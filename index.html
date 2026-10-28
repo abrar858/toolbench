@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Toolbench: free online tools that run in your browser</title>
+<meta name="description" content="Free online tools: word counter, password generator, unit converter, JSON formatter, UK take-home pay, loan and savings calculators. Nothing is uploaded.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EDF1F6;--surface:#FFFFFF;--ink:#14233D;--muted:#55667F;--line:#D3DBE6;--accent:#F2C230;--teal:#1E7A6C;--err:#B42318;--field:#F6F8FB;
+  --head:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;--body:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E192B;--surface:#16233A;--ink:#E7EDF6;--muted:#9AAAC2;--line:#2A3B57;--teal:#4CC2AE;--err:#FF8A80;--field:#0E192B;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E192B;--surface:#16233A;--ink:#E7EDF6;--muted:#9AAAC2;--line:#2A3B57;--teal:#4CC2AE;--err:#FF8A80;--field:#0E192B;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.55 var(--body)}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font:800 1.35rem/1 var(--head);text-decoration:none;letter-spacing:-.01em}
+.logo i{width:30px;height:30px;border-radius:7px;background:var(--accent);display:grid;place-items:center;font-style:normal;font-size:1rem}
+.top nav{display:flex;gap:18px;font-weight:500}
+.top nav a{text-decoration:none;color:var(--muted)}
+.top nav a:hover{color:var(--ink)}
+h1{font:800 clamp(2.3rem,6.5vw,4.2rem)/1.02 var(--head);letter-spacing:-.025em;margin:44px 0 14px;max-width:13ch}
+.lede{color:var(--muted);max-width:50ch;margin:0;font-size:1.08rem}
+.search{position:relative;margin:32px 0 0;max-width:720px}
+.search svg{position:absolute;left:20px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search input{width:100%;font:500 1.2rem var(--body);padding:18px 20px 18px 56px;border:2px solid var(--ink);border-radius:14px;background:var(--surface);color:var(--ink);box-shadow:6px 6px 0 var(--accent)}
+.search input::placeholder{color:var(--muted)}
+.cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px 44px;margin:56px 0 64px}
+.cat h2{display:flex;justify-content:space-between;align-items:baseline;font:700 1.25rem var(--head);margin:0;padding-bottom:10px;border-bottom:2px solid var(--ink);scroll-margin-top:20px}
+.cat h2 small{font:500 .85rem var(--body);color:var(--muted)}
+.cat ul{list-style:none;margin:0 0 24px;padding:0}
+.cat li a{display:block;padding:12px 0;border-bottom:1px solid var(--line);text-decoration:none}
+.cat li strong{display:block;font-weight:600}
+.cat li span{color:var(--muted);font-size:.92rem}
+.cat li a:hover strong,.cat li a:focus-visible strong{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:3px;text-underline-offset:4px}
+.empty{color:var(--muted);margin:40px 0}
+.back{display:inline-block;margin-top:28px;color:var(--muted);text-decoration:none;font-weight:500}
+.back:hover{color:var(--ink)}
+.tool h1{font-size:clamp(2rem,5vw,3rem);margin:14px 0 8px;max-width:none}
+.panel{background:var(--surface);border:2px solid var(--ink);border-radius:14px;padding:24px;box-shadow:6px 6px 0 var(--accent);margin:28px 0 40px;max-width:820px}
+label{display:block;font-weight:600;font-size:.92rem;margin:0 0 6px}
+input,select,textarea{font:inherit;font-size:1rem;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+textarea{min-height:170px;resize:vertical;line-height:1.5}
+.mono{font-family:var(--mono);font-size:.92rem}
+input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--teal)}
+input[type=range]{padding:0;accent-color:var(--teal)}
+input[type=color]{padding:2px;height:46px;width:70px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:16px}
+.check{display:flex;align-items:center;gap:8px;font-weight:500;margin:0}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+button{font:600 .95rem var(--body);padding:10px 16px;border-radius:8px;border:2px solid var(--ink);background:var(--surface);color:var(--ink);cursor:pointer}
+button:hover{background:var(--field)}
+button.primary{background:var(--accent);border-color:#14233D;color:#14233D}
+button.primary:hover{filter:brightness(1.05)}
+.out{background:var(--field);border-radius:10px;padding:16px;margin-top:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px}
+.stat b{display:block;font:700 1.6rem/1.2 var(--head)}
+.stat span{color:var(--muted);font-size:.88rem}
+.big{font:800 clamp(1.8rem,5vw,2.4rem)/1.15 var(--head);margin:0}
+.sub{color:var(--muted);margin:4px 0 0}
+.err{color:var(--err);font-weight:500}
+.ok{color:var(--teal);font-weight:600}
+.note{font-size:.88rem;color:var(--muted);margin:14px 0 0}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.9rem}
+tr.total td{font-weight:700;border-bottom:none}
+.pc{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:14px 0;border-bottom:1px solid var(--line)}
+.pc:last-child{border-bottom:none}
+.pc input{width:120px}
+.pc output{font:700 1.3rem var(--head);margin-left:6px}
+.hashes div{margin-bottom:12px}
+.hashes code{display:block;word-break:break-all;font:.88rem var(--mono);background:var(--field);padding:10px;border-radius:8px;margin:4px 0}
+.swatch{width:100%;height:80px;border-radius:10px;border:1px solid var(--line);margin-bottom:12px}
+.kv{display:grid;grid-template-columns:70px 1fr auto;gap:10px;align-items:center;margin-bottom:8px}
+.kv code{font:.95rem var(--mono)}
+.kv button{padding:6px 12px}
+.related h2{font:700 1.15rem var(--head);margin:0 0 6px}
+.related ul{list-style:none;padding:0;margin:0 0 56px;display:flex;flex-wrap:wrap;gap:8px}
+.related a{display:inline-block;padding:8px 14px;border:1px solid var(--line);border-radius:999px;text-decoration:none;background:var(--surface)}
+.related a:hover{border-color:var(--ink)}
+footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--muted);font-size:.9rem}
+footer p{margin:4px 0}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+@media (max-width:560px){.panel{padding:18px;box-shadow:4px 4px 0 var(--accent)}.search input{font-size:1.05rem}h1{margin-top:28px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="#"><i>🧰</i><span id="siteName">Toolbench</span></a>
+    <nav aria-label="Categories"><a href="#general">General</a><a href="#advanced">Advanced</a><a href="#finance">Finance</a></nav>
+  </header>
+</div>
+<main id="app"></main>
+<footer><div class="wrap">
+  <p>Every tool runs in your browser. Nothing you type is uploaded or stored.</p>
+  <p>Finance results are estimates for guidance only, not financial advice.</p>
+  <p>© <span id="yr"></span> <span class="sn">Toolbench</span></p>
+</div></footer>
+
+<script>
+const SITE = "Toolbench"; // change this to your brand name
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const num = v => parseFloat(String(v).replace(/[,£\s]/g, ""));
+const gbp = n => isFinite(n) ? n.toLocaleString("en-GB", {style: "currency", currency: "GBP"}) : "–";
+const nf = (n, d = 2) => isFinite(n) ? n.toLocaleString("en-GB", {maximumFractionDigits: d}) : "–";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const stats = a => a.map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
+function copy(text, btn) {
+  const done = t => { const o = btn.textContent; btn.textContent = t; setTimeout(() => btn.textContent = o, 1200); };
+  if (!text) return done("Nothing to copy");
+  navigator.clipboard.writeText(text).then(() => done("Copied"), () => done("Copy failed"));
+}
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const dur = m => { const y = Math.floor(m / 12), r = m % 12; return [y && plural(y, "year"), r && plural(r, "month")].filter(Boolean).join(" ") || "0 months"; };
+let cleanup = null;
+
+// Two-way text tool used by Base64 and URL encoder
+function twoWay(enc, dec, encLabel, decLabel, errMsg) {
+  return {
+    ui: `<label for="tw-in">Input</label><textarea id="tw-in" class="mono" placeholder="Paste text here"></textarea>
+      <div class="btns"><button class="primary" data-a="e">${encLabel}</button><button data-a="d">${decLabel}</button></div>
+      <label for="tw-out">Result</label><textarea id="tw-out" class="mono" readonly></textarea>
+      <div class="btns"><button data-a="c">Copy result</button></div><p class="msg" aria-live="polite"></p>`,
+    init(el) {
+      const i = $("#tw-in", el), o = $("#tw-out", el), m = $(".msg", el);
+      el.addEventListener("click", e => {
+        const a = e.target.dataset.a; if (!a) return;
+        if (a === "c") return copy(o.value, e.target);
+        m.textContent = ""; m.className = "msg";
+        try { o.value = a === "e" ? enc(i.value) : dec(i.value); }
+        catch { o.value = ""; m.textContent = errMsg; m.className = "msg err"; }
+      });
+    }
+  };
+}
+
+const UNITS = {
+  Length: {Millimetres: .001, Centimetres: .01, Metres: 1, Kilometres: 1000, Inches: .0254, Feet: .3048, Yards: .9144, Miles: 1609.344},
+  Weight: {Grams: .001, Kilograms: 1, Ounces: .028349523125, Pounds: .45359237, Stone: 6.35029318, Tonnes: 1000},
+  Volume: {Millilitres: .001, Litres: 1, "UK pints": .56826125, "UK gallons": 4.54609, "US cups": .2365882365, "US gallons": 3.785411784},
+  Temperature: {Celsius: 0, Fahrenheit: 0, Kelvin: 0},
+  Speed: {"Metres per second": 1, "Kilometres per hour": 1 / 3.6, "Miles per hour": .44704, Knots: .514444}
+};
+const toC = {Celsius: x => x, Fahrenheit: x => (x - 32) * 5 / 9, Kelvin: x => x - 273.15};
+const fromC = {Celsius: c => c, Fahrenheit: c => c * 9 / 5 + 32, Kelvin: c => c + 273.15};
+
+function ukPay(gross, pct) {
+  const pen = gross * pct / 100, inc = gross - pen;
+  const pa = inc > 100000 ? Math.max(0, 12570 - (inc - 100000) / 2) : 12570;
+  const ti = Math.max(0, inc - pa);
+  const tax = Math.min(ti, 37700) * .2 + Math.max(0, Math.min(ti, 125140) - 37700) * .4 + Math.max(0, ti - 125140) * .45;
+  const ni = Math.max(0, Math.min(gross, 50270) - 12570) * .08 + Math.max(0, gross - 50270) * .02;
+  return {gross, pen, tax, ni, net: gross - pen - tax - ni};
+}
+function payoff(bal, r, pay) {
+  let months = 0, interest = 0;
+  while (bal > .005 && months < 1200) { const i = bal * r; interest += i; bal = bal + i - pay; months++; }
+  return {months, interest};
+}
+
+const TOOLS = [
+/* ---------- GENERAL ---------- */
+{id: "word-counter", cat: "general", name: "Word counter", desc: "Count words, characters, sentences and reading time.",
+ ui: `<label for="wc">Your text</label><textarea id="wc" placeholder="Type or paste text here"></textarea><div class="out stats" id="wcs" aria-live="polite"></div>`,
+ init(el) {
+  const t = $("#wc", el), o = $("#wcs", el);
+  const run = () => {
+    const s = t.value, words = (s.trim().match(/\S+/g) || []).length;
+    const sent = (s.match(/[^.!?]+[.!?]+/g) || []).length || (s.trim() ? 1 : 0);
+    o.innerHTML = stats([[words, "Words"], [s.length, "Characters"], [s.replace(/\s/g, "").length, "Without spaces"], [sent, "Sentences"],
+      [s.split(/\n\s*\n/).filter(p => p.trim()).length, "Paragraphs"], [Math.ceil(words / 200) + " min", "Reading time"]]);
+  };
+  t.addEventListener("input", run); run();
+ }},
+{id: "case-converter", cat: "general", name: "Case converter", desc: "Switch text to UPPER, lower, Title, camelCase and more.",
+ ui: `<label for="cc">Your text</label><textarea id="cc" placeholder="Type or paste text here"></textarea>
+  <div class="btns"><button data-c="upper">UPPER CASE</button><button data-c="lower">lower case</button><button data-c="title">Title Case</button><button data-c="sentence">Sentence case</button><button data-c="camel">camelCase</button><button data-c="snake">snake_case</button><button data-c="kebab">kebab-case</button></div>
+  <div class="btns"><button class="primary" data-c="copy">Copy text</button></div>`,
+ init(el) {
+  const t = $("#cc", el);
+  const words = s => s.replace(/([a-z0-9])([A-Z])/g, "$1 $2").split(/[^A-Za-z0-9]+/).filter(Boolean);
+  const f = {
+    upper: s => s.toUpperCase(), lower: s => s.toLowerCase(),
+    title: s => s.toLowerCase().replace(/(^|\s)(\S)/g, (m, a, b) => a + b.toUpperCase()),
+    sentence: s => s.toLowerCase().replace(/(^\s*\S|[.!?]\s+\S)/g, c => c.toUpperCase()),
+    camel: s => words(s).map((w, i) => i ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w.toLowerCase()).join(""),
+    snake: s => words(s).map(w => w.toLowerCase()).join("_"),
+    kebab: s => words(s).map(w => w.toLowerCase()).join("-")
+  };
+  el.addEventListener("click", e => { const c = e.target.dataset.c; if (!c) return; if (c === "copy") copy(t.value, e.target); else t.value = f[c](t.value); });
+ }},
+{id: "password-generator", cat: "general", name: "Password generator", desc: "Strong random passwords, made on your device.",
+ ui: `<label for="pl">Length: <span id="plv">16</span></label><input type="range" id="pl" min="8" max="64" value="16">
+  <div class="row" style="margin-top:16px"><label class="check"><input type="checkbox" id="pu" checked> Capital letters</label><label class="check"><input type="checkbox" id="pw" checked> Small letters</label><label class="check"><input type="checkbox" id="pd" checked> Numbers</label><label class="check"><input type="checkbox" id="ps" checked> Symbols</label></div>
+  <div class="out"><p class="big mono" id="po" style="font-family:var(--mono);font-size:1.3rem;word-break:break-all"></p><p class="sub" id="pst"></p></div>
+  <div class="btns"><button class="primary" id="pg">Generate new password</button><button id="pc">Copy password</button></div>`,
+ init(el) {
+  const sets = {pu: "ABCDEFGHIJKLMNOPQRSTUVWXYZ", pw: "abcdefghijklmnopqrstuvwxyz", pd: "0123456789", ps: "!@#$%^&*()-_=+[]{};:,.?/"};
+  const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
+  const gen = () => {
+    const len = +$("#pl", el).value; $("#plv", el).textContent = len;
+    const on = Object.keys(sets).filter(k => $("#" + k, el).checked);
+    if (!on.length) { $("#po", el).textContent = ""; $("#pst", el).innerHTML = `<span class="err">Tick at least one type of character.</span>`; return; }
+    const pool = on.map(k => sets[k]).join("");
+    let p;
+    do { p = Array.from({length: len}, () => pool[rnd(pool.length)]).join(""); } while (!on.every(k => [...p].some(c => sets[k].includes(c))));
+    $("#po", el).textContent = p;
+    const bits = Math.round(len * Math.log2(pool.length));
+    $("#pst", el).textContent = `${bits < 50 ? "Fair" : bits < 75 ? "Strong" : "Very strong"} (${bits} bits of randomness)`;
+  };
+  el.addEventListener("input", gen); $("#pg", el).onclick = gen;
+  $("#pc", el).onclick = e => copy($("#po", el).textContent, e.target); gen();
+ }},
+{id: "unit-converter", cat: "general", name: "Unit converter", desc: "Length, weight, volume, temperature and speed.",
+ ui: `<div class="row"><div><label for="ucat">Measure</label><select id="ucat"></select></div><div><label for="uv">Value</label><input id="uv" inputmode="decimal" value="1"></div></div>
+  <div class="row"><div><label for="uf">From</label><select id="uf"></select></div><div><label for="ut">To</label><select id="ut"></select></div></div>
+  <button id="usw">Swap units</button><div class="out"><p class="big" id="ur" aria-live="polite"></p></div>`,
+ init(el) {
+  const c = $("#ucat", el), f = $("#uf", el), t = $("#ut", el);
+  c.innerHTML = Object.keys(UNITS).map(k => `<option>${k}</option>`).join("");
+  const fill = () => { const o = Object.keys(UNITS[c.value]).map(k => `<option>${k}</option>`).join(""); f.innerHTML = o; t.innerHTML = o; t.selectedIndex = 1; };
+  const run = () => {
+    const v = num($("#uv", el).value);
+    if (!isFinite(v)) return $("#ur", el).textContent = "Enter a number";
+    const r = c.value === "Temperature" ? fromC[t.value](toC[f.value](v)) : v * UNITS[c.value][f.value] / UNITS[c.value][t.value];
+    $("#ur", el).textContent = `${nf(v, 6)} ${f.value.toLowerCase()} = ${nf(r, 6)} ${t.value.toLowerCase()}`;
+  };
+  c.onchange = () => { fill(); run(); };
+  $("#usw", el).onclick = () => { const a = f.value; f.value = t.value; t.value = a; run(); };
+  el.addEventListener("input", run); el.addEventListener("change", run); fill(); run();
+ }},
+{id: "age-calculator", cat: "general", name: "Age calculator", desc: "Exact age in years, months and days, plus next birthday.",
+ ui: `<div class="row"><div><label for="ad">Date of birth</label><input type="date" id="ad"></div><div><label for="aa">Age on this date</label><input type="date" id="aa"></div></div><div class="out" id="ao" aria-live="polite"></div>`,
+ init(el) {
+  const p = v => { const [Y, M, D] = v.split("-").map(Number); return new Date(Date.UTC(Y, M - 1, D)); };
+  $("#aa", el).value = new Date().toISOString().slice(0, 10);
+  const run = () => {
+    const o = $("#ao", el), A = $("#ad", el).value, B = $("#aa", el).value;
+    if (!A || !B) return o.innerHTML = `<p class="sub">Pick a date of birth to see the age.</p>`;
+    const a = p(A), b = p(B);
+    if (a > b) return o.innerHTML = `<p class="err">The date of birth is after the other date.</p>`;
+    let y = b.getUTCFullYear() - a.getUTCFullYear(), m = b.getUTCMonth() - a.getUTCMonth(), d = b.getUTCDate() - a.getUTCDate();
+    if (d < 0) { m--; d += new Date(Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), 0)).getUTCDate(); }
+    if (m < 0) { y--; m += 12; }
+    let nb = Date.UTC(b.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate());
+    if (nb < b) nb = Date.UTC(b.getUTCFullYear() + 1, a.getUTCMonth(), a.getUTCDate());
+    const nd = Math.round((nb - b) / 864e5);
+    o.innerHTML = `<p class="big">${plural(y, "year")}, ${plural(m, "month")}, ${plural(d, "day")}</p>
+      <p class="sub">${Math.round((b - a) / 864e5).toLocaleString("en-GB")} days in total. ${nd === 0 ? "Birthday today!" : `Next birthday in ${plural(nd, "day")}.`}</p>`;
+  };
+  el.addEventListener("input", run); run();
+ }},
+{id: "percentage-calculator", cat: "general", name: "Percentage calculator", desc: "Percent of a number, percentage share and change.",
+ ui: `<div class="pc"><span>What is</span><input id="p1" inputmode="decimal" value="15"><span>% of</span><input id="p2" inputmode="decimal" value="200"><span>?</span><output id="r1"></output></div>
+  <div class="pc"><input id="p3" inputmode="decimal" value="30"><span>is what % of</span><input id="p4" inputmode="decimal" value="120"><span>?</span><output id="r2"></output></div>
+  <div class="pc"><span>Change from</span><input id="p5" inputmode="decimal" value="80"><span>to</span><input id="p6" inputmode="decimal" value="100"><output id="r3"></output></div>`,
+ init(el) {
+  const v = id => num($("#" + id, el).value);
+  const run = () => {
+    $("#r1", el).textContent = nf(v("p1") * v("p2") / 100, 4);
+    $("#r2", el).textContent = v("p4") ? nf(v("p3") / v("p4") * 100, 2) + "%" : "–";
+    const ch = (v("p6") - v("p5")) / v("p5") * 100;
+    $("#r3", el).textContent = v("p5") && isFinite(ch) ? `${ch >= 0 ? "+" : ""}${nf(ch, 2)}% (${ch >= 0 ? "increase" : "decrease"})` : "–";
+  };
+  el.addEventListener("input", run); run();
+ }},
+
+/* ---------- ADVANCED ---------- */
+{id: "json-formatter", cat: "advanced", name: "JSON formatter", desc: "Format, minify and check JSON for errors.",
+ ui: `<label for="jt">JSON</label><textarea id="jt" class="mono" style="min-height:260px" placeholder='{"name":"Abrar","tools":20}'></textarea>
+  <div class="btns"><button class="primary" data-j="f">Format</button><button data-j="m">Minify</button><button data-j="c">Copy</button></div><p id="jm" aria-live="polite"></p>`,
+ init(el) {
+  const t = $("#jt", el), m = $("#jm", el);
+  el.addEventListener("click", e => {
+    const a = e.target.dataset.j; if (!a) return;
+    if (a === "c") return copy(t.value, e.target);
+    try { t.value = JSON.stringify(JSON.parse(t.value), null, a === "f" ? 2 : 0); m.className = "ok"; m.textContent = "Valid JSON"; }
+    catch (err) { m.className = "err"; m.textContent = "Invalid JSON: " + err.message; }
+  });
+ }},
+{id: "base64", cat: "advanced", name: "Base64 encoder and decoder", desc: "Encode or decode Base64, with full Unicode support.",
+ ...twoWay(s => { let b = ""; new TextEncoder().encode(s).forEach(x => b += String.fromCharCode(x)); return btoa(b); },
+   s => new TextDecoder("utf-8", {fatal: true}).decode(Uint8Array.from(atob(s.replace(/\s/g, "")), c => c.charCodeAt(0))),
+   "Encode", "Decode", "That isn’t valid Base64. Check for missing or extra characters.")},
+{id: "url-encoder", cat: "advanced", name: "URL encoder and decoder", desc: "Make text safe for links, or read encoded URLs.",
+ ...twoWay(encodeURIComponent, s => decodeURIComponent(s.replace(/\+/g, " ")), "Encode", "Decode", "That text has a broken % sequence, so it can’t be decoded.")},
+{id: "hash-generator", cat: "advanced", name: "Hash generator", desc: "SHA-1, SHA-256, SHA-384 and SHA-512 hashes.",
+ ui: `<label for="ht">Text to hash</label><textarea id="ht" class="mono" placeholder="Type or paste text here"></textarea><div class="out hashes" id="ho"></div>`,
+ init(el) {
+  const algs = ["SHA-1", "SHA-256", "SHA-384", "SHA-512"], o = $("#ho", el);
+  if (!window.crypto || !crypto.subtle) { o.innerHTML = `<p class="err">Hashing needs the site to be opened over https.</p>`; return; }
+  o.innerHTML = algs.map(a => `<div><label>${a}</label><code data-h="${a}"></code><button data-copy="${a}">Copy ${a}</button></div>`).join("");
+  const run = async () => {
+    const d = new TextEncoder().encode($("#ht", el).value);
+    for (const a of algs) {
+      const h = await crypto.subtle.digest(a, d);
+      $(`[data-h="${a}"]`, el).textContent = [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+  };
+  o.addEventListener("click", e => { const a = e.target.dataset.copy; if (a) copy($(`[data-h="${a}"]`, el).textContent, e.target); });
+  $("#ht", el).addEventListener("input", run); run();
+ }},
+{id: "uuid-generator", cat: "advanced", name: "UUID generator", desc: "Random version 4 UUIDs, up to 100 at once.",
+ ui: `<div class="row"><div><label for="un">How many</label><input id="un" type="number" min="1" max="100" value="5"></div></div>
+  <div class="btns"><button class="primary" id="ug">Generate UUIDs</button><button id="uc">Copy all</button></div><textarea id="uo" class="mono" readonly></textarea>`,
+ init(el) {
+  const id = () => crypto.randomUUID ? crypto.randomUUID() : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+  const gen = () => { const n = Math.min(100, Math.max(1, +$("#un", el).value || 1)); $("#uo", el).value = Array.from({length: n}, id).join("\n"); };
+  $("#ug", el).onclick = gen; $("#uc", el).onclick = e => copy($("#uo", el).value, e.target); gen();
+ }},
+{id: "timestamp-converter", cat: "advanced", name: "Unix timestamp converter", desc: "Convert Unix time to dates and back.",
+ ui: `<div class="out" style="margin:0 0 20px"><p class="sub">Current Unix time</p><p class="big mono" id="tn" style="font-family:var(--mono)"></p></div>
+  <label for="tu">Unix timestamp (seconds or milliseconds)</label><input id="tu" class="mono" inputmode="numeric"><p id="tuo" class="note" aria-live="polite"></p>
+  <label for="td" style="margin-top:20px">Date and time (your time zone)</label><input id="td" type="datetime-local" step="1"><p id="tdo" class="note" aria-live="polite"></p>`,
+ init(el) {
+  const tick = () => $("#tn", el).textContent = Math.floor(Date.now() / 1000);
+  tick(); const iv = setInterval(tick, 1000); cleanup = () => clearInterval(iv);
+  $("#tu", el).value = Math.floor(Date.now() / 1000);
+  const fromU = () => {
+    const v = num($("#tu", el).value), o = $("#tuo", el);
+    if (!isFinite(v)) return o.textContent = "Enter a whole number.";
+    const d = new Date(Math.abs(v) > 1e11 ? v : v * 1000);
+    o.innerHTML = `Local: <b>${d.toLocaleString("en-GB", {dateStyle: "full", timeStyle: "medium"})}</b><br>UTC (ISO 8601): <b>${d.toISOString()}</b>`;
+  };
+  const fromD = () => { const v = $("#td", el).value; $("#tdo", el).innerHTML = v ? `Unix time: <b>${Math.floor(new Date(v).getTime() / 1000)}</b>` : ""; };
+  $("#tu", el).addEventListener("input", fromU); $("#td", el).addEventListener("input", fromD); fromU();
+ }},
+{id: "colour-converter", cat: "advanced", name: "Colour converter", desc: "Convert between HEX, RGB and HSL.",
+ ui: `<div class="row" style="align-items:end"><div><label for="cp">Pick a colour</label><input type="color" id="cp" value="#1e7a6c"></div><div><label for="ch">Or type a HEX code</label><input id="ch" class="mono" value="#1e7a6c"></div></div>
+  <div class="swatch" id="cs"></div><div id="co"></div><p id="cm" class="err" aria-live="polite"></p>`,
+ init(el) {
+  const show = hex => {
+    let h = hex.trim().replace(/^#/, "");
+    if (/^[0-9a-f]{3}$/i.test(h)) h = [...h].map(c => c + c).join("");
+    if (!/^[0-9a-f]{6}$/i.test(h)) return $("#cm", el).textContent = "Enter a HEX code like #1e7a6c or #fff.";
+    $("#cm", el).textContent = "";
+    const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
+    const R = r / 255, G = g / 255, B = b / 255, mx = Math.max(R, G, B), mn = Math.min(R, G, B), l = (mx + mn) / 2, dd = mx - mn;
+    let hh = 0, s = 0;
+    if (dd) { s = dd / (1 - Math.abs(2 * l - 1)); hh = mx === R ? ((G - B) / dd) % 6 : mx === G ? (B - R) / dd + 2 : (R - G) / dd + 4; hh = Math.round(hh * 60 + 360) % 360; }
+    const vals = {HEX: "#" + h.toLowerCase(), RGB: `rgb(${r}, ${g}, ${b})`, HSL: `hsl(${hh}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`};
+    $("#cs", el).style.background = vals.HEX; $("#cp", el).value = vals.HEX;
+    $("#co", el).innerHTML = Object.entries(vals).map(([k, v]) => `<div class="kv"><b>${k}</b><code>${v}</code><button data-v="${v}">Copy</button></div>`).join("");
+  };
+  $("#cp", el).addEventListener("input", e => { $("#ch", el).value = e.target.value; show(e.target.value); });
+  $("#ch", el).addEventListener("input", e => show(e.target.value));
+  $("#co", el).addEventListener("click", e => { if (e.target.dataset.v) copy(e.target.dataset.v, e.target); });
+  show("#1e7a6c");
+ }},
+
+/* ---------- FINANCE ---------- */
+{id: "take-home-pay", cat: "finance", name: "UK take-home pay calculator", desc: "Income tax and NI for 2026/27 (England, Wales and NI).",
+ ui: `<div class="row"><div><label for="sg">Annual salary (£)</label><input id="sg" inputmode="decimal" value="30000"></div><div><label for="sp">Pension contribution (%)</label><input id="sp" inputmode="decimal" value="5"></div></div>
+  <div class="out" id="so"></div>
+  <p class="note">2026/27 tax year rates for England, Wales and Northern Ireland: £12,570 personal allowance, 20% / 40% / 45% income tax, 8% / 2% employee National Insurance. Pension is treated as taken before tax. Doesn’t include student loans, Scottish rates or tax code adjustments.</p>`,
+ init(el) {
+  const run = () => {
+    const g = num($("#sg", el).value), pc = num($("#sp", el).value) || 0, o = $("#so", el);
+    if (!isFinite(g) || g < 0) return o.innerHTML = `<p class="err">Enter your yearly salary before tax.</p>`;
+    const r = ukPay(g, pc), row = (l, v, c = "") => `<tr class="${c}"><td>${l}</td><td>${gbp(v)}</td><td>${gbp(v / 12)}</td><td>${gbp(v / 52)}</td></tr>`;
+    o.innerHTML = `<p class="big">${gbp(r.net / 12)} a month</p><p class="sub">Your take-home pay after tax, NI and pension</p>
+      <div class="tablewrap" style="margin-top:14px"><table><tr><th></th><th>Year</th><th>Month</th><th>Week</th></tr>
+      ${row("Gross pay", r.gross)}${row("Pension", -r.pen)}${row("Income tax", -r.tax)}${row("National Insurance", -r.ni)}${row("Take-home pay", r.net, "total")}</table></div>`;
+  };
+  el.addEventListener("input", run); run();
+ }},
+{id: "loan-calculator", cat: "finance", name: "Loan repayment calculator", desc: "Monthly payment and total interest on a loan or mortgage.",
+ ui: `<div class="row"><div><label for="la">Amount borrowed (£)</label><input id="la" inputmode="decimal" value="10000"></div><div><label for="lr">Interest rate (APR %)</label><input id="lr" inputmode="decimal" value="6.9"></div></div>
+  <div class="row"><div><label for="ly">Years</label><input id="ly" type="number" min="0" value="5"></div><div><label for="lm">Extra months</label><input id="lm" type="number" min="0" max="11" value="0"></div></div><div class="out" id="lo"></div>`,
+ init(el) {
+  const run = () => {
+    const P = num($("#la", el).value), r = (num($("#lr", el).value) || 0) / 1200, n = (+$("#ly", el).value || 0) * 12 + (+$("#lm", el).value || 0), o = $("#lo", el);
+    if (!(P > 0) || !(n > 0)) return o.innerHTML = `<p class="err">Enter an amount and a term longer than zero.</p>`;
+    const pay = r ? P * r / (1 - Math.pow(1 + r, -n)) : P / n;
+    o.innerHTML = `<p class="big">${gbp(pay)} a month</p><p class="sub">for ${dur(n)}</p>
+      <div class="stats" style="margin-top:14px">${stats([[gbp(pay * n), "Total repaid"], [gbp(pay * n - P), "Total interest"]])}</div>`;
+  };
+  el.addEventListener("input", run); run();
+ }},
+{id: "savings-calculator", cat: "finance", name: "Savings calculator", desc: "See how regular saving and compound interest grow.",
+ ui: `<div class="row"><div><label for="vs">Starting amount (£)</label><input id="vs" inputmode="decimal" value="1000"></div><div><label for="vm">Monthly deposit (£)</label><input id="vm" inputmode="decimal" value="100"></div></div>
+  <div class="row"><div><label for="vr">Interest rate (AER %)</label><input id="vr" inputmode="decimal" value="4"></div><div><label for="vy">Years</label><input id="vy" type="number" min="1" max="50" value="10"></div></div><div class="out" id="vo"></div>`,
+ init(el) {
+  const run = () => {
+    const s = num($("#vs", el).value) || 0, d = num($("#vm", el).value) || 0, y = Math.min(50, +$("#vy", el).value || 0), o = $("#vo", el);
+    const r = Math.pow(1 + (num($("#vr", el).value) || 0) / 100, 1 / 12) - 1;
+    if (!(y > 0)) return o.innerHTML = `<p class="err">Enter how many years you’ll save for.</p>`;
+    let bal = s, rows = "";
+    for (let i = 1; i <= y; i++) { for (let m = 0; m < 12; m++) bal = bal * (1 + r) + d; const dep = s + d * 12 * i; rows += `<tr><td>Year ${i}</td><td>${gbp(dep)}</td><td>${gbp(bal - dep)}</td><td>${gbp(bal)}</td></tr>`; }
+    const dep = s + d * 12 * y;
+    o.innerHTML = `<p class="big">${gbp(bal)}</p><p class="sub">after ${plural(y, "year")}: ${gbp(dep)} paid in and ${gbp(bal - dep)} interest</p>
+      <div class="tablewrap" style="margin-top:14px"><table><tr><th></th><th>Paid in</th><th>Interest</th><th>Balance</th></tr>${rows}</table></div>`;
+  };
+  el.addEventListener("input", run); run();
+ }},
+{id: "debt-payoff", cat: "finance", name: "Debt payoff calculator", desc: "How long until a card or loan is cleared, and the interest cost.",
+ ui: `<div class="row"><div><label for="db">Balance owed (£)</label><input id="db" inputmode="decimal" value="3000"></div><div><label for="dr">Interest rate (APR %)</label><input id="dr" inputmode="decimal" value="24.9"></div><div><label for="dp">Monthly payment (£)</label><input id="dp" inputmode="decimal" value="150"></div></div><div class="out" id="do"></div>`,
+ init(el) {
+  const run = () => {
+    const b = num($("#db", el).value), r = (num($("#dr", el).value) || 0) / 1200, p = num($("#dp", el).value), o = $("#do", el);
+    if (!(b > 0) || !(p > 0)) return o.innerHTML = `<p class="err">Enter a balance and a monthly payment.</p>`;
+    if (p <= b * r) return o.innerHTML = `<p class="err">A payment of ${gbp(p)} doesn’t cover the first month’s interest of ${gbp(b * r)}, so the balance would keep growing. Try a higher payment.</p>`;
+    const a = payoff(b, r, p), x = payoff(b, r, p + 50), d = new Date(); d.setMonth(d.getMonth() + a.months);
+    o.innerHTML = `<p class="big">Debt-free in ${dur(a.months)}</p><p class="sub">around ${d.toLocaleDateString("en-GB", {month: "long", year: "numeric"})}</p>
+      <div class="stats" style="margin-top:14px">${stats([[gbp(a.interest), "Total interest"], [gbp(b + a.interest), "Total paid"]])}</div>
+      <p class="note">Paying ${gbp(p + 50)} a month instead clears it ${dur(a.months - x.months)} sooner and saves ${gbp(a.interest - x.interest)} in interest.</p>`;
+  };
+  el.addEventListener("input", run); run();
+ }},
+{id: "vat-calculator", cat: "finance", name: "VAT calculator", desc: "Add or remove VAT at 20% or any rate.",
+ ui: `<div class="row"><div><label for="va">Amount (£)</label><input id="va" inputmode="decimal" value="100"></div><div><label for="vt">VAT rate (%)</label><input id="vt" inputmode="decimal" value="20"></div></div>
+  <div class="row"><label class="check"><input type="radio" name="vm" value="add" checked> Add VAT to this amount</label><label class="check"><input type="radio" name="vm" value="rem"> Remove VAT from this amount</label></div><div class="out" id="vto"></div>`,
+ init(el) {
+  const run = () => {
+    const a = num($("#va", el).value), t = (num($("#vt", el).value) || 0) / 100, add = $("[name=vm]:checked", el).value === "add", o = $("#vto", el);
+    if (!isFinite(a)) return o.innerHTML = `<p class="err">Enter an amount.</p>`;
+    const net = add ? a : a / (1 + t), gross = add ? a * (1 + t) : a;
+    o.innerHTML = `<div class="stats">${stats([[gbp(net), "Before VAT"], [gbp(gross - net), "VAT"], [gbp(gross), "Including VAT"]])}</div>`;
+  };
+  el.addEventListener("input", run); el.addEventListener("change", run); run();
+ }},
+{id: "budget-planner", cat: "finance", name: "50/30/20 budget planner", desc: "Split monthly income into needs, wants and savings.",
+ ui: `<div class="row"><div><label for="bi">Monthly take-home pay (£)</label><input id="bi" inputmode="decimal" value="2200"></div></div><div class="out" id="bo"></div>
+  <p class="note">Needs are bills you must pay: rent, council tax, energy, food, transport, minimum debt payments. Wants are everything optional. The last 20% goes to savings or paying debt off faster.</p>`,
+ init(el) {
+  const run = () => {
+    const i = num($("#bi", el).value), o = $("#bo", el);
+    if (!(i > 0)) return o.innerHTML = `<p class="err">Enter your monthly income after tax.</p>`;
+    o.innerHTML = `<div class="stats">${stats([[gbp(i * .5), "Needs (50%)"], [gbp(i * .3), "Wants (30%)"], [gbp(i * .2), "Savings and debt (20%)"]])}</div>`;
+  };
+  el.addEventListener("input", run); run();
+ }}
+];
+
+const CATS = [
+  {id: "general", name: "General"},
+  {id: "advanced", name: "Advanced"},
+  {id: "finance", name: "Finance"}
+];
+const app = $("#app");
+const DEF_DESC = $('meta[name="description"]').content;
+
+function showHome(scrollTo) {
+  document.title = `${SITE}: free online tools that run in your browser`;
+  $('meta[name="description"]').content = DEF_DESC;
+  app.innerHTML = `<div class="wrap">
+    <h1>Free tools that work in your browser.</h1>
+    <p class="lede">Calculators, converters and developer utilities. No sign-up, no adverts in your way, and nothing you type leaves your device.</p>
+    <div class="search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Find a tool, e.g. loan, password, JSON" aria-label="Find a tool" autocomplete="off"></div>
+    <div class="cats">${CATS.map(c => { const t = TOOLS.filter(x => x.cat === c.id); return `<section class="cat" data-cat="${c.id}">
+      <h2 id="${c.id}">${c.name}<small>${plural(t.length, "tool")}</small></h2>
+      <ul>${t.map(x => `<li data-s="${esc((x.name + " " + x.desc).toLowerCase())}"><a href="#${x.id}"><strong>${x.name}</strong><span>${x.desc}</span></a></li>`).join("")}</ul></section>`; }).join("")}</div>
+    <p class="empty" hidden>No tools match that search. Try a shorter word.</p></div>`;
+  const q = $("#q");
+  q.addEventListener("input", () => {
+    const v = q.value.trim().toLowerCase(); let any = false;
+    $$(".cat").forEach(c => { let n = 0; $$("li", c).forEach(li => { const m = li.dataset.s.includes(v); li.hidden = !m; if (m) n++; }); c.hidden = !n; any ||= n > 0; });
+    $(".empty").hidden = any;
+  });
+  q.addEventListener("keydown", e => { if (e.key === "Enter") { const f = $$(".cat li").find(li => !li.hidden); if (f) location.hash = $("a", f).getAttribute("href"); } });
+  if (scrollTo) $("#" + scrollTo).scrollIntoView(); else window.scrollTo(0, 0);
+}
+
+function showTool(t) {
+  document.title = `${t.name}: free online tool | ${SITE}`;
+  $('meta[name="description"]').content = `${t.desc} Free, no sign-up, works in your browser.`;
+  const rel = TOOLS.filter(x => x.cat === t.cat && x.id !== t.id);
+  app.innerHTML = `<div class="wrap tool"><a class="back" href="#${t.cat}">All ${CATS.find(c => c.id === t.cat).name.toLowerCase()} tools</a>
+    <h1>${t.name}</h1><p class="lede">${t.desc}</p><div class="panel">${t.ui}</div>
+    <div class="related"><h2>More tools</h2><ul>${rel.map(x => `<li><a href="#${x.id}">${x.name}</a></li>`).join("")}</ul></div></div>`;
+  t.init($(".panel"));
+  window.scrollTo(0, 0);
+}
+
+function route() {
+  if (cleanup) { cleanup(); cleanup = null; }
+  const id = location.hash.slice(1), t = TOOLS.find(x => x.id === id);
+  if (t) showTool(t); else showHome(CATS.some(c => c.id === id) ? id : null);
+}
+$("#siteName").textContent = SITE; $$(".sn").forEach(s => s.textContent = SITE);
+$("#yr").textContent = new Date().getFullYear();
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>
