@@ -120,10 +120,20 @@ const gbp = n => isFinite(n) ? n.toLocaleString("en-GB", {style: "currency", cur
 const nf = (n, d = 2) => isFinite(n) ? n.toLocaleString("en-GB", {maximumFractionDigits: d}) : "–";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const stats = a => a.map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
+const copyFeedback = new WeakMap();
 function copy(text, btn) {
-  const done = t => { const o = btn.textContent; btn.textContent = t; setTimeout(() => btn.textContent = o, 1200); };
+  let state = copyFeedback.get(btn);
+  if (!state) { state = {label: btn.textContent, timer: null, revision: 0}; copyFeedback.set(btn, state); }
+  const revision = ++state.revision;
+  const done = message => {
+    if (revision !== state.revision) return;
+    clearTimeout(state.timer); btn.textContent = message;
+    state.timer = setTimeout(() => { btn.textContent = state.label; }, 1200);
+  };
   if (!text) return done("Nothing to copy");
-  navigator.clipboard.writeText(text).then(() => done("Copied"), () => done("Copy failed"));
+  if (!navigator.clipboard || !navigator.clipboard.writeText) return done("Copy unavailable");
+  try { Promise.resolve(navigator.clipboard.writeText(text)).then(() => done("Copied"), () => done("Copy failed")); }
+  catch { done("Copy failed"); }
 }
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 const dur = m => { const y = Math.floor(m / 12), r = m % 12; return [y && plural(y, "year"), r && plural(r, "month")].filter(Boolean).join(" ") || "0 months"; };
