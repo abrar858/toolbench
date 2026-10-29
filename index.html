@@ -135,6 +135,7 @@ function twoWay(enc, dec, encLabel, decLabel, errMsg) {
       <div class="btns"><button data-a="c">Copy result</button></div><p class="msg" aria-live="polite"></p>`,
     init(el) {
       const i = $("#tw-in", el), o = $("#tw-out", el), m = $(".msg", el);
+      i.addEventListener("input", () => { o.value = ""; m.textContent = ""; m.className = "msg"; });
       el.addEventListener("click", e => {
         const a = e.target.dataset.a; if (!a) return;
         if (a === "c") return copy(o.value, e.target);
