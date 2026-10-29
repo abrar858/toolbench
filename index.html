@@ -304,21 +304,21 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 {id: "password-generator", cat: "general", name: "Password generator", desc: "Strong random passwords, made on your device.",
  ui: `<label for="pl">Length: <span id="plv">16</span></label><input type="range" id="pl" min="8" max="64" value="16">
   <div class="row" style="margin-top:16px"><label class="check"><input type="checkbox" id="pu" checked> Capital letters</label><label class="check"><input type="checkbox" id="pw" checked> Small letters</label><label class="check"><input type="checkbox" id="pd" checked> Numbers</label><label class="check"><input type="checkbox" id="ps" checked> Symbols</label></div>
-  <div class="out"><p class="big mono" id="po" style="font-family:var(--mono);font-size:1.3rem;word-break:break-all"></p><p class="sub" id="pst"></p></div>
+  <label class="check"><input type="checkbox" id="pa"> Exclude look-alike characters (I, l, 1, O, 0)</label><div class="out"><p class="big mono" id="po" style="font-family:var(--mono);font-size:1.3rem;word-break:break-all"></p><p class="sub" id="pst"></p></div>
   <div class="btns"><button class="primary" id="pg">Generate new password</button><button id="pc">Copy password</button></div>`,
  init(el) {
   const sets = {pu: "ABCDEFGHIJKLMNOPQRSTUVWXYZ", pw: "abcdefghijklmnopqrstuvwxyz", pd: "0123456789", ps: "!@#$%^&*()-_=+[]{};:,.?/"};
-  const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
+  const rnd = n => { const limit = Math.floor(4294967296 / n) * n; let v; do { v = crypto.getRandomValues(new Uint32Array(1))[0]; } while (v >= limit); return v % n; };
   const gen = () => {
     const len = +$("#pl", el).value; $("#plv", el).textContent = len;
     const on = Object.keys(sets).filter(k => $("#" + k, el).checked);
     if (!on.length) { $("#po", el).textContent = ""; $("#pst", el).innerHTML = `<span class="err">Tick at least one type of character.</span>`; return; }
-    const pool = on.map(k => sets[k]).join("");
+    const active = Object.fromEntries(on.map(k => [k, $("#pa", el).checked ? sets[k].replace(/[Il1O0]/g, "") : sets[k]]));
+    const pool = on.map(k => active[k]).join("");
     let p;
-    do { p = Array.from({length: len}, () => pool[rnd(pool.length)]).join(""); } while (!on.every(k => [...p].some(c => sets[k].includes(c))));
+    do { p = Array.from({length: len}, () => pool[rnd(pool.length)]).join(""); } while (!on.every(k => [...p].some(c => active[k].includes(c))));
     $("#po", el).textContent = p;
-    const bits = Math.round(len * Math.log2(pool.length));
-    $("#pst", el).textContent = `${bits < 50 ? "Fair" : bits < 75 ? "Strong" : "Very strong"} (${bits} bits of randomness)`;
+    $("#pst", el).textContent = `${len} characters · Every selected character type included · Generated on your device`;
   };
   el.addEventListener("input", gen); $("#pg", el).onclick = gen;
   $("#pc", el).onclick = e => copy($("#po", el).textContent, e.target); gen();
