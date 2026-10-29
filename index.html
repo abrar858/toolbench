@@ -355,9 +355,14 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     if (!A || !B) return o.innerHTML = `<p class="sub">Pick a date of birth to see the age.</p>`;
     const a = p(A), b = p(B);
     if (a > b) return o.innerHTML = `<p class="err">The date of birth is after the other date.</p>`;
-    let y = b.getUTCFullYear() - a.getUTCFullYear(), m = b.getUTCMonth() - a.getUTCMonth(), d = b.getUTCDate() - a.getUTCDate();
-    if (d < 0) { m--; d += new Date(Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), 0)).getUTCDate(); }
-    if (m < 0) { y--; m += 12; }
+    const anniversary = months => {
+      const date = new Date(a); date.setUTCDate(1); date.setUTCMonth(a.getUTCMonth() + months);
+      const last = new Date(date); last.setUTCMonth(last.getUTCMonth() + 1); last.setUTCDate(0);
+      date.setUTCDate(Math.min(a.getUTCDate(), last.getUTCDate())); return date;
+    };
+    let months = (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + b.getUTCMonth() - a.getUTCMonth();
+    if (anniversary(months) > b) months--;
+    const y = Math.floor(months / 12), m = months % 12, d = Math.round((b - anniversary(months)) / 864e5);
     let nb = Date.UTC(b.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate());
     if (nb < b) nb = Date.UTC(b.getUTCFullYear() + 1, a.getUTCMonth(), a.getUTCDate());
     const nd = Math.round((nb - b) / 864e5);
