@@ -291,7 +291,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   <div class="btns"><button class="primary" data-c="copy">Copy text</button></div>`,
  init(el) {
   const t = $("#cc", el);
-  const words = s => s.replace(/([a-z0-9])([A-Z])/g, "$1 $2").split(/[^A-Za-z0-9]+/).filter(Boolean);
+  const words = s => s.normalize("NFC").replace(/(\p{Lu})(\p{Lu}\p{Ll})/gu, "$1 $2").replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, "$1 $2").split(/[^\p{L}\p{M}\p{N}]+/u).filter(Boolean);
   const f = {
     upper: s => s.toUpperCase(), lower: s => s.toLowerCase(),
     title: s => s.toLowerCase().replace(/(^|\s)(\S)/g, (m, a, b) => a + b.toUpperCase()),
