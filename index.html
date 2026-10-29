@@ -173,6 +173,21 @@ function payoff(bal, r, pay) {
 const TOOLS = [
 /* ---------- GENERAL ---------- */
 
+{id: "aspect-ratio", cat: "general", name: "Aspect ratio calculator", desc: "Find image and video ratios and resize without stretching.",
+ui: `<div class="row"><div><label for="ar-w">Original width (pixels)</label><input id="ar-w" type="number" min="1" step="1" inputmode="numeric" value="1920"></div><div><label for="ar-h">Original height (pixels)</label><input id="ar-h" type="number" min="1" step="1" inputmode="numeric" value="1080"></div></div><div class="row"><div><label for="ar-side">Resize by</label><select id="ar-side"><option value="width">New width</option><option value="height">New height</option></select></div><div><label for="ar-target">New size (pixels)</label><input id="ar-target" type="number" min="1" step="1" inputmode="numeric" value="1280"></div></div><div class="out" id="ar-out" aria-live="polite"></div><p class="note">Enter positive whole pixels up to 1,000,000. The other dimension is rounded to the nearest pixel. This calculates dimensions; it does not upload or resize an image file.</p>`,
+init(el) {
+const run=()=>{
+const w=Number($("#ar-w",el).value),h=Number($("#ar-h",el).value),target=Number($("#ar-target",el).value),o=$("#ar-out",el);
+if(![w,h,target].every(n=>Number.isInteger(n)&&n>0&&n<=1000000)){o.innerHTML='<p class="err">Enter whole numbers from 1 to 1,000,000 for all dimensions.</p>';return;}
+const gcd=(a,b)=>b?gcd(b,a%b):a,g=gcd(w,h),byWidth=$("#ar-side",el).value==="width";
+const nw=byWidth?target:Math.round(target*w/h),nh=byWidth?Math.round(target*h/w):target;
+if(nw<1||nh<1){o.innerHTML='<p class="err">This size would round a dimension to zero. Choose a larger size.</p>';return;}
+o.innerHTML='<p class="big">'+(w/g)+':'+(h/g)+'</p><p class="sub">Original aspect ratio</p><p class="big" style="margin-top:16px">'+nw+' × '+nh+'</p><p class="sub">New width × height in pixels</p>';
+};
+el.addEventListener("input",run);el.addEventListener("change",run);run();
+}},
+
+
 {id: "text-sorter", cat: "general", name: "Text line sorter", desc: "Sort lists and remove duplicate lines privately in your browser.",
 ui: `<label for="ls-in">One item per line</label><textarea id="ls-in"></textarea><label for="ls-order">Order</label><select id="ls-order"><option value="keep">Keep original order</option><option value="asc">A to Z (natural order)</option><option value="desc">Z to A (natural order)</option></select><div class="btns"><label class="check"><input id="ls-unique" type="checkbox" checked> Remove duplicates</label><label class="check"><input id="ls-case" type="checkbox"> Ignore case for duplicates</label><label class="check"><input id="ls-trim" type="checkbox" checked> Trim spaces and remove empty lines</label></div><label for="ls-out">Result</label><textarea id="ls-out" readonly></textarea><p id="ls-count" class="note" aria-live="polite"></p><button id="ls-copy" class="primary">Copy result</button>`,
 init(el) {
