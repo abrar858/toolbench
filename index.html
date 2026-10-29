@@ -89,19 +89,22 @@ tr.total td{font-weight:700;border-bottom:none}
 .related a:hover{border-color:var(--ink)}
 footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--muted);font-size:.9rem}
 footer p{margin:4px 0}
+.skip-link{position:absolute;top:8px;left:8px;z-index:1000;padding:10px 16px;background:var(--surface);color:var(--ink);border:2px solid var(--ink);border-radius:8px;transform:translateY(-160%)}
+.skip-link:focus{transform:translateY(0)}
 :focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 @media (max-width:560px){.panel{padding:18px;box-shadow:4px 4px 0 var(--accent)}.search input{font-size:1.05rem}h1{margin-top:28px}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
+<a class="skip-link" href="#app">Skip to tools</a>
 <div class="wrap">
   <header class="top">
     <a class="logo" href="#"><i>🧰</i><span id="siteName">Toolbench</span></a>
     <nav aria-label="Categories"><a href="#general">General</a><a href="#advanced">Advanced</a><a href="#finance">Finance</a></nav>
   </header>
 </div>
-<main id="app"></main>
+<main id="app" tabindex="-1"></main>
 <footer><div class="wrap">
   <p>Every tool runs in your browser. Nothing you type is uploaded or stored.</p>
   <p>Finance results are estimates for guidance only, not financial advice.</p>
@@ -625,7 +628,9 @@ function showTool(t) {
 
 function route() {
   if (cleanup) { cleanup(); cleanup = null; }
-  const id = location.hash.slice(1), t = TOOLS.find(x => x.id === id);
+  const id = location.hash.slice(1);
+  if (id === "app") { app.focus(); return; }
+  const t = TOOLS.find(x => x.id === id);
   if (t) showTool(t); else showHome(CATS.some(c => c.id === id) ? id : null);
 }
 $("#siteName").textContent = SITE; $$(".sn").forEach(s => s.textContent = SITE);
