@@ -332,9 +332,12 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   c.innerHTML = Object.keys(UNITS).map(k => `<option>${k}</option>`).join("");
   const fill = () => { const o = Object.keys(UNITS[c.value]).map(k => `<option>${k}</option>`).join(""); f.innerHTML = o; t.innerHTML = o; t.selectedIndex = 1; };
   const run = () => {
-    const v = num($("#uv", el).value);
-    if (!isFinite(v)) return $("#ur", el).textContent = "Enter a number";
+    const raw = $("#uv", el).value.trim();
+    const v = Number(raw);
+    if (!raw || !Number.isFinite(v)) return $("#ur", el).textContent = "Enter a valid number.";
+    if (c.value === "Temperature" && toC[f.value](v) < -273.150000001) return $("#ur", el).textContent = "Temperature cannot be below absolute zero.";
     const r = c.value === "Temperature" ? fromC[t.value](toC[f.value](v)) : v * UNITS[c.value][f.value] / UNITS[c.value][t.value];
+    if (!Number.isFinite(r)) return $("#ur", el).textContent = "Result is too large. Try a smaller value.";
     $("#ur", el).textContent = `${nf(v, 6)} ${f.value.toLowerCase()} = ${nf(r, 6)} ${t.value.toLowerCase()}`;
   };
   c.onchange = () => { fill(); run(); };
