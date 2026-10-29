@@ -173,6 +173,23 @@ function payoff(bal, r, pay) {
 const TOOLS = [
 /* ---------- GENERAL ---------- */
 
+{id: "text-sorter", cat: "general", name: "Text line sorter", desc: "Sort lists and remove duplicate lines privately in your browser.",
+ui: `<label for="ls-in">One item per line</label><textarea id="ls-in"></textarea><label for="ls-order">Order</label><select id="ls-order"><option value="keep">Keep original order</option><option value="asc">A to Z (natural order)</option><option value="desc">Z to A (natural order)</option></select><div class="btns"><label class="check"><input id="ls-unique" type="checkbox" checked> Remove duplicates</label><label class="check"><input id="ls-case" type="checkbox"> Ignore case for duplicates</label><label class="check"><input id="ls-trim" type="checkbox" checked> Trim spaces and remove empty lines</label></div><label for="ls-out">Result</label><textarea id="ls-out" readonly></textarea><p id="ls-count" class="note" aria-live="polite"></p><button id="ls-copy" class="primary">Copy result</button>`,
+init(el) {
+const run = () => {
+const input = $("#ls-in",el).value;
+let lines = input ? input.split(/\r\n|\n|\r/) : [];
+const count = lines.length;
+if ($("#ls-trim",el).checked) lines = lines.map(s=>s.trim()).filter(Boolean);
+if ($("#ls-unique",el).checked) { const seen = new Set(); lines = lines.filter(s=>{const k=$("#ls-case",el).checked?s.toLowerCase():s;if(seen.has(k))return false;seen.add(k);return true;}); }
+const order=$("#ls-order",el).value;
+if(order!=="keep"){const cmp=new Intl.Collator("en-GB",{numeric:true});lines.sort((a,b)=>(order==="desc"?-1:1)*cmp.compare(a,b));}
+$("#ls-out",el).value=lines.join("\n");$("#ls-count",el).textContent=count+" input lines → "+lines.length+" result lines";
+};
+el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",el).onclick=e=>copy($("#ls-out",el).value,e.target);run();
+}},
+
+
 {id: "date-difference", cat: "general", name: "Date difference calculator", desc: "Count calendar days and weeks between two dates.",
  ui: `<div class="row"><div><label for="dd-start">Start date</label><input id="dd-start" type="date"></div><div><label for="dd-end">End date</label><input id="dd-end" type="date"></div></div><label class="check"><input id="dd-inclusive" type="checkbox"> Include both start and end dates</label><div class="out" id="dd-result" aria-live="polite"></div><p class="note">Counts calendar days, including weekends and bank holidays. Time zones and daylight saving do not change the result.</p>`,
  init(el) {
