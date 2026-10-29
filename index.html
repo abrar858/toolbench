@@ -279,7 +279,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   const t = $("#wc", el), o = $("#wcs", el);
   const run = () => {
     const s = t.value, words = (s.trim().match(/\S+/g) || []).length;
-    const sent = (s.match(/[^.!?]+[.!?]+/g) || []).length || (s.trim() ? 1 : 0);
+    const sent = s.split(/[.!?]+/).filter(part => /[\p{L}\p{N}]/u.test(part)).length;
     o.innerHTML = stats([[words, "Words"], [s.length, "Characters"], [s.replace(/\s/g, "").length, "Without spaces"], [sent, "Sentences"],
       [s.split(/\n\s*\n/).filter(p => p.trim()).length, "Paragraphs"], [Math.ceil(words / 200) + " min", "Reading time"]]);
   };
