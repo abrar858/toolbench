@@ -417,10 +417,17 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
  }},
 {id: "uuid-generator", cat: "advanced", name: "UUID generator", desc: "Random version 4 UUIDs, up to 100 at once.",
  ui: `<div class="row"><div><label for="un">How many</label><input id="un" type="number" min="1" max="100" value="5"></div></div>
-  <div class="btns"><button class="primary" id="ug">Generate UUIDs</button><button id="uc">Copy all</button></div><textarea id="uo" class="mono" readonly></textarea>`,
+  <div class="btns"><button class="primary" id="ug">Generate UUIDs</button><button id="uc">Copy all</button></div><label for="uo">Generated UUIDs</label><textarea id="uo" class="mono" readonly></textarea><p id="um" class="note" aria-live="polite"></p>`,
  init(el) {
   const id = () => crypto.randomUUID ? crypto.randomUUID() : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
-  const gen = () => { const n = Math.min(100, Math.max(1, +$("#un", el).value || 1)); $("#uo", el).value = Array.from({length: n}, id).join("\n"); };
+  const gen = () => {
+    const raw = $("#un", el).value.trim(), n = Number(raw), msg = $("#um", el);
+    if (!raw || !Number.isInteger(n) || n < 1 || n > 100) {
+      $("#uo", el).value = ""; msg.className = "err"; msg.textContent = "Enter a whole number from 1 to 100."; return;
+    }
+    $("#uo", el).value = Array.from({length: n}, id).join("\n");
+    msg.className = "note"; msg.textContent = plural(n, "UUID") + " generated on your device.";
+  };
   $("#ug", el).onclick = gen; $("#uc", el).onclick = e => copy($("#uo", el).value, e.target); gen();
  }},
 {id: "timestamp-converter", cat: "advanced", name: "Unix timestamp converter", desc: "Convert Unix time to dates and back.",
