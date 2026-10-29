@@ -173,6 +173,21 @@ function payoff(bal, r, pay) {
 const TOOLS = [
 /* ---------- GENERAL ---------- */
 
+{id: "time-duration",cat:"general",name:"Time duration calculator",desc:"Calculate shift hours with overnight times and unpaid breaks.",
+ui:`<div class="row"><div><label for="dur-start">Start time</label><input id="dur-start" type="time"></div><div><label for="dur-end">End time</label><input id="dur-end" type="time"></div><div><label for="dur-break">Break (minutes)</label><input id="dur-break" type="number" min="0" step="1" value="0"></div></div><label class="check"><input id="dur-next" type="checkbox"> End on next day</label><div id="dur-out" class="out" aria-live="polite"></div><p class="note">Earlier end times automatically count as overnight. For equal times, select next day for 24 hours. Supports shifts up to 24 hours. Uses clock times without daylight-saving adjustments.</p>`,
+init(el){
+const parse=s=>{if(!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(s))return NaN;const [h,m]=s.split(":").map(Number);return h*60+m;};
+const run=()=>{const a=parse($("#dur-start",el).value),b=parse($("#dur-end",el).value),raw=$("#dur-break",el).value.trim(),br=Number(raw),o=$("#dur-out",el);
+if(!Number.isFinite(a)||!Number.isFinite(b)){o.textContent="Choose a start and end time.";return;}
+if(raw===""||!Number.isInteger(br)||br<0||br>1440){o.textContent="Enter a whole break duration from 0 to 1,440 minutes.";return;}
+const total=b-a+(($("#dur-next",el).checked||b<a)?1440:0);
+if(total>1440){o.textContent="Maximum shift is 24 hours. Check the next-day option.";return;}
+if(br>total){o.textContent="Break cannot exceed shift duration.";return;}
+const n=total-br;o.innerHTML='<p class="big">'+plural(Math.floor(n/60),"hour")+' '+plural(n%60,"minute")+'</p><p class="sub">'+(n/60).toFixed(2)+' decimal hours after breaks</p>';
+};el.addEventListener("input",run);el.addEventListener("change",run);run();
+}},
+
+
 {id: "aspect-ratio", cat: "general", name: "Aspect ratio calculator", desc: "Find image and video ratios and resize without stretching.",
 ui: `<div class="row"><div><label for="ar-w">Original width (pixels)</label><input id="ar-w" type="number" min="1" step="1" inputmode="numeric" value="1920"></div><div><label for="ar-h">Original height (pixels)</label><input id="ar-h" type="number" min="1" step="1" inputmode="numeric" value="1080"></div></div><div class="row"><div><label for="ar-side">Resize by</label><select id="ar-side"><option value="width">New width</option><option value="height">New height</option></select></div><div><label for="ar-target">New size (pixels)</label><input id="ar-target" type="number" min="1" step="1" inputmode="numeric" value="1280"></div></div><div class="out" id="ar-out" aria-live="polite"></div><p class="note">Enter positive whole pixels up to 1,000,000. The other dimension is rounded to the nearest pixel. This calculates dimensions; it does not upload or resize an image file.</p>`,
 init(el) {
