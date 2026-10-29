@@ -372,9 +372,9 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   el.addEventListener("input", run); run();
  }},
 {id: "percentage-calculator", cat: "general", name: "Percentage calculator", desc: "Percent of a number, percentage share and change.",
- ui: `<div class="pc"><span>What is</span><input id="p1" inputmode="decimal" value="15"><span>% of</span><input id="p2" inputmode="decimal" value="200"><span>?</span><output id="r1"></output></div>
-  <div class="pc"><input id="p3" inputmode="decimal" value="30"><span>is what % of</span><input id="p4" inputmode="decimal" value="120"><span>?</span><output id="r2"></output></div>
-  <div class="pc"><span>Change from</span><input id="p5" inputmode="decimal" value="80"><span>to</span><input id="p6" inputmode="decimal" value="100"><output id="r3"></output></div>`,
+ ui: `<div class="pc"><span>What is</span><input id="p1" aria-label="Percentage" inputmode="decimal" value="15"><span>% of</span><input id="p2" aria-label="Number to calculate a percentage of" inputmode="decimal" value="200"><span>?</span><output id="r1" aria-label="Percentage result" aria-live="polite"></output></div>
+  <div class="pc"><input id="p3" aria-label="Part" inputmode="decimal" value="30"><span>is what % of</span><input id="p4" aria-label="Whole" inputmode="decimal" value="120"><span>?</span><output id="r2" aria-label="Percentage share result" aria-live="polite"></output></div>
+  <div class="pc"><span>Change from</span><input id="p5" aria-label="Original value" inputmode="decimal" value="80"><span>to</span><input id="p6" aria-label="New value" inputmode="decimal" value="100"><output id="r3" aria-label="Percentage change result" aria-live="polite"></output></div>`,
  init(el) {
   const v = id => num($("#" + id, el).value);
   const run = () => {
