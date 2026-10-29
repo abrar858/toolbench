@@ -628,13 +628,12 @@ function showTool(t) {
 
 function route() {
   if (cleanup) { cleanup(); cleanup = null; }
-  const id = location.hash.slice(1);
-  if (id === "app") { app.focus(); return; }
-  const t = TOOLS.find(x => x.id === id);
+  const id = location.hash.slice(1), t = TOOLS.find(x => x.id === id);
   if (t) showTool(t); else showHome(CATS.some(c => c.id === id) ? id : null);
 }
 $("#siteName").textContent = SITE; $$(".sn").forEach(s => s.textContent = SITE);
 $("#yr").textContent = new Date().getFullYear();
+$(".skip-link").addEventListener("click", e => { e.preventDefault(); app.focus(); app.scrollIntoView(); });
 window.addEventListener("hashchange", route);
 route();
 </script>
