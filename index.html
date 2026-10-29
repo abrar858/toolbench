@@ -172,6 +172,39 @@ function payoff(bal, r, pay) {
 
 const TOOLS = [
 /* ---------- GENERAL ---------- */
+
+{id: "bmi-calculator", cat: "general", name: "BMI calculator", desc: "Calculate adult body mass index using metric or imperial measurements.",
+ ui: `<p class="note" style="margin-top:0">For adults aged 18 and over. Not suitable during pregnancy.</p>
+ <div class="row"><div><label for="bmi-units">Units</label><select id="bmi-units"><option value="metric">Metric (cm and kg)</option><option value="imperial">Imperial (feet, inches, stone and pounds)</option></select></div></div>
+ <div id="bmi-metric" class="row"><div><label for="bmi-cm">Height (cm)</label><input id="bmi-cm" type="number" inputmode="decimal" min="1" step="any" placeholder="e.g. 175"></div><div><label for="bmi-kg">Weight (kg)</label><input id="bmi-kg" type="number" inputmode="decimal" min="1" step="any" placeholder="e.g. 70"></div></div>
+ <div id="bmi-imperial" hidden><div class="row"><div><label for="bmi-ft">Height (feet)</label><input id="bmi-ft" type="number" inputmode="numeric" min="0" step="1"></div><div><label for="bmi-in">Extra inches</label><input id="bmi-in" type="number" inputmode="decimal" min="0" max="11.99" step="any" value="0"></div></div><div class="row"><div><label for="bmi-st">Weight (stone)</label><input id="bmi-st" type="number" inputmode="numeric" min="0" step="1"></div><div><label for="bmi-lb">Extra pounds</label><input id="bmi-lb" type="number" inputmode="decimal" min="0" max="13.99" step="any" value="0"></div></div></div>
+ <div class="out" id="bmi-result" aria-live="polite"></div>
+ <p class="note">BMI = weight (kg) ÷ height (metres)². Standard adult categories are shown. For South Asian, Chinese, other Asian, Middle Eastern, Black African and African–Caribbean backgrounds, overweight starts at 23 and obesity at 27.5. BMI cannot distinguish muscle from fat and needs careful interpretation in older adults. It is a screening estimate, not a diagnosis.</p>
+ <p class="note"><a href="https://www.nhs.uk/conditions/overweight-and-obesity/" target="_blank" rel="noopener">Read NHS guidance about BMI</a></p>`,
+ init(el) {
+  const val = id => { const s = $("#" + id, el).value.trim(); return s === "" ? NaN : Number(s); };
+  const run = () => {
+   const metric = $("#bmi-units", el).value === "metric";
+   $("#bmi-metric", el).hidden = !metric; $("#bmi-imperial", el).hidden = metric;
+   const o = $("#bmi-result", el);
+   let h, w;
+   if (metric) { h = val("bmi-cm") / 100; w = val("bmi-kg"); }
+   else {
+    const ft = val("bmi-ft"), inch = val("bmi-in"), st = val("bmi-st"), lb = val("bmi-lb");
+    if (![ft, inch, st, lb].every(Number.isFinite) || ft < 0 || st < 0 || !Number.isInteger(ft) || !Number.isInteger(st) || inch < 0 || inch >= 12 || lb < 0 || lb >= 14) {
+     o.innerHTML = '<p class="sub">Enter feet and stone as whole numbers, extra inches from 0 to less than 12, and extra pounds from 0 to less than 14.</p>'; return;
+    }
+    h = (ft * 12 + inch) * .0254; w = (st * 14 + lb) * .45359237;
+   }
+   if (!Number.isFinite(h) || !Number.isFinite(w) || h <= 0 || w <= 0) { o.innerHTML = '<p class="sub">Enter a positive height and weight to calculate your BMI.</p>'; return; }
+   const bmi = w / (h * h);
+   if (!Number.isFinite(bmi) || bmi <= 0) { o.innerHTML = '<p class="err">Please check your measurements.</p>'; return; }
+   const category = bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy weight" : bmi < 30 ? "Overweight" : "Obesity";
+   o.innerHTML = '<p class="sub">Your BMI</p><p class="big">' + bmi.toFixed(1) + '</p><p class="sub">' + category + ' (standard adult category)</p>';
+  };
+  el.addEventListener("input", run); el.addEventListener("change", run); run();
+ }},
+
 {id: "word-counter", cat: "general", name: "Word counter", desc: "Count words, characters, sentences and reading time.",
  ui: `<label for="wc">Your text</label><textarea id="wc" placeholder="Type or paste text here"></textarea><div class="out stats" id="wcs" aria-live="polite"></div>`,
  init(el) {
