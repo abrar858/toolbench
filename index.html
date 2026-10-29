@@ -383,13 +383,18 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 /* ---------- ADVANCED ---------- */
 {id: "json-formatter", cat: "advanced", name: "JSON formatter", desc: "Format, minify and check JSON for errors.",
  ui: `<label for="jt">JSON</label><textarea id="jt" class="mono" style="min-height:260px" placeholder='{"name":"Abrar","tools":20}'></textarea>
-  <div class="btns"><button class="primary" data-j="f">Format</button><button data-j="m">Minify</button><button data-j="c">Copy</button></div><p id="jm" aria-live="polite"></p>`,
+  <div class="btns"><button class="primary" data-j="f">Format</button><button data-j="m">Minify</button><button data-j="v">Validate only</button><button data-j="c">Copy</button></div><p id="jm" aria-live="polite"></p>`,
  init(el) {
   const t = $("#jt", el), m = $("#jm", el);
+  t.addEventListener("input", () => { m.textContent = ""; m.className = ""; });
   el.addEventListener("click", e => {
     const a = e.target.dataset.j; if (!a) return;
     if (a === "c") return copy(t.value, e.target);
-    try { t.value = JSON.stringify(JSON.parse(t.value), null, a === "f" ? 2 : 0); m.className = "ok"; m.textContent = "Valid JSON"; }
+    try {
+      const parsed = JSON.parse(t.value);
+      if (a !== "v") t.value = JSON.stringify(parsed, null, a === "f" ? 2 : 0);
+      m.className = "ok"; m.textContent = a === "v" ? "Valid JSON. Your original text is unchanged." : "Valid JSON";
+    }
     catch (err) { m.className = "err"; m.textContent = "Invalid JSON: " + err.message; }
   });
  }},
