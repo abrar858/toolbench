@@ -445,14 +445,23 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   const fromD = () => { const v = $("#td", el).value; $("#tdo", el).innerHTML = v ? `Unix time: <b>${Math.floor(new Date(v).getTime() / 1000)}</b>` : ""; };
   $("#tu-unit", el).addEventListener("change", fromU); $("#tu", el).addEventListener("input", fromU); $("#td", el).addEventListener("input", fromD); fromU();
  }},
-{id: "colour-converter", cat: "advanced", name: "Colour converter", desc: "Convert between HEX, RGB and HSL.",
- ui: `<div class="row" style="align-items:end"><div><label for="cp">Pick a colour</label><input type="color" id="cp" value="#1e7a6c"></div><div><label for="ch">Or type a HEX code</label><input id="ch" class="mono" value="#1e7a6c"></div></div>
+{id: "colour-converter", cat: "advanced", name: "Colour converter", desc: "Convert HEX or RGB input to HEX, RGB and HSL.",
+ ui: `<div class="row" style="align-items:end"><div><label for="cp">Pick a colour</label><input type="color" id="cp" value="#1e7a6c"></div><div><label for="ch">Or type HEX or RGB</label><input id="ch" class="mono" value="#1e7a6c"></div></div>
   <div class="swatch" id="cs"></div><div id="co"></div><p id="cm" class="err" aria-live="polite"></p>`,
  init(el) {
   const show = hex => {
-    let h = hex.trim().replace(/^#/, "");
+    const input = hex.trim();
+    let h = input.replace(/^#/, "");
+    if (/^rgb/i.test(input)) {
+      const match = /^rgb\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\)$/i.exec(input);
+      if (!match || match.slice(1).some(v => Number(v) > 255)) {
+        $("#co", el).innerHTML = ""; $("#cs", el).style.background = "transparent";
+        $("#cm", el).textContent = "Use RGB whole numbers from 0 to 255, for example rgb(30, 122, 108)."; return;
+      }
+      h = match.slice(1).map(v => Number(v).toString(16).padStart(2, "0")).join("");
+    }
     if (/^[0-9a-f]{3}$/i.test(h)) h = [...h].map(c => c + c).join("");
-    if (!/^[0-9a-f]{6}$/i.test(h)) return $("#cm", el).textContent = "Enter a HEX code like #1e7a6c or #fff.";
+    if (!/^[0-9a-f]{6}$/i.test(h)) { $("#co", el).innerHTML = ""; $("#cs", el).style.background = "transparent"; $("#cm", el).textContent = "Enter HEX like #1e7a6c or #fff, or RGB like rgb(30, 122, 108)."; return; }
     $("#cm", el).textContent = "";
     const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
     const R = r / 255, G = g / 255, B = b / 255, mx = Math.max(R, G, B), mn = Math.min(R, G, B), l = (mx + mn) / 2, dd = mx - mn;
