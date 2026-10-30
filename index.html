@@ -643,15 +643,16 @@ function showHome(scrollTo) {
     <p class="lede">Calculators, converters and developer utilities. No sign-up, no adverts in your way, and nothing you type leaves your device.</p>
     <div class="search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="Find a tool, e.g. loan, password, JSON" aria-label="Find a tool" autocomplete="off"></div>
-    <div class="cats">${CATS.map(c => { const t = TOOLS.filter(x => x.cat === c.id); return `<section class="cat" data-cat="${c.id}">
+    <p id="search-status" class="note" role="status" aria-live="polite"></p><div class="cats">${CATS.map(c => { const t = TOOLS.filter(x => x.cat === c.id); return `<section class="cat" data-cat="${c.id}">
       <h2 id="${c.id}">${c.name}<small>${plural(t.length, "tool")}</small></h2>
       <ul>${t.map(x => `<li data-s="${esc((x.name + " " + x.desc).toLowerCase())}"><a href="#${x.id}"><strong>${x.name}</strong><span>${x.desc}</span></a></li>`).join("")}</ul></section>`; }).join("")}</div>
     <p class="empty" hidden>No tools match that search. Try a shorter word.</p></div>`;
   const q = $("#q");
   q.addEventListener("input", () => {
-    const terms = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean); let any = false;
-    $$(".cat").forEach(c => { let n = 0; $$("li", c).forEach(li => { const m = terms.every(term => li.dataset.s.includes(term)); li.hidden = !m; if (m) n++; }); c.hidden = !n; any ||= n > 0; });
+    const terms = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean); let any = false, total = 0;
+    $$(".cat").forEach(c => { let n = 0; $$("li", c).forEach(li => { const m = terms.every(term => li.dataset.s.includes(term)); li.hidden = !m; if (m) n++; }); c.hidden = !n; $("h2 small", c).textContent = plural(n, "tool"); total += n; any ||= n > 0; });
     $(".empty").hidden = any;
+    $("#search-status").textContent = terms.length ? plural(total, "matching tool") : "";
   });
   q.addEventListener("keydown", e => { if (e.key === "Enter") { const f = $$(".cat li").find(li => !li.hidden); if (f) location.hash = $("a", f).getAttribute("href"); } });
   if (scrollTo) $("#" + scrollTo).scrollIntoView(); else window.scrollTo(0, 0);
