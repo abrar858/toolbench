@@ -225,7 +225,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);run();
 
 
 {id: "text-sorter", cat: "general", name: "Text line sorter", desc: "Sort lists and remove duplicate lines privately in your browser.",
-ui: `<label for="ls-in">One item per line</label><textarea id="ls-in"></textarea><label for="ls-order">Order</label><select id="ls-order"><option value="keep">Keep original order</option><option value="reverse">Reverse original order</option><option value="short">Shortest lines first</option><option value="long">Longest lines first</option><option value="asc">A to Z (natural order)</option><option value="desc">Z to A (natural order)</option></select><div class="btns"><label class="check"><input id="ls-unique" type="checkbox" checked> Remove duplicates</label><label class="check"><input id="ls-case" type="checkbox"> Ignore case for duplicates</label><label class="check"><input id="ls-trim" type="checkbox" checked> Trim spaces and remove empty lines</label></div><label for="ls-out">Result</label><textarea id="ls-out" readonly></textarea><p id="ls-count" class="note" aria-live="polite"></p><button id="ls-copy" class="primary">Copy result</button>`,
+ui: `<label for="ls-in">One item per line</label><textarea id="ls-in"></textarea><label for="ls-order">Order</label><select id="ls-order"><option value="keep">Keep original order</option><option value="reverse">Reverse original order</option><option value="short">Shortest lines first</option><option value="long">Longest lines first</option><option value="asc">A to Z (natural order)</option><option value="desc">Z to A (natural order)</option></select><div class="btns"><label class="check"><input id="ls-unique" type="checkbox" checked> Remove duplicates</label><label class="check"><input id="ls-case" type="checkbox"> Ignore case for duplicates</label><label class="check"><input id="ls-trim" type="checkbox" checked> Trim spaces and remove empty lines</label></div><label for="ls-out">Result</label><textarea id="ls-out" readonly></textarea><p id="ls-count" class="note" aria-live="polite"></p><div class="btns"><button id="ls-copy" class="primary">Copy result</button><button id="ls-reuse" disabled>Use result as input</button></div>`,
 init(el) {
 const run = () => {
 const input = $("#ls-in",el).value;
@@ -237,8 +237,9 @@ const order=$("#ls-order",el).value;
 if(order==="reverse") lines.reverse();
 else if(order==="short"||order==="long") lines.sort((a,b)=>(order==="long"?-1:1)*([...a].length-[...b].length));
 else if(order!=="keep"){const cmp=new Intl.Collator("en-GB",{numeric:true});lines.sort((a,b)=>(order==="desc"?-1:1)*cmp.compare(a,b));}
-$("#ls-out",el).value=lines.join("\n");$("#ls-count",el).textContent=count+" input lines → "+lines.length+" result lines";
+$("#ls-reuse",el).disabled=!lines.join("\n");$("#ls-out",el).value=lines.join("\n");$("#ls-count",el).textContent=count+" input lines → "+lines.length+" result lines";
 };
+$("#ls-reuse",el).onclick=()=>{$("#ls-in",el).value=$("#ls-out",el).value;run();$("#ls-in",el).focus();};
 el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",el).onclick=e=>copy($("#ls-out",el).value,e.target);run();
 }},
 
