@@ -483,7 +483,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 {id: "timestamp-converter", cat: "advanced", name: "Unix timestamp converter", desc: "Convert Unix time to dates and back.",
  ui: `<div class="out" style="margin:0 0 20px"><p class="sub">Current Unix time</p><p class="big mono" id="tn" style="font-family:var(--mono)"></p></div>
   <label for="tu">Unix timestamp (seconds or milliseconds)</label><input id="tu" class="mono" inputmode="numeric"><label for="tu-unit" style="margin-top:12px">Timestamp unit</label><select id="tu-unit"><option value="auto">Auto-detect</option><option value="seconds">Seconds</option><option value="milliseconds">Milliseconds</option></select><p id="tuo" class="note" aria-live="polite"></p>
-  <label for="td" style="margin-top:20px">Date and time (your time zone)</label><input id="td" type="datetime-local" step="1"><p id="tdo" class="note" aria-live="polite"></p>`,
+  <label for="td" style="margin-top:20px">Date and time</label><input id="td" type="datetime-local" step="1"><label for="td-zone" style="margin-top:12px">Interpret date in</label><select id="td-zone"><option value="local">Your local time zone</option><option value="utc">UTC</option></select><p id="tdo" class="note" aria-live="polite"></p>`,
  init(el) {
   const tick = () => $("#tn", el).textContent = Math.floor(Date.now() / 1000);
   tick(); const iv = setInterval(tick, 1000); cleanup = () => clearInterval(iv);
@@ -499,7 +499,8 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     if (!Number.isFinite(d.getTime())) { o.textContent = "Timestamp is outside the supported date range."; return; }
     o.innerHTML = `Interpreted as ${ms ? "milliseconds" : "seconds"}.<br>Local: <b>${d.toLocaleString("en-GB", {dateStyle:"full",timeStyle:"medium"})}</b><br>UTC (ISO 8601): <b>${d.toISOString()}</b>`;
   };
-  const fromD = () => { const v = $("#td", el).value; $("#tdo", el).innerHTML = v ? `Unix time: <b>${Math.floor(new Date(v).getTime() / 1000)}</b>` : ""; };
+  const fromD = () => { const v = $("#td", el).value, o = $("#tdo", el); if (!v) { o.textContent = ""; return; } const utc = $("#td-zone", el).value === "utc", ms = new Date(v + (utc ? "Z" : "")).getTime(); o.textContent = Number.isFinite(ms) ? `Unix time: ${Math.floor(ms / 1000)} seconds · ${utc ? "UTC" : "Local time"}` : "Enter a valid date and time."; };
+  $("#td-zone", el).addEventListener("change", fromD);
   $("#tu-unit", el).addEventListener("change", fromU); $("#tu", el).addEventListener("input", fromU); $("#td", el).addEventListener("input", fromD); fromU();
  }},
 {id: "colour-converter", cat: "advanced", name: "Colour converter", desc: "Convert HEX or RGB input to HEX, RGB and HSL.",
