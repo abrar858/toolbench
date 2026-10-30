@@ -419,16 +419,18 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 /* ---------- ADVANCED ---------- */
 {id: "json-formatter", cat: "advanced", name: "JSON formatter", desc: "Format, minify and check JSON for errors.",
  ui: `<label for="jt">JSON</label><textarea id="jt" class="mono" style="min-height:260px" placeholder='{"name":"Abrar","tools":20}'></textarea>
-  <label for="ji">Indentation</label><select id="ji"><option value="2">2 spaces</option><option value="4">4 spaces</option><option value="tab">Tabs</option></select><div class="btns"><button class="primary" data-j="f">Format</button><button data-j="m">Minify</button><button data-j="v">Validate only</button><button data-j="c">Copy</button></div><p id="jm" aria-live="polite"></p>`,
+  <label for="ji">Indentation</label><select id="ji"><option value="2">2 spaces</option><option value="4">4 spaces</option><option value="tab">Tabs</option></select><div class="btns"><button class="primary" data-j="f">Format</button><button data-j="m">Minify</button><button data-j="v">Validate only</button><button data-j="u" disabled>Undo formatting</button><button data-j="c">Copy</button></div><p id="jm" aria-live="polite"></p>`,
  init(el) {
-  const t = $("#jt", el), m = $("#jm", el);
-  t.addEventListener("input", () => { m.textContent = ""; m.className = ""; });
+  const t = $("#jt", el), m = $("#jm", el), undo = $('[data-j="u"]', el);
+  let previous = null;
+  t.addEventListener("input", () => { previous = null; undo.disabled = true; m.textContent = ""; m.className = ""; });
   el.addEventListener("click", e => {
     const a = e.target.dataset.j; if (!a) return;
     if (a === "c") return copy(t.value, e.target);
+    if (a === "u") { if (previous !== null) { t.value = previous; previous = null; undo.disabled = true; m.className = "ok"; m.textContent = "Original JSON text restored."; } return; }
     try {
       const parsed = JSON.parse(t.value);
-      if (a !== "v") { const indent = $("#ji", el).value; t.value = JSON.stringify(parsed, null, a === "f" ? (indent === "tab" ? "\t" : Number(indent)) : 0); }
+      if (a !== "v") { previous = t.value; undo.disabled = false; const indent = $("#ji", el).value; t.value = JSON.stringify(parsed, null, a === "f" ? (indent === "tab" ? "\t" : Number(indent)) : 0); }
       m.className = "ok"; m.textContent = a === "v" ? "Valid JSON. Your original text is unchanged." : "Valid JSON";
     }
     catch (err) { m.className = "err"; m.textContent = "Invalid JSON: " + err.message; }
