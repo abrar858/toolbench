@@ -519,10 +519,10 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     const input = hex.trim();
     let h = input.replace(/^#/, "");
     if (/^rgb/i.test(input)) {
-      const match = /^rgb\( *([0-9]+) *, *([0-9]+) *, *([0-9]+) *\)$/i.exec(input);
+      const match = /^rgb\(\s*([0-9]+)\s*,\s*([0-9]+)\s*,\s*([0-9]+)\s*\)$/i.exec(input) || /^rgb\(\s*([0-9]+)\s+([0-9]+)\s+([0-9]+)\s*\)$/i.exec(input);
       if (!match || match.slice(1).some(v => Number(v) > 255)) {
         $("#co", el).innerHTML = ""; $("#cs", el).style.background = "transparent";
-        $("#cm", el).textContent = "Use RGB whole numbers from 0 to 255, for example rgb(30, 122, 108)."; return;
+        $("#cm", el).textContent = "Use RGB whole numbers from 0 to 255, for example rgb(30, 122, 108) or rgb(30 122 108)."; return;
       }
       h = match.slice(1).map(v => Number(v).toString(16).padStart(2, "0")).join("");
     }
