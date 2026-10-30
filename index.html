@@ -145,16 +145,17 @@ function twoWay(enc, dec, encLabel, decLabel, errMsg) {
     ui: `<label for="tw-in">Input</label><textarea id="tw-in" class="mono" placeholder="Paste text here"></textarea>
       <div class="btns"><button class="primary" data-a="e">${encLabel}</button><button data-a="d">${decLabel}</button></div>
       <label for="tw-out">Result</label><textarea id="tw-out" class="mono" readonly></textarea>
-      <div class="btns"><button data-a="c">Copy result</button></div><p class="msg" aria-live="polite"></p>`,
+      <div class="btns"><button data-a="c">Copy result</button><button data-a="r" disabled>Use result as input</button></div><p class="msg" aria-live="polite"></p>`,
     init(el) {
-      const i = $("#tw-in", el), o = $("#tw-out", el), m = $(".msg", el);
-      i.addEventListener("input", () => { o.value = ""; m.textContent = ""; m.className = "msg"; });
+      const i = $("#tw-in", el), o = $("#tw-out", el), m = $(".msg", el), reuse = $('[data-a="r"]', el);
+      i.addEventListener("input", () => { o.value = ""; reuse.disabled = true; m.textContent = ""; m.className = "msg"; });
       el.addEventListener("click", e => {
         const a = e.target.dataset.a; if (!a) return;
         if (a === "c") return copy(o.value, e.target);
+        if (a === "r") { i.value = o.value; o.value = ""; reuse.disabled = true; m.textContent = ""; m.className = "msg"; i.focus(); return; }
         m.textContent = ""; m.className = "msg";
-        try { o.value = a === "e" ? enc(i.value) : dec(i.value); }
-        catch { o.value = ""; m.textContent = errMsg; m.className = "msg err"; }
+        try { o.value = a === "e" ? enc(i.value) : dec(i.value); reuse.disabled = !o.value; }
+        catch { o.value = ""; reuse.disabled = true; m.textContent = errMsg; m.className = "msg err"; }
       });
     }
   };
