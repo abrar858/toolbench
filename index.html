@@ -471,6 +471,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     $("#uo", el).value = Array.from({length: n}, id).join("\n");
     msg.className = "note"; msg.textContent = plural(n, "UUID") + " generated on your device.";
   };
+  $("#un", el).addEventListener("input", () => { $("#uo", el).value = ""; $("#um", el).className = "note"; $("#um", el).textContent = "Choose Generate UUIDs to create a new batch."; });
   $("#ug", el).onclick = gen; $("#uc", el).onclick = e => copy($("#uo", el).value, e.target); gen();
  }},
 {id: "timestamp-converter", cat: "advanced", name: "Unix timestamp converter", desc: "Convert Unix time to dates and back.",
