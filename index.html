@@ -304,7 +304,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 {id: "case-converter", cat: "general", name: "Case converter", desc: "Switch text to UPPER, lower, Title, camelCase and more.",
  ui: `<label for="cc">Your text</label><textarea id="cc" placeholder="Type or paste text here"></textarea>
   <div class="btns"><button data-c="upper">UPPER CASE</button><button data-c="lower">lower case</button><button data-c="title">Title Case</button><button data-c="sentence">Sentence case</button><button data-c="camel">camelCase</button><button data-c="snake">snake_case</button><button data-c="kebab">kebab-case</button></div>
-  <div class="btns"><button class="primary" data-c="copy">Copy text</button></div>`,
+  <div class="btns"><button class="primary" data-c="copy">Copy text</button><button data-c="undo" disabled>Undo conversion</button></div>`,
  init(el) {
   const t = $("#cc", el);
   const words = s => s.normalize("NFC").replace(/(\p{Lu})(\p{Lu}\p{Ll})/gu, "$1 $2").replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, "$1 $2").split(/[^\p{L}\p{M}\p{N}]+/u).filter(Boolean);
@@ -316,7 +316,16 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     snake: s => words(s).map(w => w.toLowerCase()).join("_"),
     kebab: s => words(s).map(w => w.toLowerCase()).join("-")
   };
-  el.addEventListener("click", e => { const c = e.target.dataset.c; if (!c) return; if (c === "copy") copy(t.value, e.target); else t.value = f[c](t.value); });
+  let previous = null;
+  const undo = $('[data-c="undo"]', el);
+  t.addEventListener("input", () => { previous = null; undo.disabled = true; });
+  el.addEventListener("click", e => {
+    const c = e.target.dataset.c; if (!c) return;
+    if (c === "copy") return copy(t.value, e.target);
+    if (c === "undo") { if (previous !== null) t.value = previous; previous = null; undo.disabled = true; return; }
+    const result = f[c](t.value);
+    if (result !== t.value) { previous = t.value; t.value = result; undo.disabled = false; }
+  });
  }},
 {id: "password-generator", cat: "general", name: "Password generator", desc: "Strong random passwords, made on your device.",
  ui: `<label for="pl">Length: <span id="plv">16</span></label><input type="range" id="pl" min="8" max="64" value="16">
