@@ -448,11 +448,12 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 {id: "url-encoder", cat: "advanced", name: "URL encoder and decoder", desc: "Make text safe for links, or read encoded URLs.",
  ...twoWay(encodeURIComponent, s => decodeURIComponent(s.replace(/\+/g, " ")), "Encode", "Decode", "That text has a broken % sequence, so it can’t be decoded.")},
 {id: "hash-generator", cat: "advanced", name: "Hash generator", desc: "SHA-1, SHA-256, SHA-384 and SHA-512 hashes.",
- ui: `<label for="ht">Text to hash</label><textarea id="ht" class="mono" placeholder="Type or paste text here"></textarea><div class="out hashes" id="ho"></div>`,
+ ui: `<label for="ht">Text to hash</label><textarea id="ht" class="mono" placeholder="Type or paste text here"></textarea><label class="check"><input id="hash-upper" type="checkbox"> Uppercase hexadecimal</label><div class="out hashes" id="ho"></div>`,
  init(el) {
   const algs = ["SHA-1", "SHA-256", "SHA-384", "SHA-512"], o = $("#ho", el);
   if (!window.crypto || !crypto.subtle) { o.innerHTML = `<p class="err">Hashing needs the site to be opened over https.</p>`; return; }
   o.innerHTML = algs.map(a => `<div><label>${a}</label><code data-h="${a}"></code><button data-copy="${a}">Copy ${a}</button></div>`).join("");
+  $("#hash-upper", el).addEventListener("change", () => { algs.forEach(a => { const code = $(`[data-h="${a}"]`, el); code.textContent = $("#hash-upper", el).checked ? code.textContent.toUpperCase() : code.textContent.toLowerCase(); }); });
   let revision = 0;
   const run = async () => {
     const current = ++revision, d = new TextEncoder().encode($("#ht", el).value);
@@ -460,7 +461,8 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     for (const a of algs) {
       const h = await crypto.subtle.digest(a, d);
       if (current !== revision) return;
-      $(`[data-h="${a}"]`, el).textContent = [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, "0")).join("");
+      const hex = [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, "0")).join("");
+      $(`[data-h="${a}"]`, el).textContent = $("#hash-upper", el).checked ? hex.toUpperCase() : hex;
     }
   };
   o.addEventListener("click", e => { const a = e.target.dataset.copy; if (a) copy($(`[data-h="${a}"]`, el).textContent, e.target); });
