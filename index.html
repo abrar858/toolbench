@@ -329,7 +329,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     toggle: s => [...s].map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join(""),
     title: s => s.toLowerCase().replace(/(^|\s)(\S)/g, (m, a, b) => a + b.toUpperCase()),
     sentence: s => s.toLowerCase().replace(/(^\s*\S|[.!?]\s+\S)/g, c => c.toUpperCase()),
-    camel: s => words(s).map((w, i) => i ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w.toLowerCase()).join(""),
+    camel: s => words(s).map((w, i) => i ? [...w][0].toUpperCase() + [...w].slice(1).join("").toLowerCase() : w.toLowerCase()).join(""),
     pascal: s => words(s).map(w => { const [first, ...rest] = [...w]; return first.toUpperCase() + rest.join("").toLowerCase(); }).join(""),
     snake: s => words(s).map(w => w.toLowerCase()).join("_"),
     kebab: s => words(s).map(w => w.toLowerCase()).join("-")
