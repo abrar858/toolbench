@@ -143,7 +143,7 @@ let cleanup = null;
 function twoWay(enc, dec, encLabel, decLabel, errMsg) {
   return {
     ui: `<label for="tw-in">Input</label><textarea id="tw-in" class="mono" placeholder="Paste text here"></textarea>
-      <div class="btns"><button class="primary" data-a="e">${encLabel}</button><button data-a="d">${decLabel}</button></div>
+      <div class="btns"><button class="primary" data-a="e">${encLabel}</button><button data-a="d">${decLabel}</button><button data-a="clear">Clear text</button></div>
       <label for="tw-out">Result</label><textarea id="tw-out" class="mono" readonly></textarea>
       <div class="btns"><button data-a="c">Copy result</button><button data-a="r" disabled>Use result as input</button></div><p class="msg" aria-live="polite"></p>`,
     init(el) {
@@ -152,6 +152,7 @@ function twoWay(enc, dec, encLabel, decLabel, errMsg) {
       el.addEventListener("click", e => {
         const a = e.target.dataset.a; if (!a) return;
         if (a === "c") return copy(o.value, e.target);
+        if (a === "clear") { i.value = ""; o.value = ""; reuse.disabled = true; m.textContent = ""; m.className = "msg"; i.focus(); return; }
         if (a === "r") { i.value = o.value; o.value = ""; reuse.disabled = true; m.textContent = ""; m.className = "msg"; i.focus(); return; }
         m.textContent = ""; m.className = "msg";
         try { o.value = a === "e" ? enc(i.value) : dec(i.value); reuse.disabled = !o.value; }
