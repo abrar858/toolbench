@@ -204,7 +204,7 @@ if(raw===""||!Number.isInteger(br)||br<0||br>1440){o.textContent="Enter a whole 
 const total=b-a+(($("#dur-next",el).checked||b<a)?1440:0);
 if(total>1440){o.textContent="Maximum shift is 24 hours. Check the next-day option.";return;}
 if(br>total){o.textContent="Break cannot exceed shift duration.";return;}
-const n=total-br;o.innerHTML='<p class="big">'+plural(Math.floor(n/60),"hour")+' '+plural(n%60,"minute")+'</p><p class="sub">'+(n/60).toFixed(2)+' decimal hours after breaks</p><p class="sub">Total shift: '+plural(Math.floor(total/60),"hour")+' '+plural(total%60,"minute")+' · Break: '+plural(br,"minute")+'</p>';
+const n=total-br;o.innerHTML='<p class="big">'+plural(Math.floor(n/60),"hour")+' '+plural(n%60,"minute")+'</p><p class="sub">'+(n/60).toFixed(2)+' decimal hours after breaks · '+plural(n,"minute")+' total</p><p class="sub">Total shift: '+plural(Math.floor(total/60),"hour")+' '+plural(total%60,"minute")+' · Break: '+plural(br,"minute")+'</p>';
 };el.addEventListener("input",run);el.addEventListener("change",run);run();
 }},
 
