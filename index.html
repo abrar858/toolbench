@@ -235,12 +235,13 @@ const input = $("#ls-in",el).value;
 let lines = input ? input.split(/\r\n|\n|\r/) : [];
 const count = lines.length;
 if ($("#ls-trim",el).checked) lines = lines.map(s=>s.trim()).filter(Boolean);
+const beforeDuplicates = lines.length;
 if ($("#ls-unique",el).checked) { const seen = new Set(); lines = lines.filter(s=>{let k=$("#ls-case",el).checked?s.toLowerCase():s;if($("#ls-normalize",el).checked)k=k.normalize("NFC");if(seen.has(k))return false;seen.add(k);return true;}); }
 const order=$("#ls-order",el).value;
 if(order==="reverse") lines.reverse();
 else if(order==="short"||order==="long") lines.sort((a,b)=>(order==="long"?-1:1)*([...a].length-[...b].length));
 else if(order!=="keep"){const cmp=new Intl.Collator("en-GB",{numeric:true});lines.sort((a,b)=>(order==="desc"?-1:1)*cmp.compare(a,b));}
-$("#ls-reuse",el).disabled=!lines.join("\n");$("#ls-out",el).value=lines.join("\n");$("#ls-count",el).textContent=count+" input lines → "+lines.length+" result lines";
+$("#ls-reuse",el).disabled=!lines.join("\n");$("#ls-out",el).value=lines.join("\n");$("#ls-count",el).textContent=count+" input lines → "+lines.length+" result lines · "+plural(beforeDuplicates-lines.length,"duplicate")+" removed";
 };
 $("#ls-reuse",el).onclick=()=>{$("#ls-in",el).value=$("#ls-out",el).value;run();$("#ls-in",el).focus();};
 el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",el).onclick=e=>copy($("#ls-out",el).value,e.target);run();
