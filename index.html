@@ -307,7 +307,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
  }},
 
 {id: "word-counter", cat: "general", name: "Word counter", desc: "Count words, characters, sentences and reading time.",
- ui: `<label for="wc">Your text</label><textarea id="wc" placeholder="Type or paste text here"></textarea><label for="wc-speed">Reading speed (words per minute)</label><select id="wc-speed"><option value="100">100 — slower reading</option><option value="200" selected>200 — standard estimate</option><option value="300">300 — faster reading</option></select><div class="out stats" id="wcs" aria-live="polite"></div>`,
+ ui: `<label for="wc">Your text</label><textarea id="wc" placeholder="Type or paste text here"></textarea><label for="wc-speed">Reading speed (words per minute)</label><select id="wc-speed"><option value="100">100 — slower reading</option><option value="200" selected>200 — standard estimate</option><option value="300">300 — faster reading</option></select><label for="wc-speaking">Speaking speed (words per minute)</label><select id="wc-speaking"><option value="100">100 — slower speaking</option><option value="130" selected>130 — standard estimate</option><option value="160">160 — faster speaking</option></select><div class="out stats" id="wcs" aria-live="polite"></div>`,
  init(el) {
   const t = $("#wc", el), o = $("#wcs", el);
   const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(undefined, {granularity: "grapheme"}) : null;
@@ -316,9 +316,9 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     const s = t.value, words = (s.trim().match(/\S+/g) || []).length;
     const sent = s.split(/[.!?]+/).filter(part => /[\p{L}\p{N}]/u.test(part)).length;
     o.innerHTML = stats([[words, "Words"], [s ? s.split(/\r\n|\n|\r/).length : 0, "Lines (including blank lines)"], [characters(s), "Characters"], [new TextEncoder().encode(s).length, "UTF-8 bytes"], [characters(s.replace(/\s/g, "")), "Without spaces"], [sent, "Sentences"],
-      [s.split(/\n\s*\n/).filter(p => p.trim()).length, "Paragraphs"], [Math.ceil(words / Number($("#wc-speed", el).value)) + " min", "Reading time"], [Math.ceil(words / 130) + " min", "Speaking time (130 words/min)"]]);
+      [s.split(/\n\s*\n/).filter(p => p.trim()).length, "Paragraphs"], [Math.ceil(words / Number($("#wc-speed", el).value)) + " min", "Reading time"], [Math.ceil(words / Number($("#wc-speaking", el).value)) + " min", "Speaking time (" + $("#wc-speaking", el).value + " words/min)"]]);
   };
-  t.addEventListener("input", run); $("#wc-speed", el).addEventListener("change", run); run();
+  t.addEventListener("input", run); $("#wc-speed", el).addEventListener("change", run); $("#wc-speaking", el).addEventListener("change", run); run();
  }},
 {id: "case-converter", cat: "general", name: "Case converter", desc: "Switch text to UPPER, lower, Title, camelCase and more.",
  ui: `<label for="cc">Your text</label><textarea id="cc" placeholder="Type or paste text here"></textarea>
