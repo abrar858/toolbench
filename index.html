@@ -267,7 +267,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
    const wholeWeeks = Math.floor(days / 7), remainder = days % 7;
    let weekdays = wholeWeeks * 5;
    for (let i = 0; i < remainder; i++) { const day = new Date(a + i * 86400000).getUTCDay(); if (day !== 0 && day !== 6) weekdays++; }
-   o.innerHTML = '<p class="sub">' + plural(weekdays,"weekday") + ' (Monday–Friday)</p>' + '<p class="big">' + plural(days,"day") + '</p><p class="sub">' + plural(Math.floor(days/7),"week") + ' and ' + plural(days%7,"day") + '</p>';
+   o.innerHTML = '<p class="sub">' + plural(weekdays,"weekday") + ' (Monday–Friday) · ' + plural(days-weekdays,"weekend day") + '</p>' + '<p class="big">' + plural(days,"day") + '</p><p class="sub">' + plural(Math.floor(days/7),"week") + ' and ' + plural(days%7,"day") + '</p>';
   };
   $("#dd-swap",el).onclick = () => { const a = $("#dd-start",el), b = $("#dd-end",el); [a.value,b.value] = [b.value,a.value]; run(); };
   el.addEventListener("input",run); el.addEventListener("change",run); run();
