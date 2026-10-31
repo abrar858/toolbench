@@ -315,9 +315,10 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   const characters = text => segmenter ? [...segmenter.segment(text)].length : [...text].length;
   const run = () => {
     const s = t.value, words = (s.trim().match(/\S+/g) || []).length;
+    const speakingSeconds = Math.ceil(words * 60 / Number($("#wc-speaking", el).value));
     const sent = s.split(/[.!?]+/).filter(part => /[\p{L}\p{N}]/u.test(part)).length;
     o.innerHTML = stats([[words, "Words"], [s ? s.split(/\r\n|\n|\r/).length : 0, "Lines (including blank lines)"], [characters(s), "Characters"], [new TextEncoder().encode(s).length, "UTF-8 bytes"], [characters(s.replace(/\s/g, "")), "Without spaces"], [sent, "Sentences"],
-      [s.split(/\n\s*\n/).filter(p => p.trim()).length, "Paragraphs"], [Math.ceil(words / Number($("#wc-speed", el).value)) + " min", "Reading time"], [Math.ceil(words / Number($("#wc-speaking", el).value)) + " min", "Speaking time (" + $("#wc-speaking", el).value + " words/min)"]]);
+      [s.split(/\n\s*\n/).filter(p => p.trim()).length, "Paragraphs"], [Math.ceil(words / Number($("#wc-speed", el).value)) + " min", "Reading time"], [Math.floor(speakingSeconds / 60) + " min " + (speakingSeconds % 60) + " sec", "Speaking time (" + $("#wc-speaking", el).value + " words/min)"]]);
   };
   t.addEventListener("input", run); $("#wc-speed", el).addEventListener("change", run); $("#wc-speaking", el).addEventListener("change", run); run();
  }},
