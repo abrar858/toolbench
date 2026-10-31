@@ -217,7 +217,7 @@ if(![w,h,target].every(n=>Number.isInteger(n)&&n>0&&n<=1000000)){o.innerHTML='<p
 const gcd=(a,b)=>b?gcd(b,a%b):a,g=gcd(w,h),byWidth=$("#ar-side",el).value==="width";
 const nw=byWidth?target:Math.round(target*w/h),nh=byWidth?Math.round(target*h/w):target;
 if(nw<1||nh<1){o.innerHTML='<p class="err">This size would round a dimension to zero. Choose a larger size.</p>';return;}
-o.innerHTML='<p class="big">'+(w/g)+':'+(h/g)+'</p><p class="sub">Original aspect ratio</p><p class="big" style="margin-top:16px">'+nw+' × '+nh+'</p><p class="sub">New width × height in pixels</p>';
+o.innerHTML='<p class="big">'+(w/g)+':'+(h/g)+'</p><p class="sub">Original aspect ratio</p><p class="big" style="margin-top:16px">'+nw+' × '+nh+'</p><p class="sub">New width × height in pixels</p><p class="sub">Scale: '+nf(target/(byWidth?w:h)*100,2)+'% of original · '+(target<(byWidth?w:h)?'Reduction':target>(byWidth?w:h)?'Enlargement':'Original size')+'</p>';
 };
 $("#ar-preset",el).onchange=()=>{const v=$("#ar-preset",el).value;if(v){const [w,h]=v.split(",");$("#ar-w",el).value=w;$("#ar-h",el).value=h;run();}};
 ["#ar-w","#ar-h"].forEach(s=>$(s,el).addEventListener("input",()=>{$("#ar-preset",el).value="";}));
