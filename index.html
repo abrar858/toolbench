@@ -525,7 +525,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   $("#td-zone", el).addEventListener("change", fromD);
   $("#tu-unit", el).addEventListener("change", fromU); $("#tu", el).addEventListener("input", fromU); $("#td", el).addEventListener("input", fromD); fromU();
  }},
-{id: "colour-converter", cat: "advanced", name: "Colour converter", desc: "Convert HEX or RGB input to HEX, RGB and HSL.",
+{id: "colour-converter", cat: "advanced", name: "Colour converter", desc: "Convert HEX or RGB input to HEX, RGB, HSL and its inverse colour.",
  ui: `<div class="row" style="align-items:end"><div><label for="cp">Pick a colour</label><input type="color" id="cp" value="#1e7a6c"></div><div><label for="ch">Or type HEX or RGB</label><input id="ch" class="mono" value="#1e7a6c"></div></div>
   <div class="swatch" id="cs"></div><div id="co"></div><p id="cm" class="err" aria-live="polite"></p>`,
  init(el) {
@@ -547,7 +547,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     const R = r / 255, G = g / 255, B = b / 255, mx = Math.max(R, G, B), mn = Math.min(R, G, B), l = (mx + mn) / 2, dd = mx - mn;
     let hh = 0, s = 0;
     if (dd) { s = dd / (1 - Math.abs(2 * l - 1)); hh = mx === R ? ((G - B) / dd) % 6 : mx === G ? (B - R) / dd + 2 : (R - G) / dd + 4; hh = Math.round(hh * 60 + 360) % 360; }
-    const vals = {HEX: "#" + h.toLowerCase(), RGB: `rgb(${r}, ${g}, ${b})`, HSL: `hsl(${hh}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`};
+    const vals = {HEX: "#" + h.toLowerCase(), RGB: `rgb(${r}, ${g}, ${b})`, HSL: `hsl(${hh}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`, Inverse: "#" + [r,g,b].map(v => (255-v).toString(16).padStart(2,"0")).join("")};
     $("#cs", el).style.background = vals.HEX; $("#cp", el).value = vals.HEX;
     $("#co", el).innerHTML = Object.entries(vals).map(([k, v]) => `<div class="kv"><b>${k}</b><code>${v}</code><button data-v="${v}">Copy</button></div>`).join("");
   };
