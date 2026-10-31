@@ -163,6 +163,7 @@ function twoWay(enc, dec, encLabel, decLabel, errMsg) {
 
 const UNITS = {
   "Data size": {Bytes: 1, Kilobytes: 1000, Megabytes: 1000000, Gigabytes: 1000000000, Terabytes: 1000000000000, Kibibytes: 1024, Mebibytes: 1048576, Gibibytes: 1073741824, Tebibytes: 1099511627776},
+  Pressure: {Pascals: 1, Kilopascals: 1000, Bar: 100000, Millibar: 100, PSI: 6894.757293168},
   Time: {Milliseconds: .001, Seconds: 1, Minutes: 60, Hours: 3600, Days: 86400, Weeks: 604800},
   Area: {"Square millimetres": .000001, "Square centimetres": .0001, "Square metres": 1, Hectares: 10000, "Square kilometres": 1000000, "Square inches": .00064516, "Square feet": .09290304, "Square yards": .83612736, Acres: 4046.8564224, "Square miles": 2589988.110336},
   Length: {Millimetres: .001, Centimetres: .01, Metres: 1, Kilometres: 1000, Inches: .0254, Feet: .3048, Yards: .9144, Miles: 1609.344},
@@ -364,7 +365,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   el.addEventListener("input", gen); $("#pg", el).onclick = gen;
   $("#pc", el).onclick = e => copy($("#po", el).textContent, e.target); gen();
  }},
-{id: "unit-converter", cat: "general", name: "Unit converter", desc: "Data size, time, area, length, weight, volume, temperature and speed.",
+{id: "unit-converter", cat: "general", name: "Unit converter", desc: "Data size, pressure, time, area, length, weight, volume, temperature and speed.",
  ui: `<div class="row"><div><label for="ucat">Measure</label><select id="ucat"></select></div><div><label for="uv">Value</label><input id="uv" inputmode="decimal" value="1"></div></div>
   <div class="row"><div><label for="uf">From</label><select id="uf"></select></div><div><label for="ut">To</label><select id="ut"></select></div></div>
   <button id="usw">Swap units</button><p class="note">Data size: decimal kilo/mega/giga/tera use powers of 1,000; binary kibi/mebi/gibi/tebi use powers of 1,024. All data units here measure bytes, not bits.</p><div class="out"><p class="big" id="ur" aria-live="polite"></p></div>`,
