@@ -443,7 +443,8 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     try {
       const parsed = JSON.parse(t.value);
       if (a !== "v") { previous = t.value; undo.disabled = false; const indent = $("#ji", el).value; t.value = JSON.stringify(parsed, null, a === "f" ? (indent === "tab" ? "\t" : Number(indent)) : 0); }
-      m.className = "ok"; m.textContent = a === "v" ? "Valid JSON. Your original text is unchanged." : "Valid JSON";
+      const detail = Array.isArray(parsed) ? `Array: ${plural(parsed.length, "item")}` : parsed === null ? "Root value: null" : typeof parsed === "object" ? `Object: ${plural(Object.keys(parsed).length, "key")}` : `Root value: ${typeof parsed}`;
+      m.className = "ok"; m.textContent = (a === "v" ? "Valid JSON. Your original text is unchanged. " : "Valid JSON. ") + detail + ".";
     }
     catch (err) { m.className = "err"; m.textContent = "Invalid JSON: " + err.message; }
   });
