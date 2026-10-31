@@ -514,7 +514,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     if (!Number.isFinite(d.getTime())) { o.textContent = "Timestamp is outside the supported date range."; return; }
     o.innerHTML = `Interpreted as ${ms ? "milliseconds" : "seconds"}.<br>Local: <b>${d.toLocaleString("en-GB", {dateStyle:"full",timeStyle:"medium"})}</b><br>UTC (ISO 8601): <b>${d.toISOString()}</b>`;
   };
-  const fromD = () => { const v = $("#td", el).value, o = $("#tdo", el); if (!v) { o.textContent = ""; return; } const utc = $("#td-zone", el).value === "utc", ms = new Date(v + (utc ? "Z" : "")).getTime(); o.textContent = Number.isFinite(ms) ? `Unix time: ${Math.floor(ms / 1000)} seconds · ${utc ? "UTC" : "Local time"}` : "Enter a valid date and time."; };
+  const fromD = () => { const v = $("#td", el).value, o = $("#tdo", el); if (!v) { o.textContent = ""; return; } const utc = $("#td-zone", el).value === "utc", ms = new Date(v + (utc ? "Z" : "")).getTime(); o.textContent = Number.isFinite(ms) ? `Unix time: ${Math.floor(ms / 1000)} seconds · ${ms} milliseconds · ${utc ? "UTC" : "Local time"}` : "Enter a valid date and time."; };
   $("#td-zone", el).addEventListener("change", fromD);
   $("#tu-unit", el).addEventListener("change", fromU); $("#tu", el).addEventListener("input", fromU); $("#td", el).addEventListener("input", fromD); fromU();
  }},
