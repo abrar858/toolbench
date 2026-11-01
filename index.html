@@ -376,21 +376,24 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 {id: "unit-converter", cat: "general", name: "Unit converter", desc: "Power, energy, data size, angles, pressure, time, area, length, weight, volume, temperature and speed.",
  ui: `<div class="row"><div><label for="ucat">Measure</label><select id="ucat"></select></div><div><label for="uv">Value</label><input id="uv" inputmode="decimal" value="1"></div></div>
   <div class="row"><div><label for="uf">From</label><select id="uf"></select></div><div><label for="ut">To</label><select id="ut"></select></div></div>
-  <button id="usw">Swap units</button><p class="note">Data size: decimal kilo/mega/giga/tera use powers of 1,000; binary kibi/mebi/gibi/tebi use powers of 1,024. All data units here measure bytes, not bits.</p><div class="out"><p class="big" id="ur" aria-live="polite"></p></div>`,
+  <div class="btns"><button id="usw">Swap units</button><button id="unit-copy" disabled>Copy conversion</button></div><p class="note">Data size: decimal kilo/mega/giga/tera use powers of 1,000; binary kibi/mebi/gibi/tebi use powers of 1,024. All data units here measure bytes, not bits.</p><div class="out"><p class="big" id="ur" aria-live="polite"></p></div>`,
  init(el) {
   const c = $("#ucat", el), f = $("#uf", el), t = $("#ut", el);
   const formatUnit = n => n !== 0 && (Math.abs(n) < 0.000001 || Math.abs(n) >= 1e12) ? n.toExponential(6) : n.toLocaleString("en-GB", {maximumSignificantDigits: 10});
   c.innerHTML = Object.keys(UNITS).map(k => `<option>${k}</option>`).join("");
   const fill = () => { const o = Object.keys(UNITS[c.value]).map(k => `<option>${k}</option>`).join(""); f.innerHTML = o; t.innerHTML = o; t.selectedIndex = 1; };
   const run = () => {
+    $("#unit-copy", el).disabled = true;
     const raw = $("#uv", el).value.trim();
     const v = Number(raw);
     if (!raw || !Number.isFinite(v)) return $("#ur", el).textContent = "Enter a valid number.";
     if (c.value === "Temperature" && toC[f.value](v) < -273.150000001) return $("#ur", el).textContent = "Temperature cannot be below absolute zero.";
     const r = c.value === "Temperature" ? fromC[t.value](toC[f.value](v)) : v * UNITS[c.value][f.value] / UNITS[c.value][t.value];
     if (!Number.isFinite(r)) return $("#ur", el).textContent = "Result is too large. Try a smaller value.";
+    $("#unit-copy", el).disabled = false;
     $("#ur", el).textContent = `${formatUnit(v)} ${f.value.toLowerCase()} = ${formatUnit(r)} ${t.value.toLowerCase()}`;
   };
+  $("#unit-copy", el).onclick = e => copy($("#ur", el).textContent, e.target);
   c.onchange = () => { fill(); run(); };
   $("#usw", el).onclick = () => { const a = f.value; f.value = t.value; t.value = a; run(); };
   el.addEventListener("input", run); el.addEventListener("change", run); fill(); run();
