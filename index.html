@@ -148,6 +148,39 @@ footer p{margin:4px 0}
  .tool h1,.tool .lede,.tool .panel,.tool .related,.popular,.search,.cats{animation:none!important}
  .popular-links a,.cat li a,.related a,.panel button,.top nav a{transition:none!important}
 }
+
+/* Workflow illustration: static by default, animated only when motion is allowed */
+.flow-showcase{margin:28px 0 8px;padding:24px;border:1px solid var(--line);border-radius:18px;background:var(--surface);overflow:hidden}
+.flow-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.flow-eyebrow{font:700 .7rem var(--body);letter-spacing:.12em;color:var(--teal)}
+.flow-head h2{font:800 clamp(1.2rem,3vw,1.6rem)/1.2 var(--head);margin:8px 0}
+.flow-head p{margin:0;color:var(--muted);font-size:.92rem}
+.flow-live{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-size:.76rem;color:var(--muted);border:1px solid var(--line);padding:6px 10px;border-radius:99px}
+.flow-live-dot{height:7px;width:7px;border-radius:50%;background:var(--teal)}
+.flow-track{display:grid;grid-template-columns:minmax(0,1fr) 65px minmax(0,1fr) 65px minmax(0,1fr);align-items:center;gap:8px;margin-top:24px}
+.flow-node{min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:12px 4px}
+.flow-node-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--field);border:1px solid var(--line);font-size:1.45rem;color:var(--teal);margin-bottom:4px}
+.flow-node strong{font-size:.88rem;line-height:1.3}
+.flow-node small{font-size:.75rem;color:var(--muted)}
+.flow-connector{width:100%;height:24px;overflow:visible}
+.flow-line{fill:none;stroke:var(--line);stroke-width:2;stroke-linecap:round}
+.flow-pulse{fill:none;stroke:var(--teal);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:8 98;stroke-dashoffset:0}
+@media(prefers-reduced-motion:no-preference){
+ .flow-pulse{animation:tb-flow 1.8s linear infinite}
+ .flow-pulse-delay{animation-delay:-.9s}
+ .flow-node-icon{transition:transform .22s var(--motion-ease),border-color .22s}
+ .flow-node:hover .flow-node-icon{transform:translateY(-3px);border-color:var(--teal)}
+}
+@media(prefers-reduced-motion:reduce){.flow-pulse{animation:none;stroke-dasharray:none;opacity:.35}}
+@media(max-width:640px){
+ .flow-showcase{padding:18px 14px;margin:20px 0 4px}
+ .flow-head{flex-direction:column;gap:10px}
+ .flow-track{grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr) 22px minmax(0,1fr);gap:2px;margin-top:16px}
+ .flow-node{padding:6px 0}
+ .flow-node-icon{width:36px;height:36px;font-size:1.1rem}
+ .flow-node strong{font-size:.72rem}
+ .flow-node small{font-size:.64rem}
+}
 </style>
 </head>
 <body>
@@ -718,6 +751,16 @@ function showHome(scrollTo) {
     <h1>Free tools that work in your browser.</h1>
     <p class="lede">Calculators, converters and developer utilities. No sign-up, no adverts in your way, and nothing you type leaves your device.</p>
     <p class="note">Private by design: tools run locally in your browser. Some fonts load from Google Fonts. Financial estimates are not professional advice.</p>
+    <section class="flow-showcase" aria-label="How Toolbench works">
+      <div class="flow-head"><div><span class="flow-eyebrow">YOUR WORKFLOW, SIMPLIFIED</span><h2>Pick a tool. Get your answer.</h2><p>Fast, private utilities that work right in your browser.</p></div><span class="flow-live"><span class="flow-live-dot"></span> Browser powered</span></div>
+      <div class="flow-track" role="img" aria-label="Three-step workflow: choose a tool, enter your information, and get a result in your browser">
+        <div class="flow-node"><span class="flow-node-icon" aria-hidden="true">⌕</span><strong>Choose a tool</strong><small>Explore 24 utilities</small></div>
+        <svg class="flow-connector" viewBox="0 0 110 24" preserveAspectRatio="none" aria-hidden="true"><path class="flow-line" d="M2 12 H108"/><path class="flow-pulse" d="M2 12 H108"/></svg>
+        <div class="flow-node"><span class="flow-node-icon" aria-hidden="true">✎</span><strong>Enter details</strong><small>Processed locally</small></div>
+        <svg class="flow-connector" viewBox="0 0 110 24" preserveAspectRatio="none" aria-hidden="true"><path class="flow-line" d="M2 12 H108"/><path class="flow-pulse flow-pulse-delay" d="M2 12 H108"/></svg>
+        <div class="flow-node"><span class="flow-node-icon" aria-hidden="true">✓</span><strong>See results</strong><small>Instant feedback</small></div>
+      </div>
+    </section>
     <section aria-label="Popular tools" class="popular"><h2>Popular tools</h2><div class="popular-links"><a href="uk-take-home-pay-calculator.html">UK take-home pay calculator</a><a href="loan-repayment-calculator.html">Loan repayment calculator</a><a href="word-counter.html">Word counter</a><a href="password-generator.html">Password generator</a></div></section>
     <div class="search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="Find a tool, e.g. loan, password, JSON" aria-label="Find a tool" autocomplete="off"></div>
