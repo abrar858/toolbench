@@ -584,8 +584,8 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   <p class="note">2026/27 tax year rates for England, Wales and Northern Ireland: £12,570 personal allowance, 20% / 40% / 45% income tax, 8% / 2% employee National Insurance. Pension is treated as taken before tax. Doesn’t include student loans, Scottish rates or tax code adjustments.</p>`,
  init(el) {
   const run = () => {
-    const g = num($("#sg", el).value), pc = num($("#sp", el).value) || 0, o = $("#so", el);
-    if (!isFinite(g) || g < 0) return o.innerHTML = `<p class="err">Enter your yearly salary before tax.</p>`;
+    const g = num($("#sg", el).value), pc = num($("#sp", el).value), o = $("#so", el);
+    if (!Number.isFinite(g) || g < 0 || !Number.isFinite(pc) || pc < 0 || pc > 100) return o.innerHTML = `<p class="err">Enter a valid salary and pension percentage from 0 to 100.</p>`;
     const r = ukPay(g, pc), row = (l, v, c = "") => `<tr class="${c}"><td>${l}</td><td>${gbp(v)}</td><td>${gbp(v / 12)}</td><td>${gbp(v / 52)}</td></tr>`;
     o.innerHTML = `<p class="big">${gbp(r.net / 12)} a month</p><p class="sub">Your take-home pay after tax, NI and pension</p>
       <div class="tablewrap" style="margin-top:14px"><table><tr><th></th><th>Year</th><th>Month</th><th>Week</th></tr>
@@ -598,8 +598,8 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   <div class="row"><div><label for="ly">Years</label><input id="ly" type="number" min="0" value="5"></div><div><label for="lm">Extra months</label><input id="lm" type="number" min="0" max="11" value="0"></div></div><div class="out" id="lo"></div>`,
  init(el) {
   const run = () => {
-    const P = num($("#la", el).value), r = (num($("#lr", el).value) || 0) / 1200, n = (+$("#ly", el).value || 0) * 12 + (+$("#lm", el).value || 0), o = $("#lo", el);
-    if (!(P > 0) || !(n > 0)) return o.innerHTML = `<p class="err">Enter an amount and a term longer than zero.</p>`;
+    const P = num($("#la", el).value), apr = num($("#lr", el).value), r = apr / 1200, years = Number($("#ly", el).value), months = Number($("#lm", el).value), n = years * 12 + months, o = $("#lo", el);
+    if (!(P > 0) || !Number.isFinite(apr) || apr < 0 || !Number.isInteger(years) || years < 0 || !Number.isInteger(months) || months < 0 || months > 11 || !(n > 0) || n > 1200) return o.innerHTML = `<p class="err">Enter a positive amount, non-negative APR, and a term of 1–1,200 months (extra months 0–11).</p>`;
     const pay = r ? P * r / (1 - Math.pow(1 + r, -n)) : P / n;
     o.innerHTML = `<p class="big">${gbp(pay)} a month</p><p class="sub">for ${dur(n)}</p>
       <div class="stats" style="margin-top:14px">${stats([[gbp(pay * n), "Total repaid"], [gbp(pay * n - P), "Total interest"]])}</div>`;
@@ -626,10 +626,11 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
  ui: `<div class="row"><div><label for="db">Balance owed (£)</label><input id="db" inputmode="decimal" value="3000"></div><div><label for="dr">Interest rate (APR %)</label><input id="dr" inputmode="decimal" value="24.9"></div><div><label for="dp">Monthly payment (£)</label><input id="dp" inputmode="decimal" value="150"></div></div><div class="out" id="do"></div>`,
  init(el) {
   const run = () => {
-    const b = num($("#db", el).value), r = (num($("#dr", el).value) || 0) / 1200, p = num($("#dp", el).value), o = $("#do", el);
-    if (!(b > 0) || !(p > 0)) return o.innerHTML = `<p class="err">Enter a balance and a monthly payment.</p>`;
+    const b = num($("#db", el).value), apr = num($("#dr", el).value), r = apr / 1200, p = num($("#dp", el).value), o = $("#do", el);
+    if (!(b > 0) || !(p > 0) || !Number.isFinite(apr) || apr < 0) return o.innerHTML = `<p class="err">Enter a positive balance and payment with a non-negative APR.</p>`;
     if (p <= b * r) return o.innerHTML = `<p class="err">A payment of ${gbp(p)} doesn’t cover the first month’s interest of ${gbp(b * r)}, so the balance would keep growing. Try a higher payment.</p>`;
-    const a = payoff(b, r, p), x = payoff(b, r, p + 50), d = new Date(); d.setMonth(d.getMonth() + a.months);
+    const a = payoff(b, r, p), x = payoff(b, r, p + 50), d = new Date();
+     if (a.months >= 1200) return o.innerHTML = `<p class="err">At this payment, payoff takes 100 years or more. Try a larger payment.</p>`; d.setMonth(d.getMonth() + a.months);
     o.innerHTML = `<p class="big">Debt-free in ${dur(a.months)}</p><p class="sub">around ${d.toLocaleDateString("en-GB", {month: "long", year: "numeric"})}</p>
       <div class="stats" style="margin-top:14px">${stats([[gbp(a.interest), "Total interest"], [gbp(b + a.interest), "Total paid"]])}</div>
       <p class="note">Paying ${gbp(p + 50)} a month instead clears it ${dur(a.months - x.months)} sooner and saves ${gbp(a.interest - x.interest)} in interest.</p>`;
@@ -641,8 +642,8 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   <div class="row"><label class="check"><input type="radio" name="vm" value="add" checked> Add VAT to this amount</label><label class="check"><input type="radio" name="vm" value="rem"> Remove VAT from this amount</label></div><div class="out" id="vto"></div>`,
  init(el) {
   const run = () => {
-    const a = num($("#va", el).value), t = (num($("#vt", el).value) || 0) / 100, add = $("[name=vm]:checked", el).value === "add", o = $("#vto", el);
-    if (!isFinite(a)) return o.innerHTML = `<p class="err">Enter an amount.</p>`;
+    const a = num($("#va", el).value), rate = num($("#vt", el).value), t = rate / 100, add = $("[name=vm]:checked", el).value === "add", o = $("#vto", el);
+    if (!Number.isFinite(a) || !Number.isFinite(rate) || rate <= -100) return o.innerHTML = `<p class="err">Enter a valid amount and VAT rate above -100%.</p>`;
     const net = add ? a : a / (1 + t), gross = add ? a * (1 + t) : a;
     o.innerHTML = `<div class="stats">${stats([[gbp(net), "Before VAT"], [gbp(gross - net), "VAT"], [gbp(gross), "Including VAT"]])}</div>`;
   };
