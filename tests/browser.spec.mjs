@@ -22,7 +22,7 @@ test('search filters the tool list',async ({page})=>{
  await page.goto('/');
  await page.locator('#q').fill('password');
  await expect(page.locator('a[href="#password-generator"]')).toBeVisible();
- await expect(page.locator('a[href="#loan-calculator"]')).toHaveCount(0);
+ await expect(page.locator('a[href="#loan-calculator"]')).toBeHidden();
 });
 test('salary calculator displays a result and rejects invalid pension',async ({page})=>{
  await page.goto('/#take-home-pay');
