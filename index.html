@@ -122,6 +122,7 @@ footer p{margin:4px 0}
 <footer><div class="wrap">
   <p>Every tool runs in your browser. Nothing you type is uploaded or stored.</p>
   <p>Finance results are estimates for guidance only, not financial advice.</p>
+  <p><a href="privacy.html">Privacy</a> · <a href="about.html">About Toolbench</a></p>
   <p>© <span id="yr"></span> <span class="sn">Toolbench</span></p>
 </div></footer>
 
@@ -611,9 +612,9 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   <div class="row"><div><label for="vr">Interest rate (AER %)</label><input id="vr" inputmode="decimal" value="4"></div><div><label for="vy">Years</label><input id="vy" type="number" min="1" max="50" value="10"></div></div><div class="out" id="vo"></div>`,
  init(el) {
   const run = () => {
-    const s = num($("#vs", el).value) || 0, d = num($("#vm", el).value) || 0, y = Math.min(50, +$("#vy", el).value || 0), o = $("#vo", el);
-    const r = Math.pow(1 + (num($("#vr", el).value) || 0) / 100, 1 / 12) - 1;
-    if (!(y > 0)) return o.innerHTML = `<p class="err">Enter how many years you’ll save for.</p>`;
+    const s = num($("#vs", el).value), d = num($("#vm", el).value), y = Number($("#vy", el).value), aer = num($("#vr", el).value), o = $("#vo", el);
+    if (![s, d, y, aer].every(Number.isFinite) || s < 0 || d < 0 || aer <= -100 || !Number.isInteger(y) || y < 1 || y > 50) return o.innerHTML = `<p class="err">Enter non-negative amounts, an AER above -100%, and 1–50 whole years.</p>`;
+    const r = Math.pow(1 + aer / 100, 1 / 12) - 1;
     let bal = s, rows = "";
     for (let i = 1; i <= y; i++) { for (let m = 0; m < 12; m++) bal = bal * (1 + r) + d; const dep = s + d * 12 * i; rows += `<tr><td>Year ${i}</td><td>${gbp(dep)}</td><td>${gbp(bal - dep)}</td><td>${gbp(bal)}</td></tr>`; }
     const dep = s + d * 12 * y;
