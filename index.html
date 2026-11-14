@@ -108,6 +108,7 @@ footer p{margin:4px 0}
 :focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 @media (max-width:560px){.panel{padding:18px;box-shadow:4px 4px 0 var(--accent)}.search input{font-size:1.05rem}h1{margin-top:28px}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+.popular{margin:30px 0 0}.popular h2{font:700 1.2rem var(--head);margin:0 0 12px}.popular-links{display:flex;flex-wrap:wrap;gap:10px}.popular-links a{display:inline-block;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;text-decoration:none;font-size:.95rem}.popular-links a:hover,.popular-links a:focus-visible{border-color:var(--ink);text-decoration:underline}
 </style>
 </head>
 <body>
@@ -678,6 +679,7 @@ function showHome(scrollTo) {
     <h1>Free tools that work in your browser.</h1>
     <p class="lede">Calculators, converters and developer utilities. No sign-up, no adverts in your way, and nothing you type leaves your device.</p>
     <p class="note">Private by design: tools run locally in your browser. Some fonts load from Google Fonts. Financial estimates are not professional advice.</p>
+    <section aria-label="Popular tools" class="popular"><h2>Popular tools</h2><div class="popular-links"><a href="uk-take-home-pay-calculator.html">UK take-home pay calculator</a><a href="loan-repayment-calculator.html">Loan repayment calculator</a><a href="word-counter.html">Word counter</a><a href="password-generator.html">Password generator</a></div></section>
     <div class="search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="Find a tool, e.g. loan, password, JSON" aria-label="Find a tool" autocomplete="off"></div>
     <p id="search-status" class="note" role="status" aria-live="polite"></p><div class="cats">${CATS.map(c => { const t = TOOLS.filter(x => x.cat === c.id); return `<section class="cat" data-cat="${c.id}">
