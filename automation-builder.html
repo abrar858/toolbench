@@ -3,11 +3,32 @@
 <style>
 :root{font-family:system-ui,-apple-system,sans-serif;color-scheme:dark;--bg:#0e192b;--surface:#16233a;--line:#34435b;--text:#e7edf6;--muted:#9aacc6;--teal:#4cc2ae}
 *{box-sizing:border-box}body{background:var(--bg);color:var(--text);margin:0;font-size:15px;line-height:1.5}header,main,footer{max-width:1120px;margin:auto;padding:20px}header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}a{color:var(--teal)}h1{font-size:clamp(1.8rem,4vw,2.6rem);margin:12px 0}h2{font-size:1.1rem;margin:0 0 12px}.sub{color:var(--muted)}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,1fr);gap:18px}.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}.canvas{display:flex;flex-direction:column;align-items:stretch;gap:0}.node{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px}.node.active{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal)}.node-icon{background:#204b53;color:var(--teal);width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:20px}.node strong{display:block}.node small{color:var(--muted)}.connector{height:29px;display:flex;justify-content:center;align-items:center;color:var(--teal)}.connector:before{content:'';height:100%;border-left:2px dashed var(--teal)}button,select,input,textarea{font:inherit}button{background:#24415b;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px 12px;cursor:pointer;min-height:40px}button:hover{border-color:var(--teal)}button.primary{background:#0f766e;border-color:#0f766e;color:white}button.danger{color:#ffb2a8}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--teal);outline-offset:2px}label{display:block;font-weight:600;margin:12px 0 6px}input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);width:100%;padding:10px}textarea{min-height:120px;resize:vertical}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--bg);padding:14px;border-radius:9px;max-height:340px;overflow:auto}#log{font-size:.88rem}.status{padding:10px 12px;border:1px solid var(--line);border-radius:9px;margin:12px 0;color:var(--muted)}.note{font-size:.87rem;color:var(--muted)}.actions{display:flex;flex-wrap:wrap;gap:6px}.actions button{padding:6px 9px;min-height:34px}footer{color:var(--muted);font-size:.85rem}@media(max-width:760px){.layout{grid-template-columns:1fr}header,main,footer{padding:15px}}@media(prefers-reduced-motion:no-preference){.node{transition:border-color .18s,transform .18s}.node:hover{transform:translateY(-1px)}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* Draggable n8n-style node canvas */
+.graph-viewport{position:relative;height:480px;overflow:auto;background-color:#0d1828;background-image:radial-gradient(#354963 1px,transparent 1px);background-size:22px 22px;border:1px solid var(--line);border-radius:12px;overscroll-behavior:contain}
+.graph{position:relative;width:1400px;height:900px;transform-origin:top left}
+.graph-nodes,.wires{position:absolute;inset:0;width:100%;height:100%}
+.wires{pointer-events:none;overflow:visible}
+.graph-node{position:absolute;width:205px;min-height:110px;background:#192c43;border:1px solid #42607c;border-radius:12px;box-shadow:0 8px 20px #0004;overflow:hidden;user-select:none}
+.graph-node.active{border:2px solid var(--teal);box-shadow:0 0 0 3px #4cc2ae26,0 10px 25px #0005}
+.graph-node-top{display:flex;align-items:center;gap:10px;padding:13px 10px;cursor:grab;touch-action:none}
+.graph-node-top:active{cursor:grabbing}
+.graph-node-top strong{font-size:.82rem;line-height:1.25}.graph-node-top small{display:block;font-size:.7rem;color:var(--muted)}
+.graph-node .node-icon{width:33px;height:33px;flex-shrink:0;font-size:14px}
+.graph-node .actions{border-top:1px solid var(--line);padding:7px;gap:4px}
+.graph-node .actions button{min-height:30px;padding:4px 7px;font-size:.7rem}
+.wire{fill:none;stroke:#667f9a;stroke-width:3;stroke-linecap:round}
+.wire-active{fill:none;stroke:var(--teal);stroke-width:3.5;stroke-dasharray:9 22;stroke-linecap:round}
+.canvas-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+.canvas-toolbar button{min-width:40px}.canvas-toolbar .note{margin-left:auto}
+@media(prefers-reduced-motion:no-preference){.wire-active{animation:wire-flow 1.3s linear infinite}@keyframes wire-flow{to{stroke-dashoffset:-62}}}
+@media(prefers-reduced-motion:reduce){.wire-active{stroke-dasharray:none;opacity:.35}}
+@media(max-width:760px){.graph-viewport{height:410px}.canvas-toolbar .note{width:100%;margin:0}}
 </style></head><body>
 <header><a href="./">🧰 Toolbench</a><a href="./">← All tools</a></header>
 <main><h1>Automation Builder</h1><p class="sub">Build a workflow, connect steps and run it in your browser. No account, server or subscription required.</p>
 <div class="toolbar"><select id="addType" aria-label="Step to add"><option value="uppercase">Uppercase text</option><option value="lowercase">Lowercase text</option><option value="trim">Trim whitespace</option><option value="replace">Find and replace</option><option value="prefix">Add prefix</option><option value="suffix">Add suffix</option><option value="split">Split into lines</option><option value="join">Join lines</option><option value="jsonParse">Parse JSON</option><option value="jsonStringify">Format JSON</option><option value="urlEncode">URL encode</option><option value="urlDecode">URL decode</option><option value="base64Encode">Base64 encode</option><option value="base64Decode">Base64 decode</option><option value="wordCount">Count words</option></select><button id="add">+ Add step</button><button id="export">Export workflow</button><button id="import">Import workflow</button><input id="file" type="file" accept="application/json,.json" hidden><button id="reset" class="danger">Reset</button></div>
-<div class="layout"><section class="panel"><h2>Workflow canvas</h2><label for="source">Input data</label><textarea id="source" placeholder="Enter text or JSON to process">Hello from Toolbench!</textarea><div id="nodes" class="canvas" aria-label="Connected workflow steps"></div><p class="note">Steps run top to bottom. Use the arrows to change their order. Select a step to configure it.</p></section>
+<div class="layout"><section class="panel"><h2>Workflow canvas</h2><label for="source">Input data</label><textarea id="source" placeholder="Enter text or JSON to process">Hello from Toolbench!</textarea><div class="canvas-toolbar"><button id="zoomOut" aria-label="Zoom out">−</button><span id="zoomLabel">100%</span><button id="zoomIn" aria-label="Zoom in">+</button><button id="fit">Fit view</button><span class="note">Drag nodes to arrange</span></div><div id="viewport" class="graph-viewport" aria-label="Interactive workflow canvas"><div id="graph" class="graph"><svg id="wires" class="wires" aria-hidden="true"></svg><div id="nodes" class="graph-nodes"></div></div></div><p class="note">Drag nodes to arrange the canvas. Connections indicate execution order. Use the arrows to change execution order. Select a node to configure it.</p></section>
 <section><div class="panel"><h2>Step settings</h2><div id="editor"><p class="note">Select a workflow step to configure it.</p></div></div><div class="panel" style="margin-top:18px"><h2>Run workflow</h2><button id="run" class="primary">▶ Run now</button><button id="copy">Copy output</button><div class="status" id="status" role="status" aria-live="polite">Ready to run</div><label for="output">Output</label><pre id="output" tabindex="0"></pre><h2>Execution log</h2><pre id="log" tabindex="0"></pre></div></section></div>
 <p class="note">Privacy: inputs and workflows are processed locally. Workflow settings are saved in this browser's local storage. Imported workflows contain only supported transformation steps; no arbitrary code runs. This is not a hosted n8n server: no background schedules, external webhooks or account integrations.</p></main><footer>Toolbench · Browser-only workflow builder · <a href="privacy.html">Privacy</a></footer>
 <script>
@@ -27,21 +48,50 @@ function validate(arr){
  });
 }
 function persist(){try{localStorage.setItem(key,JSON.stringify(steps))}catch{}}
+let zoom=1;
+const positions=new Map();
+const graphWidth=1400,graphHeight=900;
+function positionFor(step,i){if(!positions.has(step.id))positions.set(step.id,{x:80+i*250,y:260+(i%2)*80});return positions.get(step.id)}
+function drawWires(){
+ const svg=$('#wires');svg.replaceChildren();svg.setAttribute('viewBox','0 0 '+graphWidth+' '+graphHeight);
+ for(let i=1;i<steps.length;i++){
+  const a=positionFor(steps[i-1],i-1),b=positionFor(steps[i],i);
+  const x1=a.x+205,y1=a.y+55,x2=b.x,y2=b.y+55;
+  const dx=Math.max(45,Math.abs(x2-x1)*.48);
+  const d='M'+x1+' '+y1+' C'+(x1+dx)+' '+y1+','+(x2-dx)+' '+y2+','+x2+' '+y2;
+  const ns='http://www.w3.org/2000/svg';
+  const path=document.createElementNS(ns,'path');path.setAttribute('d',d);path.setAttribute('class','wire');svg.append(path);
+  const pulse=document.createElementNS(ns,'path');pulse.setAttribute('d',d);pulse.setAttribute('class','wire-active');svg.append(pulse);
+ }
+}
 function render(){
  const container=$('#nodes');container.replaceChildren();
+ const existing=new Set(steps.map(x=>x.id));for(const id of positions.keys())if(!existing.has(id))positions.delete(id);
  steps.forEach((step,i)=>{
-  if(i){const connector=document.createElement('div');connector.className='connector';connector.setAttribute('aria-hidden','true');container.append(connector)}
-  const node=document.createElement('div');node.className='node'+(selected===step.id?' active':'');
-  const ico=document.createElement('span');ico.className='node-icon';ico.textContent=i+1;
-  const detail=document.createElement('div');const title=document.createElement('strong');title.textContent=names[step.type];const caption=document.createElement('small');caption.textContent='Step '+(i+1);detail.append(title,caption);
+  const pos=positionFor(step,i);
+  const node=document.createElement('div');node.className='graph-node'+(selected===step.id?' active':'');node.style.left=pos.x+'px';node.style.top=pos.y+'px';
+  const top=document.createElement('div');top.className='graph-node-top';
+  const icon=document.createElement('span');icon.className='node-icon';icon.textContent=i+1;
+  const label=document.createElement('div');const name=document.createElement('strong');name.textContent=names[step.type];const sub=document.createElement('small');sub.textContent='Action · Step '+(i+1);label.append(name,sub);top.append(icon,label);
   const actions=document.createElement('div');actions.className='actions';
-  for(const [label,fn,disabled] of [['Edit',()=>{selected=step.id;render()},false],['↑',()=>move(i,-1),i===0],['↓',()=>move(i,1),i===steps.length-1],['×',()=>remove(i),false]]){
-   const b=document.createElement('button');b.type='button';b.textContent=label;b.disabled=disabled;b.setAttribute('aria-label',label+' '+names[step.type]);b.onclick=fn;actions.append(b)
+  for(const [txt,fn,disabled] of [['Configure',()=>{selected=step.id;render()},false],['↑',()=>move(i,-1),i===0],['↓',()=>move(i,1),i===steps.length-1],['×',()=>remove(i),false]]){
+   const btn=document.createElement('button');btn.type='button';btn.textContent=txt;btn.disabled=disabled;btn.setAttribute('aria-label',txt+' '+names[step.type]);btn.onclick=fn;actions.append(btn);
   }
-  node.append(ico,detail,actions);container.append(node);
+  node.append(top,actions);
+  node.onclick=e=>{if(e.target.closest('button'))return;selected=step.id;document.querySelectorAll('.graph-node').forEach(n=>n.classList.remove('active'));node.classList.add('active');renderEditor()};
+  top.style.touchAction='none';
+  top.addEventListener('pointerdown',e=>{
+   if(e.button!==0)return;e.preventDefault();top.setPointerCapture(e.pointerId);
+   const startX=e.clientX,startY=e.clientY,originX=pos.x,originY=pos.y;
+   const onMove=ev=>{pos.x=Math.max(5,Math.min(graphWidth-210,originX+(ev.clientX-startX)/zoom));pos.y=Math.max(5,Math.min(graphHeight-125,originY+(ev.clientY-startY)/zoom));node.style.left=pos.x+'px';node.style.top=pos.y+'px';drawWires()};
+   const onEnd=()=>{top.removeEventListener('pointermove',onMove);top.removeEventListener('pointerup',onEnd);top.removeEventListener('pointercancel',onEnd)};
+   top.addEventListener('pointermove',onMove);top.addEventListener('pointerup',onEnd);top.addEventListener('pointercancel',onEnd);
+  });
+  container.append(node);
  });
- renderEditor();persist();
+ drawWires();renderEditor();persist();
 }
+function setZoom(value){zoom=Math.max(.5,Math.min(1.5,value));$('#graph').style.transform='scale('+zoom+')';$('#zoomLabel').textContent=Math.round(zoom*100)+'%'}
 function move(i,d){const j=i+d;if(j<0||j>=steps.length)return;[steps[i],steps[j]]=[steps[j],steps[i]];render()}
 function remove(i){steps.splice(i,1);if(!steps.some(x=>x.id===selected))selected=steps[0]?.id;render()}
 function renderEditor(){
@@ -73,6 +123,9 @@ function transform(value,step){
   default:throw Error('Unknown step');
  }
 }
+$('#zoomIn').onclick=()=>setZoom(zoom+.1);
+$('#zoomOut').onclick=()=>setZoom(zoom-.1);
+$('#fit').onclick=()=>{$('#viewport').scrollTo({left:0,top:0,behavior:'smooth'});setZoom(.75)};
 $('#add').onclick=()=>{if(steps.length>=50){$('#status').textContent='Maximum 50 steps';return}const type=$('#addType').value;const step={id:'step-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),type,a:'',b:''};steps.push(step);selected=step.id;render()};
 $('#run').onclick=()=>{
  let value=$('#source').value;const log=[];$('#output').textContent='';
@@ -87,5 +140,5 @@ $('#import').onclick=()=>$('#file').click();
 $('#file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>100000)throw Error('File exceeds 100 KB');const obj=JSON.parse(await file.text());if(obj.version!==1)throw Error('Unsupported workflow version');steps=validate(obj.steps);selected=steps[0]?.id;render();$('#status').textContent='Workflow imported'}catch(err){$('#status').textContent='Import failed: '+err.message}e.target.value=''};
 $('#reset').onclick=()=>{if(!confirm('Reset your workflow to its default steps?'))return;steps=defaults.map(x=>({...x}));selected=steps[0].id;render();$('#status').textContent='Workflow reset'};
 try{const saved=localStorage.getItem(key);if(saved){steps=validate(JSON.parse(saved));selected=steps[0]?.id}}catch{steps=defaults.map(x=>({...x}));selected=steps[0].id}
-render();
+render();setZoom(.85);
 </script></body></html>
