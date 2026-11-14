@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Toolbench: free online tools that run in your browser</title>
 <meta name="description" content="Free online tools: word counter, password generator, unit converter, JSON formatter, UK take-home pay, loan and savings calculators. Nothing is uploaded.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#0B2545">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Toolbench">
+<meta property="og:title" content="Toolbench — free private browser tools">
+<meta property="og:description" content="Free calculators, converters and developer tools. Run everything in your browser with no sign-up.">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Toolbench","applicationCategory":"UtilitiesApplication","operatingSystem":"Any modern browser","isAccessibleForFree":true,"description":"Free browser-based calculators, converters and developer utilities."}</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,6 +25,12 @@
 :root[data-theme="dark"]{--bg:#0E192B;--surface:#16233A;--ink:#E7EDF6;--muted:#9AAAC2;--line:#2A3B57;--teal:#4CC2AE;--err:#FF8A80;--field:#0E192B;color-scheme:dark}
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.55 var(--body)}
+html{scroll-behavior:smooth}
+[hidden]{display:none!important}
+button,input,select,textarea{max-width:100%}
+button{min-height:44px}
+@media(max-width:560px){.top nav{gap:12px;font-size:.9rem}.cats{grid-template-columns:minmax(0,1fr);gap:20px}.row{grid-template-columns:minmax(0,1fr)}.wrap{padding:0 16px}.panel{overflow-wrap:anywhere}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 a{color:inherit}
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;flex-wrap:wrap}
@@ -180,10 +194,10 @@ const toC = {Celsius: x => x, Fahrenheit: x => (x - 32) * 5 / 9, Kelvin: x => x 
 const fromC = {Celsius: c => c, Fahrenheit: c => c * 9 / 5 + 32, Kelvin: c => c + 273.15};
 
 function ukPay(gross, pct) {
-  const pen = gross * pct / 100, inc = gross - pen;
+  const pen = gross * pct / 100, inc = gross - pen; // Assumes pension reduces taxable pay but not NI pay (net-pay arrangement).
   const pa = inc > 100000 ? Math.max(0, 12570 - (inc - 100000) / 2) : 12570;
   const ti = Math.max(0, inc - pa);
-  const tax = Math.min(ti, 37700) * .2 + Math.max(0, Math.min(ti, 125140) - 37700) * .4 + Math.max(0, ti - 125140) * .45;
+  const tax = Math.min(ti, 37700) * .2 + Math.max(0, Math.min(ti - 37700, 87440)) * .4 + Math.max(0, ti - 125140) * .45; // England/Wales/Northern Ireland; not Scottish income tax.
   const ni = Math.max(0, Math.min(gross, 50270) - 12570) * .08 + Math.max(0, gross - 50270) * .02;
   return {gross, pen, tax, ni, net: gross - pen - tax - ni};
 }
@@ -661,6 +675,7 @@ function showHome(scrollTo) {
   app.innerHTML = `<div class="wrap">
     <h1>Free tools that work in your browser.</h1>
     <p class="lede">Calculators, converters and developer utilities. No sign-up, no adverts in your way, and nothing you type leaves your device.</p>
+    <p class="note">Private by design: tools run locally in your browser. Some fonts load from Google Fonts. Financial estimates are not professional advice.</p>
     <div class="search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="Find a tool, e.g. loan, password, JSON" aria-label="Find a tool" autocomplete="off"></div>
     <p id="search-status" class="note" role="status" aria-live="polite"></p><div class="cats">${CATS.map(c => { const t = TOOLS.filter(x => x.cat === c.id); return `<section class="cat" data-cat="${c.id}">
@@ -686,6 +701,8 @@ function showTool(t) {
     <h1>${t.name}</h1><p class="lede">${t.desc}</p><div class="panel">${t.ui}</div>
     <div class="related"><h2>More tools</h2><ul>${rel.map(x => `<li><a href="#${x.id}">${x.name}</a></li>`).join("")}</ul></div></div>`;
   t.init($(".panel"));
+  // Keep the tool title programmatically focusable for keyboard and screen-reader navigation.
+  const heading = $(".tool h1"); heading.tabIndex = -1;
   window.scrollTo(0, 0);
 }
 
@@ -693,6 +710,7 @@ function route() {
   if (cleanup) { cleanup(); cleanup = null; }
   const id = location.hash.slice(1), t = TOOLS.find(x => x.id === id);
   if (t) showTool(t); else showHome(CATS.some(c => c.id === id) ? id : null);
+  if (t && location.hash) $(".tool h1").focus({preventScroll:true});
 }
 $("#siteName").textContent = SITE; $$(".sn").forEach(s => s.textContent = SITE);
 $("#yr").textContent = new Date().getFullYear();
