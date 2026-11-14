@@ -40,3 +40,13 @@ test('financial calculators reject invalid negative rates',()=>{
  assert.match(script,/aer <= -100/);
  assert.match(script,/rate <= -100/);
 });
+
+test('homepage links to dedicated searchable tool pages',()=>{
+ for(const path of ['uk-take-home-pay-calculator.html','loan-repayment-calculator.html','word-counter.html','password-generator.html']) {
+  assert.ok(html.includes('href="'+path+'"'), 'Missing link: '+path);
+  const page=readFileSync(new URL('../'+path,import.meta.url),'utf8');
+  assert.match(page,/<title>[^<]+<\/title>/);
+  assert.match(page,/<meta name="description"/);
+  assert.match(page,/<iframe[^>]+title=/);
+ }
+});
