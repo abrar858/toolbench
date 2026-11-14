@@ -124,6 +124,30 @@ footer p{margin:4px 0}
 @media(max-width:360px){.popular-links{grid-template-columns:minmax(0,1fr)}}
 
 .popular{margin:30px 0 0}.popular h2{font:700 1.2rem var(--head);margin:0 0 12px}.popular-links{display:flex;flex-wrap:wrap;gap:10px}.popular-links a{display:inline-block;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;text-decoration:none;font-size:.95rem}.popular-links a:hover,.popular-links a:focus-visible{border-color:var(--ink);text-decoration:underline}
+
+/* Toolbench motion system: restrained Notion-style surfaces and n8n-style flow */
+:root{--motion-ease:cubic-bezier(.22,1,.36,1);--motion-fast:140ms;--motion-normal:220ms}
+@keyframes tb-enter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tb-flow{to{stroke-dashoffset:-24}}
+@media(prefers-reduced-motion:no-preference){
+ .tool h1,.tool .lede,.tool .panel,.tool .related,.popular,.search,.cats{animation:tb-enter 320ms var(--motion-ease) both}
+ .tool .panel{animation-delay:45ms}
+ .cats{animation-delay:65ms}
+ .popular{animation-delay:40ms}
+ .popular-links a,.cat li a,.related a,.panel button,.top nav a{
+  transition:transform var(--motion-fast) var(--motion-ease),box-shadow var(--motion-normal) var(--motion-ease),border-color var(--motion-fast) ease,background-color var(--motion-fast) ease;
+ }
+ .panel button:active{transform:scale(.975)}
+}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+ .popular-links a:hover,.related a:hover{transform:translateY(-2px);box-shadow:0 5px 14px rgba(0,0,0,.09)}
+ .cat li a:hover{transform:translateX(3px)}
+ .panel button:hover{transform:translateY(-1px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .tool h1,.tool .lede,.tool .panel,.tool .related,.popular,.search,.cats{animation:none!important}
+ .popular-links a,.cat li a,.related a,.panel button,.top nav a{transition:none!important}
+}
 </style>
 </head>
 <body>
