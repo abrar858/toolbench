@@ -30,3 +30,13 @@ test('password generation uses secure randomness',()=>{
  assert.match(script,/crypto\.getRandomValues/);
  assert.doesNotMatch(script,/Math\.random\(/);
 });
+
+test('privacy and about pages are linked from the home page',()=>{
+ assert.match(html,/href="privacy\.html"/);
+ assert.match(html,/href="about\.html"/);
+});
+test('financial calculators reject invalid negative rates',()=>{
+ assert.match(script,/apr < 0/);
+ assert.match(script,/aer <= -100/);
+ assert.match(script,/rate <= -100/);
+});
