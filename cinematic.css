@@ -1,0 +1,20 @@
+/* Toolbench cinematic design shared by standalone pages */
+:root{--tb-bg:#0e192b;--tb-surface:#16263b;--tb-ink:#e7edf6;--tb-muted:#9aacc2;--tb-line:#30465c;--tb-teal:#4cc2ae;color-scheme:dark}
+html{scroll-behavior:smooth}
+body{background:var(--tb-bg)!important;color:var(--tb-ink)!important;background-image:radial-gradient(ellipse at 100% 0%,#4cc2ae12,transparent 45%)!important;font-family:system-ui,-apple-system,sans-serif!important}
+header{border-bottom:1px solid var(--tb-line);max-width:1120px!important;padding:24px 20px!important}
+header a:first-child{font-weight:800;text-decoration:none;font-size:1.2rem}
+main{max-width:1120px!important;padding:45px 20px!important}
+main>h1{font-size:clamp(2.5rem,6vw,4.7rem)!important;line-height:1.04!important;letter-spacing:-.05em;max-width:16ch;margin:22px 0!important}
+main>h1:before{content:"TOOLBENCH  /  EXPLORE";display:block;font-size:.7rem;letter-spacing:.18em;color:var(--tb-teal);font-weight:800;margin-bottom:22px}
+main>p:first-of-type,.sub{color:var(--tb-muted)!important;font-size:1.1rem;line-height:1.7;max-width:60ch}
+a{color:var(--tb-teal)!important}
+.panel,main section,main article{border-radius:20px}
+.panel{background:var(--tb-surface)!important;border:1px solid var(--tb-line)!important;box-shadow:0 18px 55px #0003!important}
+iframe{border-radius:16px!important;border:1px solid var(--tb-line)!important;background:var(--tb-bg)!important}
+main h2{font-size:clamp(1.4rem,3vw,2rem);letter-spacing:-.03em}
+footer{border-top:1px solid var(--tb-line);color:var(--tb-muted)!important;padding:35px 20px!important}
+button{border-radius:11px}
+@media(prefers-reduced-motion:no-preference){main>h1{animation:tb-page-enter .7s cubic-bezier(.22,1,.36,1) both}@keyframes tb-page-enter{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*{animation:none!important;transition:none!important}}
+@media(max-width:600px){main{padding:25px 16px!important}header{padding:18px 16px!important}main>h1{font-size:2.55rem!important}}
