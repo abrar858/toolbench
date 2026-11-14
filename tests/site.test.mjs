@@ -50,3 +50,10 @@ test('homepage links to dedicated searchable tool pages',()=>{
   assert.match(page,/<iframe[^>]+title=/);
  }
 });
+
+test('workflow illustration is accessible and supports reduced motion',()=>{
+ assert.match(html,/class="flow-showcase"/);
+ assert.match(html,/aria-label="Three-step workflow:/);
+ assert.match(html,/prefers-reduced-motion:reduce/);
+ assert.match(html,/\.flow-pulse\{animation:none/);
+});
