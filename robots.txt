@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://abrar858.github.io/toolbench/sitemap.xml
