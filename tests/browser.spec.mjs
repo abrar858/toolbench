@@ -49,3 +49,19 @@ test('mobile layout has no horizontal document overflow',async ({page})=>{
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1);
  expect(overflow).toBe(false);
 });
+
+test('automation builder runs connected transformations and exports workflows',async ({page})=>{
+ await page.goto('/automation-builder.html');
+ await expect(page.locator('#nodes .node')).toHaveCount(2);
+ await page.locator('#run').click();
+ await expect(page.locator('#output')).toHaveText('HELLO FROM TOOLBENCH!');
+ await expect(page.locator('#status')).toContainText('Success');
+ await page.locator('#addType').selectOption('suffix');
+ await page.locator('#add').click();
+ await expect(page.locator('#nodes .node')).toHaveCount(3);
+ await page.locator('#editor input').fill(' TEST');
+ await page.locator('#run').click();
+ await expect(page.locator('#output')).toHaveText('HELLO FROM TOOLBENCH! TEST');
+ await page.reload();
+ await expect(page.locator('#nodes .node')).toHaveCount(3);
+});
