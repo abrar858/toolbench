@@ -52,8 +52,8 @@ test('homepage links to dedicated searchable tool pages',()=>{
 });
 
 test('workflow illustration is accessible and supports reduced motion',()=>{
- assert.match(html,/class="flow-showcase"/);
- assert.match(html,/aria-label="Three-step workflow:/);
+ assert.match(html,/class="builder-promo"/);
+ assert.match(html,/href="automation-builder.html"/);
  assert.match(html,/prefers-reduced-motion:reduce/);
  assert.match(html,/\.flow-pulse\{animation:none/);
 });
