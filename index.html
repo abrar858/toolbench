@@ -6,6 +6,7 @@
 <title>Toolbench: free online tools that run in your browser</title>
 <meta name="description" content="Free online tools: word counter, password generator, unit converter, JSON formatter, UK take-home pay, loan and savings calculators. Nothing is uploaded.">
 <meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://abrar858.github.io/toolbench/">
 <meta name="theme-color" content="#0B2545">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Toolbench">
@@ -108,6 +109,20 @@ footer p{margin:4px 0}
 :focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 @media (max-width:560px){.panel{padding:18px;box-shadow:4px 4px 0 var(--accent)}.search input{font-size:1.05rem}h1{margin-top:28px}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+/* Compact, balanced mobile navigation and featured tool cards */
+@media (max-width:640px){
+ .top{align-items:flex-start;gap:14px;padding:14px 0 10px}
+ .logo{font-size:1.2rem;gap:8px}
+ .top nav{width:100%;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.92rem}
+ .top nav a{padding:8px 4px}
+ .popular{margin:20px 0 0}
+ .popular-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .popular-links a{display:flex;align-items:center;padding:12px;min-width:0;line-height:1.35}
+ .cats{margin:32px 0 44px}
+ .search{margin-top:26px}
+}
+@media(max-width:360px){.popular-links{grid-template-columns:minmax(0,1fr)}}
+
 .popular{margin:30px 0 0}.popular h2{font:700 1.2rem var(--head);margin:0 0 12px}.popular-links{display:flex;flex-wrap:wrap;gap:10px}.popular-links a{display:inline-block;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;text-decoration:none;font-size:.95rem}.popular-links a:hover,.popular-links a:focus-visible{border-color:var(--ink);text-decoration:underline}
 </style>
 </head>
