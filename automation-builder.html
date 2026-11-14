@@ -24,7 +24,7 @@
 @media(prefers-reduced-motion:no-preference){.wire-active{animation:wire-flow 1.3s linear infinite}@keyframes wire-flow{to{stroke-dashoffset:-62}}}
 @media(prefers-reduced-motion:reduce){.wire-active{stroke-dasharray:none;opacity:.35}}
 @media(max-width:760px){.graph-viewport{height:410px}.canvas-toolbar .note{width:100%;margin:0}}
-</style></head><body>
+</style><link rel="stylesheet" href="cinematic.css"></head><body>
 <header><a href="./">🧰 Toolbench</a><a href="./">← All tools</a></header>
 <main><h1>Automation Builder</h1><p class="sub">Build a workflow, connect steps and run it in your browser. No account, server or subscription required.</p>
 <div class="toolbar"><select id="addType" aria-label="Step to add"><option value="uppercase">Uppercase text</option><option value="lowercase">Lowercase text</option><option value="trim">Trim whitespace</option><option value="replace">Find and replace</option><option value="prefix">Add prefix</option><option value="suffix">Add suffix</option><option value="split">Split into lines</option><option value="join">Join lines</option><option value="jsonParse">Parse JSON</option><option value="jsonStringify">Format JSON</option><option value="urlEncode">URL encode</option><option value="urlDecode">URL decode</option><option value="base64Encode">Base64 encode</option><option value="base64Decode">Base64 decode</option><option value="wordCount">Count words</option></select><button id="add">+ Add step</button><button id="export">Export workflow</button><button id="import">Import workflow</button><input id="file" type="file" accept="application/json,.json" hidden><button id="reset" class="danger">Reset</button></div>
