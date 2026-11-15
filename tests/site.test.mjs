@@ -94,3 +94,13 @@ test('custom domain and crawl configuration remain aligned',()=>{
  for(const path of ['','uk-take-home-pay-calculator.html','loan-repayment-calculator.html','word-counter.html','password-generator.html'])
   assert.ok(sitemap.includes('https://toolsbravo.com/'+path),'Sitemap missing '+path);
 });
+
+test('standalone landing page JavaScript parses without iframes',()=>{
+ for(const path of ['uk-take-home-pay-calculator.html','loan-repayment-calculator.html','word-counter.html','password-generator.html']){
+  const page=readFileSync(new URL('../'+path,import.meta.url),'utf8');
+  const js=page.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+  assert.ok(js,'Missing interactive script: '+path);
+  assert.doesNotThrow(()=>new vm.Script(js),'Invalid JavaScript: '+path);
+  assert.doesNotMatch(page,/<iframe\b/i,'Iframe remains: '+path);
+ }
+});
