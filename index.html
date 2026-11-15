@@ -3,17 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Toolbench: free online tools that run in your browser</title>
+<title>ToolsBravo: free online tools that run in your browser</title>
 <meta name="description" content="Free online tools: word counter, password generator, unit converter, JSON formatter, UK take-home pay, loan and savings calculators. Nothing is uploaded.">
 <meta name="robots" content="index,follow,max-image-preview:large">
-<link rel="canonical" href="https://abrar858.github.io/toolbench/">
+<link rel="canonical" href="https://toolsbravo.com/">
 <meta name="theme-color" content="#0B2545">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Toolbench">
-<meta property="og:title" content="Toolbench — free private browser tools">
+<meta property="og:site_name" content="ToolsBravo">
+<meta property="og:url" content="https://toolsbravo.com/">
+<meta property="og:title" content="ToolsBravo — free private browser tools">
 <meta property="og:description" content="Free calculators, converters and developer tools. Run everything in your browser with no sign-up.">
 <meta name="twitter:card" content="summary">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Toolbench","applicationCategory":"UtilitiesApplication","operatingSystem":"Any modern browser","isAccessibleForFree":true,"description":"Free browser-based calculators, converters and developer utilities."}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"ToolsBravo","applicationCategory":"UtilitiesApplication","operatingSystem":"Any modern browser","isAccessibleForFree":true,"description":"Free browser-based calculators, converters and developer utilities."}</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -125,7 +126,7 @@ footer p{margin:4px 0}
 
 .popular{margin:30px 0 0}.popular h2{font:700 1.2rem var(--head);margin:0 0 12px}.popular-links{display:flex;flex-wrap:wrap;gap:10px}.popular-links a{display:inline-block;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;text-decoration:none;font-size:.95rem}.popular-links a:hover,.popular-links a:focus-visible{border-color:var(--ink);text-decoration:underline}
 
-/* Toolbench motion system: restrained Notion-style surfaces and n8n-style flow */
+/* ToolsBravo motion system: restrained Notion-style surfaces and n8n-style flow */
 :root{--motion-ease:cubic-bezier(.22,1,.36,1);--motion-fast:140ms;--motion-normal:220ms}
 @keyframes tb-enter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
 @keyframes tb-flow{to{stroke-dashoffset:-24}}
@@ -320,7 +321,7 @@ footer{background:var(--surface);padding:50px 0 65px}
 <a class="skip-link" href="#app">Skip to tools</a>
 <div class="wrap">
   <header class="top">
-    <a class="logo" href="#"><i>🧰</i><span id="siteName">Toolbench</span></a>
+    <a class="logo" href="#"><i>🧰</i><span id="siteName">ToolsBravo</span></a>
     <nav aria-label="Categories"><a href="#general">General</a><a href="#advanced">Advanced</a><a href="#finance">Finance</a><a href="automation-builder.html">Automations</a></nav>
   </header>
 </div>
@@ -328,12 +329,12 @@ footer{background:var(--surface);padding:50px 0 65px}
 <footer><div class="wrap">
   <p>Every tool runs in your browser. Nothing you type is uploaded or stored.</p>
   <p>Finance results are estimates for guidance only, not financial advice.</p>
-  <p><a href="privacy.html">Privacy</a> · <a href="about.html">About Toolbench</a></p>
-  <p>© <span id="yr"></span> <span class="sn">Toolbench</span></p>
+  <p><a href="privacy.html">Privacy</a> · <a href="about.html">About ToolsBravo</a></p>
+  <p>© <span id="yr"></span> <span class="sn">ToolsBravo</span></p>
 </div></footer>
 
 <script>
-const SITE = "Toolbench"; // change this to your brand name
+const SITE = "ToolsBravo"; // change this to your brand name
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const num = v => parseFloat(String(v).replace(/[,£\s]/g, ""));
@@ -881,7 +882,7 @@ function showHome(scrollTo) {
   document.title = `${SITE}: free online tools that run in your browser`;
   $('meta[name="description"]').content = DEF_DESC;
   app.innerHTML = `<div class="wrap">
-    <section class="editorial-hero"><div class="editorial-copy"><span class="eyebrow">YOUR EVERYDAY DIGITAL WORKSPACE · FREE & PRIVATE</span><h1>Make every <em>task</em> feel effortless.</h1><p class="lede">Beautifully simple calculators, converters and smart utilities. Everything you need, right where you are.</p><div class="hero-actions"><a href="#general">Explore tools ↗</a><a href="automation-builder.html">Build a workflow →</a></div><p class="hero-note">24 free tools · No account · Browser-based</p></div><div class="hero-art" aria-label="Illustrated Toolbench workspace"><div class="art-halo"></div><div class="art-device"><div class="art-top">✳ TOOLBENCH <span>● ● ●</span></div><small>YOUR EVERYDAY TOOLKIT</small><strong>24<span>+</span></strong><p>Simple tools. Infinite possibilities.</p><div class="art-bars"><i></i><i></i><i></i><i></i><i></i></div></div><div class="art-chip chip-one">£ <span>Calculate smarter</span> ↗</div><div class="art-chip chip-two">✦ <span>Connect your work</span> ↗</div></div><a class="scroll-prompt" href="#discover">SCROLL TO DISCOVER ↓</a></section><section class="editorial-intro" id="discover"><span class="eyebrow">DESIGNED FOR THE WAY YOU WORK</span><h2>Less friction.<br><em>More flow.</em></h2><p>From a quick calculation to a connected workflow, Toolbench keeps useful things close and complications out of your way.</p></section><section class="editorial-cards" aria-label="Explore Toolbench"><a href="uk-take-home-pay-calculator.html"><span>01 / CALCULATE</span><strong>Know your numbers.</strong><p>Salaries, loans, savings and more.</p><b>Explore calculators ↗</b></a><a href="word-counter.html"><span>02 / CREATE</span><strong>Find your words.</strong><p>Count, refine and format text.</p><b>Explore writing tools ↗</b></a><a href="automation-builder.html"><span>03 / AUTOMATE</span><strong>Make work flow.</strong><p>Connect actions in a visual editor.</p><b>Open workflow builder ↗</b></a></section><p class="note">Tool inputs run locally in your browser. Some fonts load from Google Fonts. Financial results are estimates, not professional advice.</p>
+    <section class="editorial-hero"><div class="editorial-copy"><span class="eyebrow">YOUR EVERYDAY DIGITAL WORKSPACE · FREE & PRIVATE</span><h1>Make every <em>task</em> feel effortless.</h1><p class="lede">Beautifully simple calculators, converters and smart utilities. Everything you need, right where you are.</p><div class="hero-actions"><a href="#general">Explore tools ↗</a><a href="automation-builder.html">Build a workflow →</a></div><p class="hero-note">24 free tools · No account · Browser-based</p></div><div class="hero-art" aria-label="Illustrated ToolsBravo workspace"><div class="art-halo"></div><div class="art-device"><div class="art-top">✳ TOOLBENCH <span>● ● ●</span></div><small>YOUR EVERYDAY TOOLKIT</small><strong>24<span>+</span></strong><p>Simple tools. Infinite possibilities.</p><div class="art-bars"><i></i><i></i><i></i><i></i><i></i></div></div><div class="art-chip chip-one">£ <span>Calculate smarter</span> ↗</div><div class="art-chip chip-two">✦ <span>Connect your work</span> ↗</div></div><a class="scroll-prompt" href="#discover">SCROLL TO DISCOVER ↓</a></section><section class="editorial-intro" id="discover"><span class="eyebrow">DESIGNED FOR THE WAY YOU WORK</span><h2>Less friction.<br><em>More flow.</em></h2><p>From a quick calculation to a connected workflow, ToolsBravo keeps useful things close and complications out of your way.</p></section><section class="editorial-cards" aria-label="Explore ToolsBravo"><a href="uk-take-home-pay-calculator.html"><span>01 / CALCULATE</span><strong>Know your numbers.</strong><p>Salaries, loans, savings and more.</p><b>Explore calculators ↗</b></a><a href="word-counter.html"><span>02 / CREATE</span><strong>Find your words.</strong><p>Count, refine and format text.</p><b>Explore writing tools ↗</b></a><a href="automation-builder.html"><span>03 / AUTOMATE</span><strong>Make work flow.</strong><p>Connect actions in a visual editor.</p><b>Open workflow builder ↗</b></a></section><p class="note">Tool inputs run locally in your browser. Some fonts load from Google Fonts. Financial results are estimates, not professional advice.</p>
     <section aria-label="Popular tools" class="popular"><h2>Popular tools</h2><div class="popular-links"><a href="uk-take-home-pay-calculator.html">UK take-home pay calculator</a><a href="loan-repayment-calculator.html">Loan repayment calculator</a><a href="word-counter.html">Word counter</a><a href="password-generator.html">Password generator</a></div></section>
     <div class="search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="Find a tool, e.g. loan, password, JSON" aria-label="Find a tool" autocomplete="off"></div>
