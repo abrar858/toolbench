@@ -47,7 +47,7 @@ test('homepage links to dedicated searchable tool pages',()=>{
   const page=readFileSync(new URL('../'+path,import.meta.url),'utf8');
   assert.match(page,/<title>[^<]+<\/title>/);
   assert.match(page,/<meta name="description"/);
-  assert.match(page,/<iframe[^>]+title=/);
+  assert.doesNotMatch(page,/<iframe\\b/i);\n  assert.match(page,/id="standalone-tool"/);\n  assert.match(page,/tool\\.init\\(root\\)/);
  }
 });
 
