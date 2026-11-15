@@ -10,7 +10,8 @@ const dur=m=>{const y=Math.floor(m/12),r=m%12;return [y?plural(y,"year"):"",r?pl
 const stats=a=>a.map(([v,l])=>'<div class="stat"><b>'+v+'</b><span>'+l+'</span></div>').join("");
 function ukPay(gross,pct){const pen=gross*pct/100,inc=gross-pen,pa=inc>100000?Math.max(0,12570-(inc-100000)/2):12570,ti=Math.max(0,inc-pa);const tax=Math.min(ti,37700)*.2+Math.max(0,Math.min(ti-37700,87440))*.4+Math.max(0,ti-125140)*.45;const ni=Math.max(0,Math.min(gross,50270)-12570)*.08+Math.max(0,gross-50270)*.02;return {gross,pen,tax,ni,net:gross-pen-tax-ni}}
 function copy(value,btn){if(!value||!navigator.clipboard){btn.textContent="Copy unavailable";return;}navigator.clipboard.writeText(value).then(()=>{btn.textContent="Copied";},()=>{btn.textContent="Copy failed";});}
-\nconst tool={id: "word-counter", cat: "general", name: "Word counter", desc: "Count words, characters, sentences and reading time.",
+
+const tool={id: "word-counter", cat: "general", name: "Word counter", desc: "Count words, characters, sentences and reading time.",
  ui: `<label for="wc">Your text</label><textarea id="wc" placeholder="Type or paste text here"></textarea><label for="wc-speed">Reading speed (words per minute)</label><select id="wc-speed"><option value="100">100 — slower reading</option><option value="200" selected>200 — standard estimate</option><option value="300">300 — faster reading</option></select><label for="wc-speaking">Speaking speed (words per minute)</label><select id="wc-speaking"><option value="100">100 — slower speaking</option><option value="130" selected>130 — standard estimate</option><option value="160">160 — faster speaking</option></select><div class="out stats" id="wcs" aria-live="polite"></div>`,
  init(el) {
   const t = $("#wc", el), o = $("#wcs", el);
