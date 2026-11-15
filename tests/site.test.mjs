@@ -57,3 +57,40 @@ test('workflow illustration is accessible and supports reduced motion',()=>{
  assert.match(html,/prefers-reduced-motion:reduce/);
  assert.match(html,/\.flow-pulse\{animation:none/);
 });
+
+test('all 24 published tools have valid categories, UI and initializers',()=>{
+ const ids=[...script.matchAll(/\\{id:\\s*"([^"]+)"\\s*,\\s*cat:\\s*"([^"]+)"\\s*,\\s*name:\\s*"([^"]+)"\\s*,\\s*desc:/g)];
+ assert.equal(ids.length,24,'Published tool inventory changed; review coverage');
+ for(const [,id,cat,name] of ids){
+  assert.ok(['general','advanced','finance'].includes(cat),id+' has unknown category');
+  assert.ok(name.trim(),id+' has no name');
+  assert.match(script,new RegExp('id:\\s*"'+id+'"[^]*?init\\s*\\(el\\)\\s*\\{'),id+' missing initializer');
+ }
+});
+test('payoff calculator amortization examples and safety cap',()=>{
+ const code=script.match(/function payoff\\(bal, r, pay\\) \\{[\\s\\S]*?\\n\\}/)?.[0];
+ assert.ok(code);
+ const fn=vm.runInNewContext(code+';payoff');
+ const free=fn(1200,0,100);
+ assert.equal(free.months,12);
+ assert.equal(free.interest,0);
+ const charged=fn(1000,.01,100);
+ assert.equal(charged.months,11);
+ assert.ok(charged.interest>0);
+ assert.equal(fn(1000,.1,1).months,1200);
+});
+test('HTML-escaping helper protects tool-generated markup',()=>{
+ const code=script.match(/const esc = [^\\n]+/)?.[0];
+ assert.ok(code);
+ const fn=vm.runInNewContext(code+';esc');
+ assert.equal(fn('<img src="x" onerror="x">&'), '&lt;img src=&quot;x&quot; onerror=&quot;x&quot;&gt;&amp;');
+});
+test('custom domain and crawl configuration remain aligned',()=>{
+ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+ assert.equal(read('CNAME').trim(),'toolsbravo.com');
+ assert.match(html,/https:\\/\\/toolsbravo\\.com\\//);
+ assert.match(read('robots.txt'),/Sitemap: https:\\/\\/toolsbravo\\.com\\/sitemap\\.xml/);
+ const sitemap=read('sitemap.xml');
+ for(const path of ['','uk-take-home-pay-calculator.html','loan-repayment-calculator.html','word-counter.html','password-generator.html'])
+  assert.ok(sitemap.includes('https://toolsbravo.com/'+path),'Sitemap missing '+path);
+});
