@@ -10,7 +10,8 @@ const dur=m=>{const y=Math.floor(m/12),r=m%12;return [y?plural(y,"year"):"",r?pl
 const stats=a=>a.map(([v,l])=>'<div class="stat"><b>'+v+'</b><span>'+l+'</span></div>').join("");
 function ukPay(gross,pct){const pen=gross*pct/100,inc=gross-pen,pa=inc>100000?Math.max(0,12570-(inc-100000)/2):12570,ti=Math.max(0,inc-pa);const tax=Math.min(ti,37700)*.2+Math.max(0,Math.min(ti-37700,87440))*.4+Math.max(0,ti-125140)*.45;const ni=Math.max(0,Math.min(gross,50270)-12570)*.08+Math.max(0,gross-50270)*.02;return {gross,pen,tax,ni,net:gross-pen-tax-ni}}
 function copy(value,btn){if(!value||!navigator.clipboard){btn.textContent="Copy unavailable";return;}navigator.clipboard.writeText(value).then(()=>{btn.textContent="Copied";},()=>{btn.textContent="Copy failed";});}
-\nconst tool={id: "take-home-pay", cat: "finance", name: "UK take-home pay calculator", desc: "Income tax and NI for 2026/27 (England, Wales and NI).",
+
+const tool={id: "take-home-pay", cat: "finance", name: "UK take-home pay calculator", desc: "Income tax and NI for 2026/27 (England, Wales and NI).",
  ui: `<div class="row"><div><label for="sg">Annual salary (£)</label><input id="sg" inputmode="decimal" value="30000"></div><div><label for="sp">Pension contribution (%)</label><input id="sp" inputmode="decimal" value="5"></div></div>
   <div class="out" id="so"></div>
   <p class="note">2026/27 tax year rates for England, Wales and Northern Ireland: £12,570 personal allowance, 20% / 40% / 45% income tax, 8% / 2% employee National Insurance. Pension is treated as taken before tax. Doesn’t include student loans, Scottish rates or tax code adjustments.</p>`,
