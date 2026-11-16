@@ -318,7 +318,153 @@ function pdfTable(items) {
 // Preview a printable HTML document in an iframe and print it to PDF.
 const printDoc = (title, css, body) => `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${css}</style></head><body>${body}</body></html>`;
 
+/* ---------- Word (.docx) merging ----------
+   The first document is the base: its page setup, headers, footers and styles are kept.
+   Each later document's body is appended, with its images, links, lists and missing styles
+   brought across. Footnotes, comments, charts and embedded objects from later documents
+   are dropped rather than left pointing at parts that don't exist. */
+const OX = {
+  w: "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
+  r: "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+  pr: "http://schemas.openxmlformats.org/package/2006/relationships",
+  ct: "http://schemas.openxmlformats.org/package/2006/content-types",
+  wp: "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing",
+  w14: "http://schemas.microsoft.com/office/word/2010/wordml",
+  rel: t => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/" + t,
+};
+const MEDIA_TYPES = {png: "image/png", jpeg: "image/jpeg", jpg: "image/jpeg", gif: "image/gif", bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff", emf: "image/x-emf", wmf: "image/x-wmf", svg: "image/svg+xml", webp: "image/webp"};
+const DROP_IN_APPENDED = ["footnoteReference", "endnoteReference", "commentReference", "commentRangeStart", "commentRangeEnd", "bookmarkStart", "bookmarkEnd", "headerReference", "footerReference"];
+const wEls = (node, name) => [...node.getElementsByTagNameNS(OX.w, name)];
+const wVal = el => el.getAttributeNS(OX.w, "val");
+const ancestor = (el, name, ns = OX.w) => { for (let p = el.parentNode; p && p.nodeType === 1; p = p.parentNode) if (p.localName === name && p.namespaceURI === ns) return p; return null; };
+async function mergeDocx(files, pageBreak) {
+  const {unzipSync, zipSync, strToU8, strFromU8} = await zipLib();
+  const parse = (bytes, name) => {
+    const d = new DOMParser().parseFromString(strFromU8(bytes), "application/xml");
+    if (d.getElementsByTagName("parsererror").length) throw new Error(`${name} contains a damaged part and can't be merged.`);
+    return d;
+  };
+  const xml = d => { const s = new XMLSerializer().serializeToString(d); return strToU8(s.startsWith("<?xml") ? s : `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n${s}`); };
+  const open = async f => {
+    if (!/\.docx$/i.test(f.name)) throw new Error(`${f.name} is not a .docx file. Open older .doc files in Word or Google Docs and save them as .docx first.`);
+    let z; try { z = unzipSync(new Uint8Array(await f.arrayBuffer())); } catch { throw new Error(`${f.name} could not be opened. It may be damaged or password-protected.`); }
+    if (!z["word/document.xml"]) throw new Error(`${f.name} is not a Word document.`);
+    return z;
+  };
+  const resolve = t => t.startsWith("/") ? t.slice(1) : "word/" + t.replace(/^\.\//, "");
+  const relsOf = (z, name) => z["word/_rels/document.xml.rels"] ? parse(z["word/_rels/document.xml.rels"], name) : null;
+  const relTarget = (rels, type) => rels && [...rels.documentElement.children].find(r => r.getAttribute("Type") === OX.rel(type) && r.getAttribute("TargetMode") !== "External")?.getAttribute("Target");
+
+  const base = await open(files[0]), doc = parse(base["word/document.xml"], files[0].name);
+  const body = doc.getElementsByTagNameNS(OX.w, "body")[0];
+  const finalSect = [...body.childNodes].filter(n => n.nodeType === 1).pop();
+  const anchor = finalSect && finalSect.localName === "sectPr" ? finalSect : null;
+  const rels = relsOf(base, files[0].name) || new DOMParser().parseFromString(`<Relationships xmlns="${OX.pr}"/>`, "application/xml");
+  const ct = parse(base["[Content_Types].xml"], files[0].name);
+  const relIds = new Set([...rels.documentElement.children].map(r => r.getAttribute("Id")));
+  const addRel = (type, target, external) => {
+    let id, k = relIds.size + 1; do id = "rIdTb" + k++; while (relIds.has(id)); relIds.add(id);
+    const el = rels.createElementNS(OX.pr, "Relationship"); el.setAttribute("Id", id); el.setAttribute("Type", OX.rel(type)); el.setAttribute("Target", target);
+    if (external) el.setAttribute("TargetMode", "External");
+    rels.documentElement.appendChild(el); return id;
+  };
+  const ctHas = (tag, attr, v) => [...ct.documentElement.children].some(n => n.localName === tag && n.getAttribute(attr).toLowerCase() === v.toLowerCase());
+  const ensureDefault = ext => { if (ctHas("Default", "Extension", ext)) return; const el = ct.createElementNS(OX.ct, "Default"); el.setAttribute("Extension", ext); el.setAttribute("ContentType", MEDIA_TYPES[ext] || "application/octet-stream"); ct.documentElement.insertBefore(el, ct.documentElement.firstChild); };
+  const ensurePart = (path, type, relType, root) => {
+    if (base[path]) return parse(base[path], files[0].name);
+    const el = ct.createElementNS(OX.ct, "Override"); el.setAttribute("PartName", "/" + path); el.setAttribute("ContentType", type); ct.documentElement.appendChild(el);
+    addRel(relType, path.replace(/^word\//, ""));
+    return new DOMParser().parseFromString(`<w:${root} xmlns:w="${OX.w}"/>`, "application/xml");
+  };
+  // Base parts that later documents may add to.
+  let numPath = relTarget(rels, "numbering") ? resolve(relTarget(rels, "numbering")) : "word/numbering.xml", numbering = null;
+  const stylesPath = relTarget(rels, "styles") ? resolve(relTarget(rels, "styles")) : null, styles = stylesPath && base[stylesPath] ? parse(base[stylesPath], files[0].name) : null;
+  const styleIds = new Set(styles ? [...styles.getElementsByTagNameNS(OX.w, "style")].map(s => s.getAttributeNS(OX.w, "styleId")) : []);
+  let docPrId = Math.max(0, ...[...doc.getElementsByTagNameNS(OX.wp, "docPr")].map(e => +e.getAttribute("id") || 0));
+  let media = 0, dropped = 0;
+
+  for (const [k, f] of files.slice(1).entries()) {
+    const z = await open(f), d = parse(z["word/document.xml"], f.name), b = d.getElementsByTagNameNS(OX.w, "body")[0], r = relsOf(z, f.name);
+    // Relationships: copy images and external links, mark everything else as unsupported.
+    const map = new Map();
+    if (r) for (const rel of [...r.documentElement.children]) {
+      const id = rel.getAttribute("Id"), type = rel.getAttribute("Type"), target = rel.getAttribute("Target"), external = rel.getAttribute("TargetMode") === "External";
+      if (type === OX.rel("image") && !external && z[resolve(target)]) {
+        const ext = (resolve(target).split(".").pop() || "bin").toLowerCase(), name = `media/toolsbravo-${k + 2}-${++media}.${ext}`;
+        base["word/" + name] = z[resolve(target)]; ensureDefault(ext); map.set(id, addRel("image", name));
+      } else if (external && (type === OX.rel("hyperlink") || type === OX.rel("image"))) map.set(id, addRel(type.split("/").pop(), target, true));
+      else map.set(id, null);
+    }
+    // Lists: copy numbering definitions with new ids.
+    const numMap = new Map(), otherNumPath = relTarget(r, "numbering") && resolve(relTarget(r, "numbering"));
+    if (otherNumPath && z[otherNumPath]) {
+      numbering ||= ensurePart(numPath, "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml", "numbering", "numbering");
+      const src = parse(z[otherNumPath], f.name), root = numbering.documentElement;
+      const absIds = wEls(numbering, "abstractNum").map(a => +a.getAttributeNS(OX.w, "abstractNumId")), numIds = wEls(numbering, "num").map(n => +n.getAttributeNS(OX.w, "numId"));
+      let nextAbs = Math.max(-1, ...absIds) + 1, nextNum = Math.max(0, ...numIds) + 1; const absMap = new Map();
+      const firstNum = wEls(numbering, "num")[0] || null;
+      for (const a of wEls(src, "abstractNum")) { const c = numbering.importNode(a, true); absMap.set(c.getAttributeNS(OX.w, "abstractNumId"), String(nextAbs)); c.setAttributeNS(OX.w, "w:abstractNumId", String(nextAbs++)); root.insertBefore(c, firstNum); }
+      for (const n of wEls(src, "num")) { const c = numbering.importNode(n, true); numMap.set(c.getAttributeNS(OX.w, "numId"), String(nextNum)); c.setAttributeNS(OX.w, "w:numId", String(nextNum++)); const ref = wEls(c, "abstractNumId")[0]; if (ref) ref.setAttributeNS(OX.w, "w:val", absMap.get(wVal(ref)) ?? wVal(ref)); root.appendChild(c); }
+    }
+    const fixNumIds = node => wEls(node, "numId").forEach(e => e.setAttributeNS(OX.w, "w:val", numMap.get(wVal(e)) ?? "0"));
+    // Styles: bring across styles the base document doesn't have.
+    const otherStyles = relTarget(r, "styles") && z[resolve(relTarget(r, "styles"))];
+    if (styles && otherStyles) for (const s of [...parse(otherStyles, f.name).getElementsByTagNameNS(OX.w, "style")]) {
+      const id = s.getAttributeNS(OX.w, "styleId"); if (styleIds.has(id)) continue;
+      const c = styles.importNode(s, true); fixNumIds(c); styles.documentElement.appendChild(c); styleIds.add(id);
+    }
+    // Body content.
+    if (pageBreak) { const p = doc.createElementNS(OX.w, "w:p"), run = doc.createElementNS(OX.w, "w:r"), br = doc.createElementNS(OX.w, "w:br"); br.setAttributeNS(OX.w, "w:type", "page"); run.appendChild(br); p.appendChild(run); body.insertBefore(p, anchor); }
+    for (const n of [...b.childNodes].filter(n => n.nodeType === 1 && n.localName !== "sectPr")) {
+      const c = doc.importNode(n, true), all = [c, ...c.getElementsByTagName("*")], unsupported = [];
+      for (const el of all) for (const a of [...el.attributes]) {
+        if (a.namespaceURI === OX.r) { const v = map.get(a.value); if (v) el.setAttributeNS(OX.r, a.name, v); else unsupported.push(el); }
+        else if (a.namespaceURI === OX.w14 && (a.localName === "paraId" || a.localName === "textId")) el.removeAttributeNode(a);
+      }
+      for (const el of unsupported) {
+        if (!el.parentNode) continue;
+        if (el.localName === "hyperlink") { while (el.firstChild) el.parentNode.insertBefore(el.firstChild, el); el.remove(); continue; }
+        (ancestor(el, "r") || el).remove(); dropped++;
+      }
+      for (const name of DROP_IN_APPENDED) wEls(c, name).forEach(e => { if (/Reference$/.test(name) && name !== "headerReference" && name !== "footerReference") dropped++; e.remove(); });
+      fixNumIds(c);
+      for (const e of c.getElementsByTagNameNS(OX.wp, "docPr")) e.setAttribute("id", String(++docPrId));
+      body.insertBefore(c, anchor);
+    }
+  }
+  base["word/document.xml"] = xml(doc); base["word/_rels/document.xml.rels"] = xml(rels); base["[Content_Types].xml"] = xml(ct);
+  if (numbering) base[numPath] = xml(numbering);
+  if (styles) base[stylesPath] = xml(styles);
+  return {blob: new Blob([zipSync(base)], {type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}), dropped};
+}
+
 const TOOLS = [
+/* ---------- WORD ---------- */
+{id: "merge-word", cat: "office", name: "Merge Word documents", desc: "Combine several Word (.docx) files into one document.",
+ ui: `${dropUI("mw-in", ".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document", "Choose Word files (.docx)", true)}<ol class="file-list" id="mw-list"></ol>
+  <label class="check"><input id="mw-break" type="checkbox" checked> Start each document on a new page</label>
+  <p class="note">The first document sets the page size, margins, headers and footers. Text, headings, tables, images, links and lists from every document are kept.</p>
+  <div class="btns"><button class="primary" id="mw-go" disabled>Merge documents</button><button id="mw-clear" disabled>Clear</button></div><p id="mw-msg" class="note" aria-live="polite">Add two or more .docx files. Use the arrows to set the order.</p><div id="mw-out"></div>`,
+ init(el) {
+  const files = [], list = $("#mw-list", el), go = $("#mw-go", el), msg = $("#mw-msg", el);
+  const changed = () => { fileListUI(list, files); go.disabled = files.length < 2; $("#mw-clear", el).disabled = !files.length; };
+  wireDrop(el, "mw-in", f => {
+    const ok = f.filter(x => /\.docx$/i.test(x.name)), skipped = f.length - ok.length;
+    files.push(...ok); changed();
+    if (skipped) say(msg, `${plural(skipped, "file")} skipped: only .docx files can be merged. Save older .doc files as .docx first.`, true);
+  });
+  wireFileList(list, files, changed);
+  $("#mw-clear", el).onclick = () => { files.length = 0; changed(); $("#mw-out", el).innerHTML = ""; };
+  go.onclick = async () => {
+    busy(go, true, "Merging…");
+    try {
+      const {blob, dropped} = await mergeDocx(files, $("#mw-break", el).checked);
+      showResults($("#mw-out", el), [{name: "merged.docx", blob, note: `${plural(files.length, "document")} · ${fsize(blob.size)}`}]);
+      say(msg, `Merged ${plural(files.length, "document")}.${dropped ? ` ${plural(dropped, "footnote, comment or chart")} from the later documents couldn't be carried over.` : ""}`);
+    } catch (e) { say(msg, e.message, true); } finally { busy(go, false); }
+  };
+ }},
+
 /* ---------- EXCEL & DATA ---------- */
 {id: "pdf-to-excel", cat: "office", name: "PDF to Excel", desc: "Turn tables in a PDF into an editable Excel spreadsheet.",
  ui: `${dropUI("px-in", "application/pdf,.pdf", "Choose a PDF file", false)}<p id="px-file" class="file-picked" hidden></p>
@@ -1276,6 +1422,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 
 // Each tool has its own static, indexable page. Keep in sync with scripts/content.mjs (checked by tests).
 const SLUGS = {
+  "merge-word": "merge-word-documents.html",
   "pdf-to-excel": "pdf-to-excel.html", "excel-to-pdf": "excel-to-pdf.html", "csv-to-excel": "csv-to-excel.html", "excel-to-csv": "excel-to-csv.html", "merge-excel": "merge-excel-files.html", "excel-to-json": "excel-to-json.html", "remove-duplicate-rows": "remove-duplicate-rows.html", "excel-viewer": "excel-viewer.html",
   "merge-pdf": "merge-pdf.html", "split-pdf": "split-pdf.html", "rotate-pdf": "rotate-pdf.html", "delete-pdf-pages": "delete-pdf-pages.html", "jpg-to-pdf": "jpg-to-pdf.html", "pdf-to-jpg": "pdf-to-jpg.html", "pdf-to-word": "pdf-to-word.html", "word-to-pdf": "word-to-pdf.html", "compress-pdf": "compress-pdf.html", "image-converter": "image-converter.html", "image-compressor": "image-compressor.html", "image-resizer": "image-resizer.html",
   "time-duration": "time-duration-calculator.html", "aspect-ratio": "aspect-ratio-calculator.html", "text-sorter": "text-line-sorter.html",
@@ -1289,7 +1436,7 @@ const SLUGS = {
 };
 const CATS = [
   {id: "files", name: "PDF & image"},
-  {id: "office", name: "Excel & data"},
+  {id: "office", name: "Office & data"},
   {id: "general", name: "General"},
   {id: "advanced", name: "Developer"},
   {id: "finance", name: "Finance"}
@@ -1298,7 +1445,7 @@ const app = $("#app");
 const DEF_DESC = $('meta[name="description"]').content, DEF_TITLE = document.title;
 
 // Small icon glyph for each tool card.
-const ICONS = {"pdf-to-excel": "XLS", "excel-to-pdf": "PDF", "csv-to-excel": "CSV", "excel-to-csv": "⇢", "merge-excel": "⊞", "excel-to-json": "{ }", "remove-duplicate-rows": "≠", "excel-viewer": "▤",
+const ICONS = {"merge-word": "W+", "pdf-to-excel": "XLS", "excel-to-pdf": "PDF", "csv-to-excel": "CSV", "excel-to-csv": "⇢", "merge-excel": "⊞", "excel-to-json": "{ }", "remove-duplicate-rows": "≠", "excel-viewer": "▤",
   "merge-pdf": "⧉", "split-pdf": "✂", "rotate-pdf": "↻", "delete-pdf-pages": "⌫", "jpg-to-pdf": "JPG", "pdf-to-jpg": "PDF", "pdf-to-word": "W", "word-to-pdf": "DOC", "compress-pdf": "⇲", "image-converter": "⇆", "image-compressor": "◫", "image-resizer": "⤢",
   "time-duration": "◷", "aspect-ratio": "▭", "text-sorter": "⇅", "date-difference": "▦", "bmi-calculator": "♡", "word-counter": "¶",
   "case-converter": "Aa", "password-generator": "✱", "unit-converter": "⇄", "age-calculator": "✦", "percentage-calculator": "%",

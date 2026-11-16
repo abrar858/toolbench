@@ -13,7 +13,7 @@ const ORIGIN = "https://toolsbravo.com/";
 const SITE = "ToolsBravo";
 const TAX_YEAR = "2026/27";
 const RATES_CHECKED = "15 November 2026"; // Re-check HMRC rates each spring and update this date.
-const CATS = {files: "PDF & image", office: "Excel & data", finance: "Finance", general: "General", advanced: "Developer"};
+const CATS = {files: "PDF & image", office: "Office & data", finance: "Finance", general: "General", advanced: "Developer"};
 const SALARIES = [18000, 20000, 22000, 24000, 25000, 26000, 28000, 30000, 32000, 35000, 38000, 40000, 42000, 45000, 48000,
   50000, 55000, 60000, 65000, 70000, 75000, 80000, 90000, 100000, 110000, 120000, 125000, 150000];
 const read = p => readFileSync(new URL(p, ROOT), "utf8").replace(/\r\n/g, "\n");
@@ -80,7 +80,7 @@ const header = `<a class="skip-link" href="#app">Skip to content</a>
 <div class="site-head"><div class="wrap">
   <header class="top">
     <a class="logo" href="./"><img src="assets/icon.svg" alt="" width="32" height="32"><span id="siteName">${SITE}</span></a>
-    <nav aria-label="Categories"><a href="./#files">PDF &amp; image</a><a href="./#office">Excel</a><a href="./#finance">Finance</a><a href="./#general">General</a><a href="./#advanced">Developer</a><a href="automation-builder.html">Automations</a></nav><button class="theme-btn" type="button" aria-label="Switch theme">☾</button>
+    <nav aria-label="Categories"><a href="./#files">PDF &amp; image</a><a href="./#office">Office</a><a href="./#finance">Finance</a><a href="./#general">General</a><a href="./#advanced">Developer</a><a href="automation-builder.html">Automations</a></nav><button class="theme-btn" type="button" aria-label="Switch theme">☾</button>
   </header>
 </div></div>`;
 const hid = s => strip(s).toLowerCase().replace(/&[a-z]+;/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
