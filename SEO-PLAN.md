@@ -64,7 +64,7 @@ Rule of thumb: one page = one search intent. Don't publish thin near-duplicates;
 
 ## Technical next steps (code)
 
-- Self-host the two Google Fonts or switch to system fonts to speed up first paint (Core Web Vitals).
+- Done: fonts are self-hosted with `font-display: optional` and preloaded; the home page is pre-rendered so it doesn't shift when the script runs.
 - Add Scottish income tax bands and student loan plans to the take-home pay calculator. Check the 2026/27 thresholds on GOV.UK first; they were not added here because accuracy matters more than coverage on money pages.
 - Each April: update `ukPay` in `assets/tools.js`, `RATES_CHECKED` and `TAX_YEAR` in `scripts/build.mjs`, then rebuild.
 - Consider extensionless URLs (`/vat-calculator`) only together with redirects; current `.html` URLs are fine, and changing them later costs rankings.

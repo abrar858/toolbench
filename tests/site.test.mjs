@@ -186,3 +186,29 @@ test('pages load CSS and JS with a content version tag', async ()=>{
   assert.ok(page.includes('assets/site.css?v='+tag('assets/site.css')+'"'),'site.css version tag in '+p);
  }
 });
+
+test('home page is pre-rendered so it does not shift when the script runs', ()=>{
+ const main=html.match(/<main id="app"[^>]*>([\s\S]*?)<\/main>/)[1];
+ assert.match(main,/class="home-hero"/);
+ assert.match(main,/<input id="q" type="search"/);
+ for(const c of TOOL_CONTENT) assert.ok(main.includes('href="'+c.slug+'"'),'Pre-rendered card missing for '+c.slug);
+});
+
+test('pages make no third-party font requests and preload self-hosted fonts', ()=>{
+ for(const p of ['index.html','404.html','about.html','privacy.html',...TOOL_CONTENT.map(c=>c.slug)]){
+  const page=readPage(p);
+  assert.ok(!/fonts\.(googleapis|gstatic)\.com/.test(page),'Third-party font request in '+p);
+  assert.match(page,/<link rel="preload" href="\/?assets\/fonts\/figtree-latin\.woff2" as="font" type="font\/woff2" crossorigin>/,p);
+  assert.match(page,/<a class="logo" href="[^"]*" aria-label="ToolsBravo home">/,'Logo link needs a name: '+p);
+ }
+ for(const f of ['figtree-latin','figtree-latin-ext','bricolage-latin','bricolage-latin-ext']) assert.ok(statSync(new URL('../assets/fonts/'+f+'.woff2',import.meta.url)).size>5000,f);
+ assert.match(readPage('assets/fonts/OFL.txt'),/SIL OPEN FONT LICENSE/);
+ assert.ok(!/googleapis|gstatic/.test(css),'site.css must not load remote fonts');
+ assert.match(css,/font-display:optional/);
+});
+
+test('every url() in site.css points to a file that exists', ()=>{
+ const urls=[...css.matchAll(/url\(["']?([^"')]+)["']?\)/g)].map(m=>m[1]).filter(u=>!/^(data:|https?:|#)/.test(u));
+ assert.ok(urls.length>=4);
+ for(const u of urls) assert.ok(statSync(new URL('../assets/'+u,import.meta.url)).size>0,'Missing file for url('+u+') in site.css');
+});

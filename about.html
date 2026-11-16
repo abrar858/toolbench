@@ -22,10 +22,9 @@
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css?v=0033f5c03d">
+<link rel="preload" href="assets/fonts/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css?v=542e2006d0">
 <script>try{const t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ToolsBravo","item":"https://toolsbravo.com/"},{"@type":"ListItem","position":2,"name":"About ToolsBravo","item":"https://toolsbravo.com/about.html"}]}</script>
 </head>
@@ -33,7 +32,7 @@
 <a class="skip-link" href="#app">Skip to content</a>
 <div class="site-head"><div class="wrap">
   <header class="top">
-    <a class="logo" href="./"><img src="assets/icon.svg" alt="" width="32" height="32"><span id="siteName">ToolsBravo</span></a>
+    <a class="logo" href="./" aria-label="ToolsBravo home"><img src="assets/icon.svg" alt="" width="32" height="32"><span id="siteName">ToolsBravo</span></a>
     <nav aria-label="Categories"><a href="./#files">PDF &amp; image</a><a href="./#office">Office</a><a href="./#finance">Finance</a><a href="./#general">General</a><a href="./#advanced">Developer</a><a href="automation-builder.html">Automations</a></nav><button class="theme-btn" type="button" aria-label="Switch theme">☾</button>
   </header>
 </div></div>
@@ -47,7 +46,7 @@
     
   </header>
   <article class="guide prose">
-    <h2>Private by design</h2><p>The tools run in your browser. What you type into a calculator, text box or converter is processed on your own device and is not uploaded to a ToolsBravo server. The site has no accounts, no adverts and no tracking cookies. Read the <a href="privacy.html">privacy notice</a> for the details, including the fonts loaded from Google Fonts.</p>
+    <h2>Private by design</h2><p>The tools run in your browser. What you type into a calculator, text box or converter is processed on your own device and is not uploaded to a ToolsBravo server. The site has no accounts, no adverts and no tracking cookies. Fonts and libraries are hosted on ToolsBravo itself, so your browser doesn't contact other companies to use the tools. Read the <a href="privacy.html">privacy notice</a> for details.</p>
     <h2>How results are checked</h2><p>The source code is public on <a href="https://github.com/abrar858/toolbench">GitHub</a>. Automated tests run on every change. They check the UK income tax and National Insurance figures against worked examples, test that every tool loads without errors, and confirm that worked examples quoted on each page match what the tool calculates.</p>
     <p>UK finance tools use the published rates for the stated tax year. Each finance page shows the date its rates were last checked against GOV.UK guidance. Rates are reviewed each spring before the new tax year starts on 6 April.</p>
     <h2>Limits of the calculators</h2><p>Finance results are estimates for guidance, not financial, tax or legal advice. UK pay estimates use stated assumptions and may not reflect your tax code, region, benefits, pension scheme, student loan or other deductions. Confirm important figures with official guidance, your payslip or a qualified professional. Health tools such as the BMI calculator are screening estimates, not a diagnosis.</p>
@@ -62,6 +61,6 @@
   <p><a href="privacy.html">Privacy</a> · <a href="about.html">About ToolsBravo</a></p>
   <p>© <span id="yr">2026</span> <span class="sn">ToolsBravo</span></p>
 </div></footer>
-<script src="assets/tools.js?v=02b24d48b5"></script>
+<script src="assets/tools.js?v=ee72dd968c"></script>
 </body>
 </html>
