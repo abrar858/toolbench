@@ -1,7 +1,7 @@
 // Run with: node --test tests/site.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync, statSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import vm from 'node:vm';
@@ -145,4 +145,32 @@ test('custom domain and crawl configuration remain aligned',()=>{
  assert.equal(readPage('CNAME').trim(),'toolsbravo.com');
  assert.ok(html.includes('https://toolsbravo.com/'));
  assert.ok(readPage('robots.txt').includes('Sitemap: https://toolsbravo.com/sitemap.xml'));
+});
+
+test('all 36 tools are present and mapped to unique dedicated pages',()=>{
+ const tools=[...script.matchAll(/\\{id:\\s*"([^"]+)"\\s*,\\s*cat:\\s*"([^"]+)"/g)];
+ assert.equal(tools.length,36,'Homepage advertises 36 tools');
+ const ids=tools.map(m=>m[1]);
+ assert.equal(new Set(ids).size,36,'Tool IDs must be unique');
+ const contentIds=TOOL_CONTENT.map(t=>t.id);
+ assert.deepEqual([...contentIds].sort(),[...ids].sort(),'Every tool must have a generated content page');
+ const slugs=TOOL_CONTENT.map(t=>t.slug);
+ assert.equal(new Set(slugs).size,36,'Tool page paths must be unique');
+ for(const slug of slugs){
+  assert.ok(readPage('sitemap.xml').includes('https://toolsbravo.com/'+slug),'Missing sitemap entry '+slug);
+  assert.ok(html.includes('href="'+slug+'"'),'Missing homepage link '+slug);
+ }
+});
+
+test('locally hosted PDF and document dependencies are nonempty',()=>{
+ const assets=['pdf-lib.min.js','pdf.min.js','pdf.worker.min.js','mammoth.browser.min.js','fflate.min.js'];
+ for(const name of assets){
+  const file=new URL('../assets/vendor/'+name,import.meta.url);
+  assert.ok(statSync(file).size>10000,'Missing or truncated vendor library: '+name);
+ }
+});
+
+test('homepage explains browser storage accurately',()=>{
+ assert.match(html,/saved automation workflows may be stored locally/i);
+ assert.match(readPage('privacy.html'),/local storage is used only/i);
 });
