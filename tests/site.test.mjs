@@ -148,7 +148,7 @@ test('custom domain and crawl configuration remain aligned',()=>{
 });
 
 test('all 36 tools are present and mapped to unique dedicated pages',()=>{
- const tools=[...script.matchAll(/\\{id:\\s*"([^"]+)"\\s*,\\s*cat:\\s*"([^"]+)"/g)];
+ const tools=[...script.matchAll(/\{id:\s*"([^"]+)"\s*,\s*cat:\s*"([^"]+)"/g)];
  assert.equal(tools.length,36,'Homepage advertises 36 tools');
  const ids=tools.map(m=>m[1]);
  assert.equal(new Set(ids).size,36,'Tool IDs must be unique');
