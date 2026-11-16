@@ -124,3 +124,25 @@ test('every page has social image, icon and a single canonical',()=>{
  }
  assert.ok(readPage('404.html').includes('<meta name="robots" content="noindex">'));
 });
+
+test('payoff calculator amortization examples and safety cap',()=>{
+ const fn=vm.runInNewContext(script.match(/function payoff\(bal, r, pay\) \{[\s\S]*?\n\}/)[0]+';payoff');
+ const free=fn(1200,0,100);
+ assert.equal(free.months,12);
+ assert.equal(free.interest,0);
+ const charged=fn(1000,.01,100);
+ assert.equal(charged.months,11);
+ assert.ok(charged.interest>0);
+ assert.equal(fn(1000,.1,1).months,1200);
+});
+
+test('HTML-escaping helper protects tool-generated markup',()=>{
+ const fn=vm.runInNewContext(script.match(/const esc = [^\n]+/)[0]+';esc');
+ assert.equal(fn('<img src="x" onerror="x">&'),'&lt;img src=&quot;x&quot; onerror=&quot;x&quot;&gt;&amp;');
+});
+
+test('custom domain and crawl configuration remain aligned',()=>{
+ assert.equal(readPage('CNAME').trim(),'toolsbravo.com');
+ assert.ok(html.includes('https://toolsbravo.com/'));
+ assert.ok(readPage('robots.txt').includes('Sitemap: https://toolsbravo.com/sitemap.xml'));
+});
