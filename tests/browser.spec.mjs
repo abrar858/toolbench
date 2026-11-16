@@ -269,3 +269,50 @@ test('Excel viewer switches sheets and filters rows', async ({page}) => {
  await page.locator('#ev-tabs button', {hasText: 'Orders'}).click();
  await expect(page.locator('#ev-out tbody')).toContainText('1001');
 });
+
+/* ---------- Word document merger: the merged file must be a structurally valid .docx ---------- */
+// Unpacks the merged file with the page's own fflate and checks every cross-reference, then reads it with mammoth.
+const inspectDocx = (page, buf) => page.evaluate(async b64 => {
+ const z = fflate.unzipSync(Uint8Array.from(atob(b64), c => c.charCodeAt(0))), dec = new TextDecoder();
+ const parse = p => { const d = new DOMParser().parseFromString(dec.decode(z[p]), 'application/xml'); if (d.getElementsByTagName('parsererror').length) throw new Error('Bad XML in ' + p); return d; };
+ const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main', R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+ const doc = parse('word/document.xml'), rels = z['word/_rels/document.xml.rels'] ? parse('word/_rels/document.xml.rels') : null;
+ const relById = new Map(rels ? [...rels.documentElement.children].map(r => [r.getAttribute('Id'), r]) : []);
+ const problems = [];
+ for (const el of doc.getElementsByTagName('*')) for (const a of el.attributes) if (a.namespaceURI === R) {
+  const rel = relById.get(a.value);
+  if (!rel) problems.push('missing relationship ' + a.value);
+  else if (rel.getAttribute('TargetMode') !== 'External' && !z['word/' + rel.getAttribute('Target')]) problems.push('missing part ' + rel.getAttribute('Target'));
+ }
+ const numbering = z['word/numbering.xml'] ? parse('word/numbering.xml') : null;
+ const nums = new Set(numbering ? [...numbering.getElementsByTagNameNS(W, 'num')].map(n => n.getAttributeNS(W, 'numId')) : []);
+ const abs = new Set(numbering ? [...numbering.getElementsByTagNameNS(W, 'abstractNum')].map(n => n.getAttributeNS(W, 'abstractNumId')) : []);
+ for (const n of doc.getElementsByTagNameNS(W, 'numId')) { const v = n.getAttributeNS(W, 'val'); if (v !== '0' && !nums.has(v)) problems.push('missing list ' + v); }
+ if (numbering) for (const a of numbering.getElementsByTagNameNS(W, 'abstractNumId')) if (!abs.has(a.getAttributeNS(W, 'val'))) problems.push('missing abstract list');
+ const styles = z['word/styles.xml'] ? new Set([...parse('word/styles.xml').getElementsByTagNameNS(W, 'style')].map(s => s.getAttributeNS(W, 'styleId'))) : null;
+ if (styles) for (const p of doc.getElementsByTagNameNS(W, 'pStyle')) if (!styles.has(p.getAttributeNS(W, 'val'))) problems.push('missing style ' + p.getAttributeNS(W, 'val'));
+ const ids = [...doc.getElementsByTagNameNS('http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing', 'docPr')].map(e => e.getAttribute('id'));
+ if (new Set(ids).size !== ids.length) problems.push('duplicate drawing ids');
+ if (!/Extension="png"/i.test(dec.decode(z['[Content_Types].xml']))) problems.push('png content type missing');
+ const html = (await (await wordLib()).convertToHtml({arrayBuffer: Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer})).value;
+ return {problems, html, footnoteRefs: doc.getElementsByTagNameNS(W, 'footnoteReference').length};
+}, buf.toString('base64'));
+
+test('merge Word documents keeps images, links, lists and styles valid', async ({page}) => {
+ await page.goto('/merge-word-documents.html');
+ for (const order of [['sample.docx', 'rich.docx', 'rich.docx'], ['rich.docx', 'sample.docx']]) {
+  await page.locator('#mw-clear').click({force: true});
+  await page.locator('#mw-in').setInputFiles(order.map(fixture));
+  await page.locator('#mw-go').click();
+  const d = await download(page, () => page.locator('#mw-out [data-dl="0"]').click());
+  expect(d.suggestedFilename()).toBe('merged.docx');
+  const r = await inspectDocx(page, await readDownload(d));
+  expect(r.problems).toEqual([]);
+  expect(r.html).toContain('Quarterly report');
+  expect(r.html).toContain('First bullet point');
+  expect(r.html).toContain('<a href="https://toolsbravo.com/">Visit ToolsBravo</a>');
+  expect(r.html).toMatch(/<img src="data:image\/png;base64,/);
+  expect(r.html).toMatch(/<ul><li>First bullet point/);
+  if (order[0] === 'sample.docx') { expect(r.footnoteRefs).toBe(0); await expect(page.locator('#mw-msg')).toContainText("couldn't be carried over"); }
+ }
+});

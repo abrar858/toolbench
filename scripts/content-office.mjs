@@ -155,4 +155,24 @@ export const OFFICE_CONTENT = [
   ],
   related: ["excel-to-pdf", "excel-to-csv", "pdf-to-excel"],
 },
+{
+  id: "merge-word", howTo: "How to merge Word documents", slug: "merge-word-documents.html",
+  title: "Merge Word Documents – Combine DOCX Files Free",
+  description: "Combine several Word .docx files into one document, keeping text, tables, images, links and lists. Free, private and no upload.",
+  h1: "Merge Word documents",
+  lede: "Combine several Word documents into one .docx file, in the order you choose, without copying and pasting.",
+  steps: ["Choose two or more .docx files, or drag them onto the box.", "Use the arrows to put them in order. The first document is the main one.", "Leave Start each document on a new page ticked to keep each one on fresh pages.", "Press Merge documents and download merged.docx."],
+  sections: [
+    ["What is kept", "<p>Text, headings, bold and italic formatting, tables, images, hyperlinks and numbered or bulleted lists from every document are carried into the merged file. Styles that only exist in a later document, such as a custom heading style, are copied across so it keeps its look.</p>"],
+    ["How the documents are combined", "<p>The first document is the base: its page size, margins, headers, footers and theme apply to the whole merged file. Where a later document uses a style with the same name as the first, such as Normal or Heading 1, the first document’s version is used, so fonts can change slightly. Footnotes, comments, charts and embedded objects from the later documents can’t be carried over reliably, so they are left out and the tool tells you how many.</p>"],
+    ["Private by design", "<p>Many online mergers upload your documents to a server. Here the files are unpacked and combined by your own browser, so contracts, CVs and reports never leave your device.</p>"],
+  ],
+  faqs: [
+    ["How do I combine Word documents into one?", "Choose the .docx files, put them in order and press Merge documents. The combined file downloads as merged.docx."],
+    ["Can I merge .doc files?", "Only .docx. Open older .doc files in Word, Google Docs or LibreOffice and save them as .docx first."],
+    ["Will the merged document open in Google Docs?", "Yes. Upload merged.docx to Google Drive and open it with Google Docs, or open it in Word, Pages or LibreOffice."],
+    PRIVATE,
+  ],
+  related: ["word-to-pdf", "merge-pdf", "pdf-to-word"],
+},
 ];
