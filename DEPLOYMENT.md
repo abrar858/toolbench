@@ -20,7 +20,8 @@ These pages, `sitemap.xml` and the tool list in the home page footer are **gener
 - To add a tool: add it to `TOOLS` and `SLUGS` in `assets/tools.js`, add its content to `scripts/content.mjs`, then build.
 - Old `/#tool-id` links redirect to the tool's page.
 - PDF, Word and image tools use self-hosted libraries in `assets/vendor` (pdf-lib, pdf.js, mammoth, fflate; licences in `assets/vendor/LICENSES.txt`). They load only on the pages that need them, and files never leave the visitor's browser.
-- Avoid claiming that no external requests are made: Google Fonts is loaded externally.
+- Fonts are self-hosted in `assets/fonts` (SIL OFL 1.1, see `assets/fonts/OFL.txt`); pages make no third-party requests.
+- `assets/tools.js` and `assets/site.css` URLs carry a content hash (`?v=…`) added by the build, so browsers never pair a new page with old cached code. GitHub Pages caches files for 10 minutes and this can't be changed from the repository.
 
 See `SEO-PLAN.md` for the growth plan.
 

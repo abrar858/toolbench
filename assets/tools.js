@@ -1461,11 +1461,11 @@ const EXTRA_CARDS = {
 };
 const cards = cat => [...TOOLS.filter(x => x.cat === cat).map(x => ({name: x.name, desc: x.desc, href: SLUGS[x.id], icon: ICONS[x.id] || "✦"})), ...(EXTRA_CARDS[cat] || [])];
 
-function showHome(scrollTo) {
-  document.title = DEF_TITLE;
-  $('meta[name="description"]').content = DEF_DESC;
+// Home page markup. scripts/build.mjs pre-renders this into index.html so the page is
+// complete on first paint (no layout shift) and every tool link is crawlable without JavaScript.
+function homeHTML() {
   const cats = HOME_ORDER.map(id => CATS.find(c => c.id === id));
-  app.innerHTML = `<div class="wrap">
+  return `<div class="wrap">
     <section class="home-hero">
       <span class="eyebrow">FREE · PRIVATE · NO SIGN-UP</span>
       <h1>Free PDF tools, converters and <em>UK calculators</em></h1>
@@ -1491,20 +1491,29 @@ function showHome(scrollTo) {
     </section>
     <a class="promo" href="automation-builder.html"><span><strong>Automate repetitive text jobs</strong><span class="promo-sub">Chain steps like find and replace, case changes and JSON formatting into one reusable workflow.</span></span><span class="cta">Open the builder →</span></a>
   </div>`;
+}
+
+function showHome(scrollTo) {
+  document.title = DEF_TITLE;
+  $('meta[name="description"]').content = DEF_DESC;
+  if (!$(".home-hero", app)) app.innerHTML = homeHTML();
   const q = $("#q");
-  const filter = () => {
-    const terms = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean); let total = 0;
-    $$(".tool-section").forEach(c => { let n = 0; $$("li", c).forEach(li => { const m = terms.every(term => li.dataset.s.includes(term)); li.hidden = !m; if (m) n++; }); c.hidden = !n; $("h2 small", c).textContent = plural(n, "tool"); total += n; });
-    $(".empty").hidden = total > 0;
-    $(".cat-tabs").hidden = terms.length > 0;
-    $("#search-status").textContent = terms.length ? plural(total, "matching tool") : "";
-  };
-  q.addEventListener("input", filter);
-  q.addEventListener("keydown", e => {
-    if (e.key === "Enter") { const f = $$(".tool-section li").find(li => !li.hidden); if (f) location.href = $("a", f).getAttribute("href"); }
-    if (e.key === "Escape") { q.value = ""; filter(); }
-  });
-  if (scrollTo) $("#" + scrollTo).scrollIntoView(); else window.scrollTo(0, 0);
+  if (!q.dataset.wired) {
+    q.dataset.wired = "1";
+    const filter = () => {
+      const terms = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean); let total = 0;
+      $$(".tool-section").forEach(c => { let n = 0; $$("li", c).forEach(li => { const m = terms.every(term => li.dataset.s.includes(term)); li.hidden = !m; if (m) n++; }); c.hidden = !n; $("h2 small", c).textContent = plural(n, "tool"); total += n; });
+      $(".empty").hidden = total > 0;
+      $(".cat-tabs").hidden = terms.length > 0;
+      $("#search-status").textContent = terms.length ? plural(total, "matching tool") : "";
+    };
+    q.addEventListener("input", filter);
+    q.addEventListener("keydown", e => {
+      if (e.key === "Enter") { const f = $$(".tool-section li").find(li => !li.hidden); if (f) location.href = $("a", f).getAttribute("href"); }
+      if (e.key === "Escape") { q.value = ""; filter(); }
+    });
+  }
+  if (scrollTo) $("#" + scrollTo).scrollIntoView();
 }
 
 function route() {

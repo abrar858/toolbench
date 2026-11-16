@@ -316,3 +316,18 @@ test('merge Word documents keeps images, links, lists and styles valid', async (
   if (order[0] === 'sample.docx') { expect(r.footnoteRefs).toBe(0); await expect(page.locator('#mw-msg')).toContainText("couldn't be carried over"); }
  }
 });
+
+test('home page layout does not shift after load', async ({page}) => {
+ for (const viewport of [{width: 1350, height: 940}, {width: 375, height: 812}]) {
+  await page.setViewportSize(viewport);
+  await page.goto('/');
+  await page.waitForLoadState('load');
+  const cls = await page.evaluate(() => new Promise(done => {
+   let total = 0;
+   new PerformanceObserver(list => { for (const e of list.getEntries()) if (!e.hadRecentInput) total += e.value; }).observe({type: 'layout-shift', buffered: true});
+   setTimeout(() => done(total), 1500);
+  }));
+  expect(cls).toBeLessThan(0.1);
+  expect(await page.locator('.tcards a.tcard').count()).toBeGreaterThanOrEqual(45);
+ }
+});

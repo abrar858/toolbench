@@ -66,9 +66,8 @@ ${url ? `<meta property="og:url" content="${url}">\n` : ""}<meta property="og:ti
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" href="assets/fonts/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css">
 <script>try{const t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>`;
 
@@ -80,7 +79,7 @@ const directory = current => Object.entries(CATS).map(([cat, label]) =>
 const header = `<a class="skip-link" href="#app">Skip to content</a>
 <div class="site-head"><div class="wrap">
   <header class="top">
-    <a class="logo" href="./"><img src="assets/icon.svg" alt="" width="32" height="32"><span id="siteName">${SITE}</span></a>
+    <a class="logo" href="./" aria-label="ToolsBravo home"><img src="assets/icon.svg" alt="" width="32" height="32"><span id="siteName">${SITE}</span></a>
     <nav aria-label="Categories"><a href="./#files">PDF &amp; image</a><a href="./#office">Office</a><a href="./#finance">Finance</a><a href="./#general">General</a><a href="./#advanced">Developer</a><a href="automation-builder.html">Automations</a></nav><button class="theme-btn" type="button" aria-label="Switch theme">☾</button>
   </header>
 </div></div>`;
@@ -336,7 +335,7 @@ const PROSE = [
   {slug: "about.html", title: `About ${SITE} | Free, Private Online Tools`, h1: `About ${SITE}`,
     description: `Who makes ${SITE}, how its free calculators and tools work, how results are checked, and how to report a problem.`,
     lede: "Free everyday calculators, text tools, converters and developer utilities that work on phones and computers, with no account, subscription or app to install.",
-    html: `<h2>Private by design</h2><p>The tools run in your browser. What you type into a calculator, text box or converter is processed on your own device and is not uploaded to a ${SITE} server. The site has no accounts, no adverts and no tracking cookies. Read the <a href="privacy.html">privacy notice</a> for the details, including the fonts loaded from Google Fonts.</p>
+    html: `<h2>Private by design</h2><p>The tools run in your browser. What you type into a calculator, text box or converter is processed on your own device and is not uploaded to a ${SITE} server. The site has no accounts, no adverts and no tracking cookies. Fonts and libraries are hosted on ToolsBravo itself, so your browser doesn't contact other companies to use the tools. Read the <a href="privacy.html">privacy notice</a> for details.</p>
     <h2>How results are checked</h2><p>The source code is public on <a href="https://github.com/abrar858/toolbench">GitHub</a>. Automated tests run on every change. They check the UK income tax and National Insurance figures against worked examples, test that every tool loads without errors, and confirm that worked examples quoted on each page match what the tool calculates.</p>
     <p>UK finance tools use the published rates for the stated tax year. Each finance page shows the date its rates were last checked against GOV.UK guidance. Rates are reviewed each spring before the new tax year starts on 6 April.</p>
     <h2>Limits of the calculators</h2><p>Finance results are estimates for guidance, not financial, tax or legal advice. UK pay estimates use stated assumptions and may not reflect your tax code, region, benefits, pension scheme, student loan or other deductions. Confirm important figures with official guidance, your payslip or a qualified professional. Health tools such as the BMI calculator are screening estimates, not a diagnosis.</p>
@@ -345,7 +344,7 @@ const PROSE = [
     description: `How ${SITE} handles your data: tools run in your browser, with no accounts, adverts or tracking cookies.`,
     lede: `${SITE} is designed so the calculations, conversions and text processing in its tools happen in your browser.`,
     html: `<p>The site does not use accounts, an application database, analytics scripts or advertising trackers.</p>
-    <h2>External services</h2><p>Pages load fonts from Google Fonts. Your browser may connect to Google to download those fonts; Google's own privacy terms apply to that connection. The site is hosted on GitHub Pages, so GitHub may process technical connection data such as IP addresses and server logs under its policies.</p>
+    <h2>External services</h2><p>Fonts and code libraries are served from toolsbravo.com itself, so using the tools doesn't connect your browser to Google or other third parties. The site is hosted on GitHub Pages, so GitHub may process technical connection data such as IP addresses and server logs under its policies.</p>
     <h2>Information you enter</h2><p>Tool inputs are processed in your browser and are not sent to a ${SITE} application server. Avoid entering sensitive information on shared devices. Browser extensions and the device you use may have their own access.</p>
     <h2>Cookies and local storage</h2><p>${SITE} does not set tracking cookies. Your browser's local storage is used only to remember your light or dark theme choice and, in the automation builder, your saved workflow. Both stay on your device. If advertising, analytics, accounts or other third-party services are introduced, this notice will be updated before launch.</p>
     <h2>Contact</h2><p>For enquiries, use the project's <a href="https://github.com/abrar858/toolbench">GitHub repository</a>. Do not post personal information in public issues.</p>
@@ -359,9 +358,15 @@ ${pages.map(p => `  <url><loc>${ORIGIN}${p}</loc></url>`).join("\n")}
 </urlset>
 `;
 
-// Home page: replace the marked block with a crawlable list of every tool page.
-const home = read("index.html").replace(/<!-- tool-directory:start -->[\s\S]*?<!-- tool-directory:end -->/,
-  `<!-- tool-directory:start --><nav class="tool-directory" aria-label="All tools">${directory(null)}</nav><!-- tool-directory:end -->`);
+// Home page: pre-render the same markup homeHTML() builds in the browser, so the page is complete
+// on first paint (no layout shift when the script runs) and readable without JavaScript.
+const homeCtx = {document: {title: "", querySelector: () => ({content: "", textContent: "", dataset: {}}), querySelectorAll: () => []}, window: {}, navigator: {}};
+vm.createContext(homeCtx);
+vm.runInContext(js.slice(0, js.indexOf("function showHome(")) + ";globalThis.HOME = homeHTML();", homeCtx);
+const home = read("index.html")
+  .replace(/<main id="app" tabindex="-1">[\s\S]*?<\/main>/, () => `<main id="app" tabindex="-1">${homeCtx.HOME}</main>`)
+  .replace(/<!-- tool-directory:start -->[\s\S]*?<!-- tool-directory:end -->/,
+    () => `<!-- tool-directory:start --><nav class="tool-directory" aria-label="All tools">${directory(null)}</nav><!-- tool-directory:end -->`);
 
 const outputs = {"sitemap.xml": sitemap, "index.html": home, "404.html": notFound, "salary-after-tax.html": salaryHub()};
 for (const c of TOOL_CONTENT) outputs[c.slug] = toolPage(c);
