@@ -147,15 +147,17 @@ test('custom domain and crawl configuration remain aligned',()=>{
  assert.ok(readPage('robots.txt').includes('Sitemap: https://toolsbravo.com/sitemap.xml'));
 });
 
-test('all 36 tools are present and mapped to unique dedicated pages',()=>{
+test('every tool is present and mapped to a unique dedicated page',()=>{
  const tools=[...script.matchAll(/\{id:\s*"([^"]+)"\s*,\s*cat:\s*"([^"]+)"/g)];
- assert.equal(tools.length,36,'Homepage advertises 36 tools');
+ assert.ok(tools.length>=44,'Expected at least 44 tools');
+ const count=tools.length;
+ assert.ok(html.includes(count+' free online tools'),'Home page description should state the tool count ('+count+')');
  const ids=tools.map(m=>m[1]);
- assert.equal(new Set(ids).size,36,'Tool IDs must be unique');
+ assert.equal(new Set(ids).size,count,'Tool IDs must be unique');
  const contentIds=TOOL_CONTENT.map(t=>t.id);
  assert.deepEqual([...contentIds].sort(),[...ids].sort(),'Every tool must have a generated content page');
  const slugs=TOOL_CONTENT.map(t=>t.slug);
- assert.equal(new Set(slugs).size,36,'Tool page paths must be unique');
+ assert.equal(new Set(slugs).size,count,'Tool page paths must be unique');
  for(const slug of slugs){
   assert.ok(readPage('sitemap.xml').includes('https://toolsbravo.com/'+slug),'Missing sitemap entry '+slug);
   assert.ok(html.includes('href="'+slug+'"'),'Missing homepage link '+slug);
@@ -163,7 +165,7 @@ test('all 36 tools are present and mapped to unique dedicated pages',()=>{
 });
 
 test('locally hosted PDF and document dependencies are nonempty',()=>{
- const assets=['pdf-lib.min.js','pdf.min.js','pdf.worker.min.js','mammoth.browser.min.js','fflate.min.js'];
+ const assets=['pdf-lib.min.js','pdf.min.js','pdf.worker.min.js','mammoth.browser.min.js','fflate.min.js','xlsx.full.min.js'];
  for(const name of assets){
   const file=new URL('../assets/vendor/'+name,import.meta.url);
   assert.ok(statSync(file).size>10000,'Missing or truncated vendor library: '+name);
