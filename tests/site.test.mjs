@@ -176,3 +176,13 @@ test('homepage explains browser storage accurately',()=>{
  assert.match(html,/saved automation workflows may be stored locally/i);
  assert.match(readPage('privacy.html'),/local storage is used only/i);
 });
+
+test('pages load CSS and JS with a content version tag', async ()=>{
+ const {createHash}=await import('node:crypto');
+ const tag=p=>createHash('sha256').update(readPage(p).replace(/\r\n/g,'\n')).digest('hex').slice(0,10);
+ for(const p of ['index.html','404.html','about.html','salary-after-tax.html',...TOOL_CONTENT.map(c=>c.slug)]){
+  const page=readPage(p);
+  assert.ok(page.includes('assets/tools.js?v='+tag('assets/tools.js')+'"'),'tools.js version tag in '+p);
+  assert.ok(page.includes('assets/site.css?v='+tag('assets/site.css')+'"'),'site.css version tag in '+p);
+ }
+});
