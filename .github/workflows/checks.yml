@@ -1,4 +1,4 @@
-name: Toolbench static checks
+name: ToolsBravo static checks
 on:
   push:
     branches: [main]
