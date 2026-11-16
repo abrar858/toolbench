@@ -500,3 +500,22 @@ html{scroll-padding-top:84px}
 /* Right-align the menu without hiding its first links when it scrolls on small screens. */
 .site-head .top nav{justify-content:flex-start}
 .site-head .top nav a:first-child{margin-left:auto}
+
+/* ---------- Excel & data tools ---------- */
+:root{--c-office:#1D6F42;--c-office-bg:#E3F3E9}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--c-office:#7FD6A3;--c-office-bg:#16372A}}
+:root[data-theme="dark"]{--c-office:#7FD6A3;--c-office-bg:#16372A}
+.tcard-office{--c:var(--c-office);--cbg:var(--c-office-bg)}
+.out-title{font:700 1rem var(--head);margin:18px 0 8px}
+.sheet-wrap{max-height:480px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.tool .panel table.sheet{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-size:.85rem;font-variant-numeric:tabular-nums}
+.tool .panel table.sheet th,.tool .panel table.sheet td{padding:6px 10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);white-space:nowrap;max-width:320px;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.tool .panel table.sheet thead th{position:sticky;top:0;z-index:1;background:var(--field);font-weight:700}
+.tool .panel table.sheet th.rn{position:sticky;left:0;background:var(--field);color:var(--muted);font-weight:500;text-align:right;min-width:44px}
+.tool .panel table.sheet thead th.rn{z-index:2}
+.sheet-tabs{display:flex;gap:6px;overflow-x:auto;margin:14px 0 12px;padding-bottom:4px}
+.tool .panel .sheet-tabs button{flex:none;min-height:36px;padding:6px 14px;border-radius:999px;font-size:.85rem}
+.tool .panel .sheet-tabs button[aria-selected="true"]{background:var(--c-office);border-color:var(--c-office);color:#fff}
+.col-pick{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:12px 0}
+.col-pick legend{font-weight:600;font-size:.9rem;padding:0 6px}
+.col-pick > div{display:flex;flex-wrap:wrap;gap:6px 16px;max-height:180px;overflow:auto}

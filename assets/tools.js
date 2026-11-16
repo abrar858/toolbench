@@ -253,7 +253,306 @@ function pdfParagraphs(items) {
   return paras.map(x => x.join(" "));
 }
 
+/* ---------- Excel, CSV and data tools: shared helpers (SheetJS, loaded on demand) ---------- */
+const sheetLib = () => loadScript("xlsx.full.min.js").then(() => window.XLSX);
+const SHEET_ACCEPT = ".xlsx,.xlsm,.xls,.ods,.csv,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.oasis.opendocument.spreadsheet,text/csv";
+const BOOK_MIME = {xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", csv: "text/csv;charset=utf-8"};
+async function readBook(file, opts = {}) {
+  const X = await sheetLib();
+  try {
+    const isText = /\.(csv|tsv|txt)$/i.test(file.name);
+    return X.read(isText ? await file.text() : new Uint8Array(await file.arrayBuffer()), {type: isText ? "string" : "array", cellDates: true, ...opts});
+  } catch (e) {
+    throw new Error(/password|encrypt/i.test(e.message) ? `${file.name} is password-protected. Open it in Excel, remove the password, then try again.` : `${file.name} could not be read as a spreadsheet. Use .xlsx, .xls, .ods or .csv files.`);
+  }
+}
+// Rows of displayed text, as Excel shows them.
+const sheetRows = (X, ws) => X.utils.sheet_to_json(ws, {header: 1, raw: false, defval: "", blankrows: false});
+const fillSheets = (sel, wb) => { sel.innerHTML = wb.SheetNames.map((n, i) => `<option value="${i}">${esc(n)}</option>`).join(""); };
+function rowsTable(rows, {max = 200, header = true} = {}) {
+  if (!rows.length) return `<p class="note">This sheet is empty.</p>`;
+  const width = Math.max(...rows.slice(0, max + 1).map(r => r.length)), cell = v => esc(v == null ? "" : String(v));
+  const pad = r => Array.from({length: width}, (_, i) => r[i]);
+  const head = header ? rows[0] : null, body = (header ? rows.slice(1) : rows).slice(0, max);
+  return `<div class="sheet-wrap"><table class="sheet">${head ? `<thead><tr><th class="rn"></th>${pad(head).map(v => `<th>${cell(v)}</th>`).join("")}</tr></thead>` : ""}<tbody>${body.map((r, i) => `<tr><th class="rn">${i + (header ? 2 : 1)}</th>${pad(r).map(v => `<td>${cell(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${rows.length - (header ? 1 : 0) > max ? `<p class="note">Showing the first ${max.toLocaleString("en-GB")} of ${(rows.length - (header ? 1 : 0)).toLocaleString("en-GB")} rows.</p>` : ""}`;
+}
+function saveBook(X, wb, name, type = "xlsx") {
+  const out = X.write(wb, {bookType: type, type: "array", compression: true});
+  const blob = new Blob([out], {type: BOOK_MIME[type] || "application/octet-stream"});
+  saveBlob(blob, name); return blob;
+}
+// Excel sheet names: max 31 characters, no : \ / ? * [ ], unique in the workbook.
+function safeSheetName(name, used) {
+  let base = String(name).replace(/[:\\/?*[\]]/g, " ").trim().slice(0, 31) || "Sheet", n = base, k = 2;
+  while (used.has(n.toLowerCase())) { const suffix = ` (${k++})`; n = base.slice(0, 31 - suffix.length) + suffix; }
+  used.add(n.toLowerCase()); return n;
+}
+const pickOneFile = (el, prefix, onFile) => wireDrop(el, `${prefix}-in`, f => onFile(f[0]));
+// Converts "1,234.50", "£12", "-7%" style text into numbers; leaves anything else as text.
+function toNumberish(s) {
+  const t = String(s).trim();
+  if (!/^[-+(]?[£$€]?\s?\d{1,3}(,\d{3})*(\.\d+)?\)?%?$|^[-+]?[£$€]?\d+(\.\d+)?%?$/.test(t) || /^0\d/.test(t)) return s;
+  const neg = /^\(.*\)$/.test(t) || t.startsWith("-"), pct = t.endsWith("%");
+  const n = Number(t.replace(/[^\d.]/g, "")) * (neg ? -1 : 1);
+  return Number.isFinite(n) ? (pct ? n / 100 : n) : s;
+}
+// Rebuilds a table from the positions of text on a PDF page.
+function pdfTable(items) {
+  const parts = items.filter(it => "str" in it && it.str.trim()).map(it => ({x: it.transform[4], y: it.transform[5], w: it.width, h: Math.abs(it.transform[3]) || it.height || 10, s: it.str}));
+  parts.sort((a, b) => b.y - a.y || a.x - b.x);
+  const rows = [];
+  for (const p of parts) { const r = rows.find(r => Math.abs(r.y - p.y) <= Math.max(2, p.h * .45)); if (r) r.parts.push(p); else rows.push({y: p.y, parts: [p]}); }
+  rows.sort((a, b) => b.y - a.y);
+  // Merge text runs that are close together into cells.
+  const cellRows = rows.map(r => {
+    const ps = r.parts.sort((a, b) => a.x - b.x), cells = [];
+    for (const p of ps) { const c = cells[cells.length - 1]; if (c && p.x - (c.x + c.w) < Math.max(3, p.h * .55)) { c.s += (p.x - (c.x + c.w) > p.h * .15 ? " " : "") + p.s; c.w = p.x + p.w - c.x; } else cells.push({...p}); }
+    return cells;
+  });
+  // Column positions shared by all rows: cluster the left edges of cells.
+  const lefts = cellRows.flat().map(c => c.x).sort((a, b) => a - b), cols = [];
+  for (const x of lefts) { const c = cols[cols.length - 1]; if (c && x - c.max < 12) { c.max = x; c.n++; } else cols.push({min: x, max: x, n: 1}); }
+  const colOf = x => { let best = 0; cols.forEach((c, i) => { if (x >= c.min - 6) best = i; }); return best; };
+  return cellRows.map(cells => { const row = []; cells.forEach(c => { const i = colOf(c.x); row[i] = row[i] ? row[i] + " " + c.s.trim() : c.s.trim(); }); return Array.from({length: Math.max(row.length, 1)}, (_, i) => row[i] ?? ""); });
+}
+// Preview a printable HTML document in an iframe and print it to PDF.
+const printDoc = (title, css, body) => `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${css}</style></head><body>${body}</body></html>`;
+
 const TOOLS = [
+/* ---------- EXCEL & DATA ---------- */
+{id: "pdf-to-excel", cat: "office", name: "PDF to Excel", desc: "Turn tables in a PDF into an editable Excel spreadsheet.",
+ ui: `${dropUI("px-in", "application/pdf,.pdf", "Choose a PDF file", false)}<p id="px-file" class="file-picked" hidden></p>
+  <div class="row"><div><label for="px-mode">Layout</label><select id="px-mode"><option value="pages">One sheet for each page</option><option value="one">All pages in one sheet</option></select></div>
+  <div><label for="px-pages">Pages (blank for all)</label><input id="px-pages" placeholder="e.g. 2-4" autocomplete="off"></div></div>
+  <label class="check"><input id="px-num" type="checkbox" checked> Turn numbers like 1,234.50 and £12 into real numbers</label>
+  <div class="btns"><button class="primary" id="px-go" disabled>Convert to Excel</button></div><p id="px-msg" class="note" aria-live="polite">Choose a PDF to start. Works with PDFs that contain real text, such as bank statements, invoices and reports.</p><div id="px-out"></div>`,
+ init(el) {
+  let file = null; const go = $("#px-go", el), msg = $("#px-msg", el);
+  pickOneFile(el, "px", f => { file = f; $("#px-out", el).innerHTML = ""; const p = $("#px-file", el); p.hidden = false; p.textContent = `${f.name} · ${fsize(f.size)}`; go.disabled = false; say(msg, "Press Convert to Excel."); });
+  go.onclick = async () => {
+    busy(go, true, "Converting…");
+    try {
+      const [X, doc] = await Promise.all([sheetLib(), openPdfJs(file)]), wb = X.utils.book_new(), used = new Set(), num = $("#px-num", el).checked;
+      const idx = $("#px-pages", el).value.trim() ? pageGroups($("#px-pages", el).value, doc.numPages).flat() : Array.from({length: doc.numPages}, (_, i) => i);
+      const all = []; let firstRows = null, cells = 0;
+      for (const i of idx) {
+        say(msg, `Reading page ${i + 1} of ${doc.numPages}…`);
+        const page = await doc.getPage(i + 1), rows = pdfTable((await page.getTextContent()).items).map(r => num ? r.map(toNumberish) : r); page.cleanup();
+        cells += rows.flat().filter(v => v !== "").length; firstRows ||= rows.length ? rows : null;
+        if ($("#px-mode", el).value === "pages") X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(rows.length ? rows : [[""]]), safeSheetName(`Page ${i + 1}`, used));
+        else all.push(...rows, []);
+      }
+      doc.destroy();
+      if (!cells) throw new Error("No text was found. This PDF is probably a scanned image, which needs OCR (text recognition) before it can be converted.");
+      if (!wb.SheetNames.length) X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(all), "Sheet1");
+      const blob = new Blob([X.write(wb, {bookType: "xlsx", type: "array", compression: true})], {type: BOOK_MIME.xlsx});
+      $("#px-out", el).innerHTML = `<h3 class="out-title">Preview of the first page</h3>${rowsTable(firstRows || [[""]], {max: 50})}`;
+      showResults($("#px-out", el).appendChild(document.createElement("div")), [{name: `${baseName(file)}.xlsx`, blob, note: plural(wb.SheetNames.length, "sheet")}]);
+      say(msg, "Done. Check the preview: columns are rebuilt from the position of the text, so merged or wrapped cells may need tidying.");
+    } catch (e) { say(msg, e.message, true); } finally { busy(go, false); }
+  };
+ }},
+{id: "excel-to-pdf", cat: "office", name: "Excel to PDF", desc: "Turn an Excel or CSV sheet into a clean, printable PDF.",
+ ui: `${dropUI("ep-in", SHEET_ACCEPT, "Choose an Excel or CSV file", false)}<p id="ep-file" class="file-picked" hidden></p>
+  <div class="row"><div><label for="ep-sheet">Sheet</label><select id="ep-sheet" disabled><option>Choose a file first</option></select></div>
+  <div><label for="ep-orient">Orientation</label><select id="ep-orient"><option value="landscape">Landscape</option><option value="portrait">Portrait</option></select></div>
+  <div><label for="ep-size">Paper</label><select id="ep-size"><option value="A4">A4</option><option value="letter">US Letter</option></select></div></div>
+  <label class="check"><input id="ep-grid" type="checkbox" checked> Show gridlines</label> <label class="check"><input id="ep-head" type="checkbox" checked> Repeat the first row as a header on every page</label>
+  <p id="ep-msg" class="note" aria-live="polite">Choose a spreadsheet to preview it.</p>
+  <div id="ep-out" hidden><div class="btns"><button class="primary" id="ep-print">Save as PDF</button></div><p class="note">In the print window, choose <strong>Save as PDF</strong> as the printer.</p><iframe id="ep-frame" class="doc-preview" title="Spreadsheet preview"></iframe></div>`,
+ init(el) {
+  let wb = null, X = null, name = ""; const msg = $("#ep-msg", el), sel = $("#ep-sheet", el), frame = $("#ep-frame", el);
+  const render = () => {
+    if (!wb) return;
+    const rows = sheetRows(X, wb.Sheets[wb.SheetNames[+sel.value]]), grid = $("#ep-grid", el).checked, head = $("#ep-head", el).checked && rows.length > 1;
+    const width = Math.max(1, ...rows.map(r => r.length)), cell = v => esc(v ?? ""), pad = r => Array.from({length: width}, (_, i) => `<td>${cell(r[i])}</td>`).join("");
+    frame.srcdoc = printDoc(`${name} - ${wb.SheetNames[+sel.value]}`, `@page{size:${$("#ep-size", el).value} ${$("#ep-orient", el).value};margin:12mm}body{font:9pt/1.35 Calibri,Carlito,Arial,sans-serif;color:#000;background:#fff;margin:0;padding:8px}h1{font-size:12pt;margin:0 0 8px}table{border-collapse:collapse;width:100%}td{padding:3px 5px;vertical-align:top;${grid ? "border:1px solid #b7b7b7;" : ""}}thead td{font-weight:700;background:#f1f3f5}tr{page-break-inside:avoid}@media print{body{padding:0}}`,
+      `<h1>${esc(wb.SheetNames[+sel.value])}</h1>${rows.length ? `<table>${head ? `<thead><tr>${pad(rows[0])}</tr></thead>` : ""}<tbody>${(head ? rows.slice(1) : rows).map(r => `<tr>${pad(r)}</tr>`).join("")}</tbody></table>` : "<p>This sheet is empty.</p>"}`);
+    $("#ep-out", el).hidden = false;
+    say(msg, `Preview of ${plural(rows.length, "row")}. Change the options above to update it.`);
+  };
+  pickOneFile(el, "ep", async f => {
+    try { X = await sheetLib(); wb = await readBook(f); name = baseName(f); fillSheets(sel, wb); sel.disabled = false; const p = $("#ep-file", el); p.hidden = false; p.textContent = `${f.name} · ${fsize(f.size)} · ${plural(wb.SheetNames.length, "sheet")}`; render(); }
+    catch (e) { say(msg, e.message, true); }
+  });
+  ["ep-sheet", "ep-orient", "ep-size", "ep-grid", "ep-head"].forEach(id => $("#" + id, el).addEventListener("change", render));
+  $("#ep-print", el).onclick = () => { frame.contentWindow.focus(); frame.contentWindow.print(); };
+ }},
+{id: "csv-to-excel", cat: "office", name: "CSV to Excel", desc: "Convert CSV files into Excel spreadsheets (.xlsx).",
+ ui: `${dropUI("cx-in", ".csv,.tsv,.txt,text/csv", "Choose CSV files", true)}<p id="cx-file" class="file-picked" hidden></p>
+  <div class="row"><div><label for="cx-sep">Separator</label><select id="cx-sep"><option value="">Detect automatically</option><option value=",">Comma ,</option><option value=";">Semicolon ;</option><option value="\t">Tab</option><option value="|">Pipe |</option></select></div>
+  <div><label for="cx-mode">Output</label><select id="cx-mode"><option value="each">One Excel file per CSV</option><option value="one">One Excel file, one sheet per CSV</option></select></div></div>
+  <label class="check"><input id="cx-text" type="checkbox"> Keep every value as text (keeps leading zeros in codes and phone numbers)</label>
+  <div class="btns"><button class="primary" id="cx-go" disabled>Convert to Excel</button></div><p id="cx-msg" class="note" aria-live="polite">Choose one or more CSV files.</p><div id="cx-out"></div>`,
+ init(el) {
+  let files = []; const go = $("#cx-go", el), msg = $("#cx-msg", el);
+  wireDrop(el, "cx-in", f => { files = f; const p = $("#cx-file", el); p.hidden = false; p.textContent = `${plural(f.length, "file")} · ${fsize(f.reduce((a, x) => a + x.size, 0))}`; go.disabled = false; $("#cx-out", el).innerHTML = ""; say(msg, "Ready to convert."); });
+  go.onclick = async () => {
+    busy(go, true, "Converting…");
+    try {
+      const X = await sheetLib(), sep = $("#cx-sep", el).value, text = $("#cx-text", el).checked, one = $("#cx-mode", el).value === "one", items = [], book = X.utils.book_new(), used = new Set();
+      let preview = null;
+      for (const f of files) {
+        const src = (await f.text()).replace(/^﻿/, ""), opts = {type: "string", raw: text, cellDates: !text, ...(sep ? {FS: sep} : {})};
+        let wb; try { wb = X.read(src, opts); } catch { throw new Error(`${f.name} could not be read as CSV.`); }
+        const ws = wb.Sheets[wb.SheetNames[0]]; preview ||= sheetRows(X, ws);
+        if (one) X.utils.book_append_sheet(book, ws, safeSheetName(baseName(f), used));
+        else { const nb = X.utils.book_new(); X.utils.book_append_sheet(nb, ws, safeSheetName(baseName(f), new Set())); items.push({name: `${baseName(f)}.xlsx`, blob: new Blob([X.write(nb, {bookType: "xlsx", type: "array", compression: true})], {type: BOOK_MIME.xlsx})}); }
+      }
+      if (one) items.push({name: "converted.xlsx", blob: new Blob([X.write(book, {bookType: "xlsx", type: "array", compression: true})], {type: BOOK_MIME.xlsx}), note: plural(book.SheetNames.length, "sheet")});
+      $("#cx-out", el).innerHTML = `<h3 class="out-title">Preview</h3>${rowsTable(preview || [], {max: 20})}`;
+      showResults($("#cx-out", el).appendChild(document.createElement("div")), items);
+      say(msg, `${plural(items.length, "Excel file")} ready.`);
+    } catch (e) { say(msg, e.message, true); } finally { busy(go, false); }
+  };
+ }},
+{id: "excel-to-csv", cat: "office", name: "Excel to CSV", desc: "Export Excel sheets to CSV with the separator you need.",
+ ui: `${dropUI("xc-in", SHEET_ACCEPT, "Choose an Excel file", false)}<p id="xc-file" class="file-picked" hidden></p>
+  <div class="row"><div><label for="xc-sheet">Sheet</label><select id="xc-sheet" disabled><option>Choose a file first</option></select></div>
+  <div><label for="xc-sep">Separator</label><select id="xc-sep"><option value=",">Comma ,</option><option value=";">Semicolon ; (European Excel)</option><option value="\t">Tab</option><option value="|">Pipe |</option></select></div></div>
+  <label class="check"><input id="xc-all" type="checkbox"> Export every sheet (downloads a ZIP)</label> <label class="check"><input id="xc-bom" type="checkbox" checked> Add a UTF-8 marker so Excel shows £, € and accents correctly</label>
+  <div class="btns"><button class="primary" id="xc-go" disabled>Convert to CSV</button></div><p id="xc-msg" class="note" aria-live="polite">Choose an .xlsx, .xls or .ods file.</p><div id="xc-out"></div>`,
+ init(el) {
+  let wb = null, file = null; const go = $("#xc-go", el), msg = $("#xc-msg", el), sel = $("#xc-sheet", el);
+  pickOneFile(el, "xc", async f => {
+    try { wb = await readBook(f); file = f; fillSheets(sel, wb); sel.disabled = false; go.disabled = false; const p = $("#xc-file", el); p.hidden = false; p.textContent = `${f.name} · ${fsize(f.size)} · ${plural(wb.SheetNames.length, "sheet")}`; $("#xc-out", el).innerHTML = ""; say(msg, "Choose a sheet and separator."); }
+    catch (e) { say(msg, e.message, true); }
+  });
+  go.onclick = async () => {
+    busy(go, true, "Converting…");
+    try {
+      const X = await sheetLib(), FS = $("#xc-sep", el).value, bom = $("#xc-bom", el).checked ? "﻿" : "";
+      const names = $("#xc-all", el).checked ? wb.SheetNames : [wb.SheetNames[+sel.value]];
+      const items = names.map(n => ({name: `${baseName(file)}${names.length > 1 || wb.SheetNames.length > 1 ? "-" + n.replace(/[\\/:*?"<>|]/g, "_") : ""}.${FS === "\t" ? "tsv" : "csv"}`,
+        blob: new Blob([bom + X.utils.sheet_to_csv(wb.Sheets[n], {FS, blankrows: false})], {type: BOOK_MIME.csv})}));
+      $("#xc-out", el).innerHTML = `<h3 class="out-title">Preview</h3>${rowsTable(sheetRows(X, wb.Sheets[names[0]]), {max: 20})}`;
+      showResults($("#xc-out", el).appendChild(document.createElement("div")), items);
+      say(msg, `${plural(items.length, "file")} ready.`);
+    } catch (e) { say(msg, e.message, true); } finally { busy(go, false); }
+  };
+ }},
+{id: "merge-excel", cat: "office", name: "Merge Excel files", desc: "Combine several Excel or CSV files into one workbook or one sheet.",
+ ui: `${dropUI("me-in", SHEET_ACCEPT, "Choose Excel or CSV files", true)}<ol class="file-list" id="me-list"></ol>
+  <label for="me-mode">How to merge</label><select id="me-mode"><option value="sheets">Keep each sheet as its own tab in one workbook</option><option value="stack">Stack the rows of every file into one sheet</option></select>
+  <div id="me-stack-opts" hidden><label class="check"><input id="me-head" type="checkbox" checked> Files have a header row (keep it once)</label> <label class="check"><input id="me-src" type="checkbox" checked> Add a column showing the source file</label></div>
+  <div class="btns"><button class="primary" id="me-go" disabled>Merge files</button><button id="me-clear" disabled>Clear</button></div><p id="me-msg" class="note" aria-live="polite">Add two or more files. Use the arrows to set the order.</p><div id="me-out"></div>`,
+ init(el) {
+  const files = [], list = $("#me-list", el), go = $("#me-go", el), msg = $("#me-msg", el), mode = $("#me-mode", el);
+  const changed = () => { fileListUI(list, files); go.disabled = files.length < 2; $("#me-clear", el).disabled = !files.length; };
+  mode.onchange = () => { $("#me-stack-opts", el).hidden = mode.value !== "stack"; };
+  wireDrop(el, "me-in", f => { files.push(...f); changed(); });
+  wireFileList(list, files, changed);
+  $("#me-clear", el).onclick = () => { files.length = 0; changed(); };
+  go.onclick = async () => {
+    busy(go, true, "Merging…");
+    try {
+      const X = await sheetLib(), out = X.utils.book_new(), used = new Set();
+      if (mode.value === "sheets") {
+        for (const f of files) { const wb = await readBook(f); wb.SheetNames.forEach(n => X.utils.book_append_sheet(out, wb.Sheets[n], safeSheetName(wb.SheetNames.length > 1 ? `${baseName(f)} - ${n}` : baseName(f), used))); }
+      } else {
+        const head = $("#me-head", el).checked, src = $("#me-src", el).checked, rows = []; let header = null;
+        for (const f of files) {
+          const wb = await readBook(f), data = X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1, raw: true, defval: "", blankrows: false});
+          if (!data.length) continue;
+          let body = data;
+          if (head) { if (!header) header = data[0]; body = data.slice(1); }
+          rows.push(...body.map(r => src ? [f.name, ...r] : r));
+        }
+        X.utils.book_append_sheet(out, X.utils.aoa_to_sheet(header ? [src ? ["Source file", ...header] : header, ...rows] : rows), "Merged");
+      }
+      const blob = new Blob([X.write(out, {bookType: "xlsx", type: "array", compression: true, cellDates: true})], {type: BOOK_MIME.xlsx});
+      showResults($("#me-out", el), [{name: "merged.xlsx", blob, note: plural(out.SheetNames.length, "sheet")}]);
+      say(msg, mode.value === "sheets" ? `Merged ${plural(files.length, "file")} into ${plural(out.SheetNames.length, "sheet")}.` : `Merged ${plural(files.length, "file")} into one sheet of ${plural(sheetRows(X, out.Sheets.Merged).length, "row")}.`);
+    } catch (e) { say(msg, e.message, true); } finally { busy(go, false); }
+  };
+ }},
+{id: "excel-to-json", cat: "office", name: "Excel to JSON", desc: "Convert an Excel or CSV sheet into JSON for code and APIs.",
+ ui: `${dropUI("xj-in", SHEET_ACCEPT, "Choose an Excel or CSV file", false)}<p id="xj-file" class="file-picked" hidden></p>
+  <div class="row"><div><label for="xj-sheet">Sheet</label><select id="xj-sheet" disabled><option>Choose a file first</option></select></div>
+  <div><label for="xj-shape">JSON shape</label><select id="xj-shape"><option value="objects">Array of objects (first row = keys)</option><option value="arrays">Array of rows (arrays)</option></select></div>
+  <div><label for="xj-indent">Indentation</label><select id="xj-indent"><option value="2">2 spaces</option><option value="4">4 spaces</option><option value="0">Minified</option></select></div></div>
+  <p id="xj-msg" class="note" aria-live="polite">Choose a spreadsheet.</p>
+  <div id="xj-out" hidden><label for="xj-text">JSON</label><textarea id="xj-text" class="mono" readonly></textarea><div class="btns"><button class="primary" id="xj-dl">Download .json</button><button id="xj-copy">Copy JSON</button></div></div>`,
+ init(el) {
+  let wb = null, X = null, name = ""; const msg = $("#xj-msg", el), sel = $("#xj-sheet", el);
+  const render = () => {
+    if (!wb) return;
+    const ws = wb.Sheets[wb.SheetNames[+sel.value]], objects = $("#xj-shape", el).value === "objects";
+    const data = objects ? X.utils.sheet_to_json(ws, {raw: true, defval: null, blankrows: false}) : X.utils.sheet_to_json(ws, {header: 1, raw: true, defval: null, blankrows: false});
+    const ind = +$("#xj-indent", el).value, text = JSON.stringify(data, (k, v) => v instanceof Date ? v.toISOString() : v, ind || undefined);
+    $("#xj-text", el).value = text; $("#xj-out", el).hidden = false;
+    say(msg, `${plural(data.length, objects ? "record" : "row")} · ${fsize(new Blob([text]).size)}.${objects ? " Keys come from the first row; empty cells become null." : ""}`);
+  };
+  pickOneFile(el, "xj", async f => {
+    try { X = await sheetLib(); wb = await readBook(f); name = baseName(f); fillSheets(sel, wb); sel.disabled = false; const p = $("#xj-file", el); p.hidden = false; p.textContent = `${f.name} · ${fsize(f.size)} · ${plural(wb.SheetNames.length, "sheet")}`; render(); }
+    catch (e) { say(msg, e.message, true); }
+  });
+  ["xj-sheet", "xj-shape", "xj-indent"].forEach(id => $("#" + id, el).addEventListener("change", render));
+  $("#xj-dl", el).onclick = () => saveBlob(new Blob([$("#xj-text", el).value], {type: "application/json"}), `${name}.json`);
+  $("#xj-copy", el).onclick = e => copy($("#xj-text", el).value, e.target);
+ }},
+{id: "remove-duplicate-rows", cat: "office", name: "Remove duplicate rows", desc: "Find and delete duplicate rows in an Excel or CSV file.",
+ ui: `${dropUI("rd-in", SHEET_ACCEPT, "Choose an Excel or CSV file", false)}<p id="rd-file" class="file-picked" hidden></p>
+  <div class="row"><div><label for="rd-sheet">Sheet</label><select id="rd-sheet" disabled><option>Choose a file first</option></select></div>
+  <div><label for="rd-out-type">Save as</label><select id="rd-out-type"><option value="xlsx">Excel (.xlsx)</option><option value="csv">CSV</option></select></div></div>
+  <label class="check"><input id="rd-head" type="checkbox" checked> First row is a header</label> <label class="check"><input id="rd-case" type="checkbox"> Ignore upper/lower case and extra spaces</label>
+  <fieldset id="rd-cols" class="col-pick" hidden><legend>Compare these columns</legend><div id="rd-col-list"></div></fieldset>
+  <div class="btns"><button class="primary" id="rd-go" disabled>Remove duplicates</button></div><p id="rd-msg" class="note" aria-live="polite">Choose a spreadsheet.</p><div id="rd-out"></div>`,
+ init(el) {
+  let wb = null, X = null, file = null; const go = $("#rd-go", el), msg = $("#rd-msg", el), sel = $("#rd-sheet", el);
+  const cols = () => {
+    const rows = sheetRows(X, wb.Sheets[wb.SheetNames[+sel.value]]), head = $("#rd-head", el).checked, width = Math.max(0, ...rows.map(r => r.length));
+    $("#rd-col-list", el).innerHTML = Array.from({length: width}, (_, i) => `<label class="check"><input type="checkbox" value="${i}" checked> ${esc(head && rows[0] && String(rows[0][i] ?? "").trim() ? rows[0][i] : "Column " + X.utils.encode_col(i))}</label>`).join("");
+    $("#rd-cols", el).hidden = !width;
+  };
+  pickOneFile(el, "rd", async f => {
+    try { X = await sheetLib(); wb = await readBook(f); file = f; fillSheets(sel, wb); sel.disabled = false; go.disabled = false; cols(); const p = $("#rd-file", el); p.hidden = false; p.textContent = `${f.name} · ${fsize(f.size)} · ${plural(wb.SheetNames.length, "sheet")}`; $("#rd-out", el).innerHTML = ""; say(msg, "Choose the columns that must match, then remove duplicates."); }
+    catch (e) { say(msg, e.message, true); }
+  });
+  sel.onchange = () => wb && cols(); $("#rd-head", el).onchange = () => wb && cols();
+  go.onclick = async () => {
+    busy(go, true, "Checking…");
+    try {
+      const ws = wb.Sheets[wb.SheetNames[+sel.value]], raw = X.utils.sheet_to_json(ws, {header: 1, raw: true, defval: "", blankrows: false}), shown = sheetRows(X, ws);
+      const head = $("#rd-head", el).checked, fold = $("#rd-case", el).checked, keys = $$("#rd-col-list input:checked", el).map(i => +i.value);
+      if (!keys.length) throw new Error("Choose at least one column to compare.");
+      const norm = v => fold ? String(v).trim().replace(/\s+/g, " ").toLowerCase() : String(v);
+      const seen = new Set(), keep = head ? [raw[0]] : [], start = head ? 1 : 0;
+      for (let r = start; r < raw.length; r++) { const k = JSON.stringify(keys.map(i => norm(shown[r]?.[i] ?? ""))); if (!seen.has(k)) { seen.add(k); keep.push(raw[r]); } }
+      const removed = raw.length - keep.length, out = X.utils.book_new(), type = $("#rd-out-type", el).value;
+      X.utils.book_append_sheet(out, X.utils.aoa_to_sheet(keep, {cellDates: true}), safeSheetName(wb.SheetNames[+sel.value], new Set()));
+      const blob = new Blob([type === "csv" ? "﻿" + X.utils.sheet_to_csv(out.Sheets[out.SheetNames[0]]) : X.write(out, {bookType: "xlsx", type: "array", compression: true})], {type: BOOK_MIME[type]});
+      $("#rd-out", el).innerHTML = `<h3 class="out-title">Result</h3>${rowsTable(sheetRows(X, out.Sheets[out.SheetNames[0]]), {max: 50, header: head})}`;
+      showResults($("#rd-out", el).appendChild(document.createElement("div")), [{name: `${baseName(file)}-no-duplicates.${type}`, blob, note: `${plural(keep.length - start, "row")} kept`}]);
+      say(msg, removed ? `Removed ${plural(removed, "duplicate row")}; ${plural(keep.length - start, "row")} left.` : "No duplicate rows found.");
+    } catch (e) { say(msg, e.message, true); } finally { busy(go, false); }
+  };
+ }},
+{id: "excel-viewer", cat: "office", name: "Excel file viewer", desc: "Open and search .xlsx, .xls, .ods and CSV files without Excel.",
+ ui: `${dropUI("ev-in", SHEET_ACCEPT, "Choose a spreadsheet to open", false)}<p id="ev-file" class="file-picked" hidden></p>
+  <div id="ev-tools" hidden><div class="sheet-tabs" id="ev-tabs" role="tablist" aria-label="Sheets"></div>
+  <label for="ev-q">Search this sheet</label><input id="ev-q" type="search" placeholder="Type to filter rows" autocomplete="off"></div>
+  <p id="ev-msg" class="note" aria-live="polite">Choose an .xlsx, .xls, .ods or .csv file. It opens on your device; nothing is uploaded.</p><div id="ev-out"></div>`,
+ init(el) {
+  let wb = null, X = null, cur = 0; const msg = $("#ev-msg", el), q = $("#ev-q", el);
+  const show = () => {
+    const rows = sheetRows(X, wb.Sheets[wb.SheetNames[cur]]), term = q.value.trim().toLowerCase();
+    const body = term ? rows.slice(1).filter(r => r.some(v => String(v).toLowerCase().includes(term))) : rows.slice(1);
+    $$("#ev-tabs button", el).forEach((b, i) => b.setAttribute("aria-selected", String(i === cur)));
+    $("#ev-out", el).innerHTML = rowsTable(rows.length ? [rows[0], ...body] : [], {max: 1000});
+    say(msg, term ? `${plural(body.length, "matching row")} in “${wb.SheetNames[cur]}”.` : `“${wb.SheetNames[cur]}”: ${plural(Math.max(0, rows.length - 1), "row")} below the first row.`);
+  };
+  pickOneFile(el, "ev", async f => {
+    try {
+      X = await sheetLib(); wb = await readBook(f); cur = 0; q.value = "";
+      $("#ev-tabs", el).innerHTML = wb.SheetNames.map((n, i) => `<button type="button" role="tab" data-i="${i}">${esc(n)}</button>`).join("");
+      $("#ev-tools", el).hidden = false; const p = $("#ev-file", el); p.hidden = false; p.textContent = `${f.name} · ${fsize(f.size)} · ${plural(wb.SheetNames.length, "sheet")}`; show();
+    } catch (e) { say(msg, e.message, true); }
+  });
+  $("#ev-tabs", el).onclick = e => { const b = e.target.closest("button[data-i]"); if (b) { cur = +b.dataset.i; q.value = ""; show(); } };
+  q.addEventListener("input", () => wb && show());
+ }},
+
 /* ---------- PDF & IMAGE ---------- */
 {id: "merge-pdf", cat: "files", name: "Merge PDF", desc: "Combine several PDF files into one, in the order you choose.",
  ui: `${dropUI("mp-in", "application/pdf,.pdf", "Choose PDF files", true)}<ol class="file-list" id="mp-list"></ol>
@@ -977,6 +1276,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 
 // Each tool has its own static, indexable page. Keep in sync with scripts/content.mjs (checked by tests).
 const SLUGS = {
+  "pdf-to-excel": "pdf-to-excel.html", "excel-to-pdf": "excel-to-pdf.html", "csv-to-excel": "csv-to-excel.html", "excel-to-csv": "excel-to-csv.html", "merge-excel": "merge-excel-files.html", "excel-to-json": "excel-to-json.html", "remove-duplicate-rows": "remove-duplicate-rows.html", "excel-viewer": "excel-viewer.html",
   "merge-pdf": "merge-pdf.html", "split-pdf": "split-pdf.html", "rotate-pdf": "rotate-pdf.html", "delete-pdf-pages": "delete-pdf-pages.html", "jpg-to-pdf": "jpg-to-pdf.html", "pdf-to-jpg": "pdf-to-jpg.html", "pdf-to-word": "pdf-to-word.html", "word-to-pdf": "word-to-pdf.html", "compress-pdf": "compress-pdf.html", "image-converter": "image-converter.html", "image-compressor": "image-compressor.html", "image-resizer": "image-resizer.html",
   "time-duration": "time-duration-calculator.html", "aspect-ratio": "aspect-ratio-calculator.html", "text-sorter": "text-line-sorter.html",
   "date-difference": "date-difference-calculator.html", "bmi-calculator": "bmi-calculator.html", "word-counter": "word-counter.html",
@@ -989,6 +1289,7 @@ const SLUGS = {
 };
 const CATS = [
   {id: "files", name: "PDF & image"},
+  {id: "office", name: "Excel & data"},
   {id: "general", name: "General"},
   {id: "advanced", name: "Developer"},
   {id: "finance", name: "Finance"}
@@ -997,13 +1298,14 @@ const app = $("#app");
 const DEF_DESC = $('meta[name="description"]').content, DEF_TITLE = document.title;
 
 // Small icon glyph for each tool card.
-const ICONS = {"merge-pdf": "⧉", "split-pdf": "✂", "rotate-pdf": "↻", "delete-pdf-pages": "⌫", "jpg-to-pdf": "JPG", "pdf-to-jpg": "PDF", "pdf-to-word": "W", "word-to-pdf": "DOC", "compress-pdf": "⇲", "image-converter": "⇆", "image-compressor": "◫", "image-resizer": "⤢",
+const ICONS = {"pdf-to-excel": "XLS", "excel-to-pdf": "PDF", "csv-to-excel": "CSV", "excel-to-csv": "⇢", "merge-excel": "⊞", "excel-to-json": "{ }", "remove-duplicate-rows": "≠", "excel-viewer": "▤",
+  "merge-pdf": "⧉", "split-pdf": "✂", "rotate-pdf": "↻", "delete-pdf-pages": "⌫", "jpg-to-pdf": "JPG", "pdf-to-jpg": "PDF", "pdf-to-word": "W", "word-to-pdf": "DOC", "compress-pdf": "⇲", "image-converter": "⇆", "image-compressor": "◫", "image-resizer": "⤢",
   "time-duration": "◷", "aspect-ratio": "▭", "text-sorter": "⇅", "date-difference": "▦", "bmi-calculator": "♡", "word-counter": "¶",
   "case-converter": "Aa", "password-generator": "✱", "unit-converter": "⇄", "age-calculator": "✦", "percentage-calculator": "%",
   "json-formatter": "{ }", "base64": "64", "url-encoder": "%20", "hash-generator": "#", "uuid-generator": "ID", "timestamp-converter": "⏱",
   "colour-converter": "◐", "take-home-pay": "£", "loan-calculator": "⌂", "savings-calculator": "↗", "debt-payoff": "↘", "vat-calculator": "VAT", "budget-planner": "◔"};
-const HOME_ORDER = ["finance", "files", "general", "advanced"];
-const POPULAR = [["Merge PDF", "merge-pdf.html"], ["PDF to Word", "pdf-to-word.html"], ["JPG to PDF", "jpg-to-pdf.html"], ["UK take-home pay", "uk-take-home-pay-calculator.html"], ["VAT", "vat-calculator.html"],
+const HOME_ORDER = ["files", "office", "finance", "general", "advanced"];
+const POPULAR = [["Merge PDF", "merge-pdf.html"], ["PDF to Word", "pdf-to-word.html"], ["JPG to PDF", "jpg-to-pdf.html"], ["PDF to Excel", "pdf-to-excel.html"], ["PDF to Excel", "pdf-to-excel.html"], ["UK take-home pay", "uk-take-home-pay-calculator.html"], ["VAT", "vat-calculator.html"],
   ["Loan repayments", "loan-repayment-calculator.html"], ["Word counter", "word-counter.html"], ["Password generator", "password-generator.html"], ["Percentage", "percentage-calculator.html"]];
 // Pages that are not in TOOLS but deserve their own card on the home page.
 const EXTRA_CARDS = {
@@ -1020,7 +1322,7 @@ function showHome(scrollTo) {
     <section class="home-hero">
       <span class="eyebrow">FREE · PRIVATE · NO SIGN-UP</span>
       <h1>Free PDF tools, converters and <em>UK calculators</em></h1>
-      <p class="lede">${TOOLS.length} fast, simple tools for money, PDFs, images, writing and code. Everything runs in your browser, so nothing you type leaves your device.</p>
+      <p class="lede">${TOOLS.length} fast, simple tools for PDFs, Excel, images, money, writing and code. Everything runs in your browser, so nothing you type leaves your device.</p>
       <div class="hero-search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="q" type="search" placeholder="Search tools, e.g. VAT, salary, JSON" aria-label="Search tools" autocomplete="off" enterkeyhint="go"><kbd aria-hidden="true">/</kbd></div>
       <p id="search-status" class="search-status" role="status" aria-live="polite"></p>

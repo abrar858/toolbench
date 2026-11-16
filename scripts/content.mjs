@@ -3,6 +3,7 @@
 // Keep titles under ~60 characters and descriptions under ~155 so they are not cut off in results.
 
 import {FILE_CONTENT} from "./content-files.mjs";
+import {OFFICE_CONTENT} from "./content-office.mjs";
 
 const BASE_CONTENT = [
 /* ---------------- GENERAL ---------------- */
@@ -462,4 +463,4 @@ const BASE_CONTENT = [
 },
 ];
 
-export const TOOL_CONTENT = [...BASE_CONTENT, ...FILE_CONTENT];
+export const TOOL_CONTENT = [...BASE_CONTENT, ...FILE_CONTENT, ...OFFICE_CONTENT];

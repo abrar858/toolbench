@@ -172,3 +172,100 @@ test('image converter, compressor and resizer', async ({page}) => {
  await page.locator('#ir-go').click();
  await expect(page.locator('#ir-out li')).toContainText('100 × 100 px');
 });
+
+/* ---------- Excel, CSV and data tools, run end to end with real files ---------- */
+// Reads a downloaded workbook with the site's own SheetJS, already loaded by the tool.
+const inspectBook = (page, buf) => page.evaluate(b64 => {
+ const wb = XLSX.read(Uint8Array.from(atob(b64), c => c.charCodeAt(0)), {type: 'array'});
+ return {sheets: wb.SheetNames, rows: XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1, raw: true, defval: ''})};
+}, buf.toString('base64'));
+
+test('PDF to Excel rebuilds table rows and numbers', async ({page}) => {
+ await page.goto('/pdf-to-excel.html');
+ await page.locator('#px-in').setInputFiles(fixture('table.pdf'));
+ await page.locator('#px-go').click();
+ await expect(page.locator('#px-out table.sheet')).toContainText('Coffee shop');
+ const d = await download(page, () => page.locator('#px-out [data-dl="0"]').click());
+ expect(d.suggestedFilename()).toBe('table.xlsx');
+ const {rows} = await inspectBook(page, await readDownload(d));
+ const salary = rows.find(r => r.includes('Salary'));
+ expect(salary).toEqual(['10/03/2026', 'Salary', 2450, 3445.8]);
+ expect(rows.find(r => r.includes('Opening balance'))).toEqual(['01/03/2026', 'Opening balance', '', 1000]);
+});
+
+test('Excel to PDF previews each sheet', async ({page}) => {
+ await page.goto('/excel-to-pdf.html');
+ await page.locator('#ep-in').setInputFiles(fixture('sample.xlsx'));
+ await expect(page.frameLocator('#ep-frame').locator('table')).toContainText('Sam Patel');
+ await page.locator('#ep-sheet').selectOption({label: 'Orders'});
+ await expect(page.frameLocator('#ep-frame').locator('table')).toContainText('1001');
+ await expect(page.locator('#ep-print')).toBeVisible();
+});
+
+test('CSV to Excel keeps leading zeros and detects semicolons', async ({page}) => {
+ await page.goto('/csv-to-excel.html');
+ await page.locator('#cx-in').setInputFiles(fixture('sample.csv'));
+ await page.locator('#cx-text').check();
+ await page.locator('#cx-go').click();
+ const d = await download(page, () => page.locator('#cx-out [data-dl="0"]').click());
+ expect(d.suggestedFilename()).toBe('sample.xlsx');
+ const {rows} = await inspectBook(page, await readDownload(d));
+ expect(rows.slice(0, 2)).toEqual([['Code', 'Product', 'Price'], ['00123', 'Tea, green', '3.50']]);
+});
+
+test('Excel to CSV exports with the chosen separator', async ({page}) => {
+ await page.goto('/excel-to-csv.html');
+ await page.locator('#xc-in').setInputFiles(fixture('sample.xlsx'));
+ await page.locator('#xc-sep').selectOption(';');
+ await page.locator('#xc-go').click();
+ const d = await download(page, () => page.locator('#xc-out [data-dl="0"]').click());
+ expect(d.suggestedFilename()).toBe('sample-Customers.csv');
+ const text = (await readDownload(d)).toString('utf8');
+ expect(text.startsWith('﻿Name;Email;Joined\nSam Patel;sam@example.com;2026-01-05')).toBe(true);
+});
+
+test('merge Excel files as tabs and as stacked rows', async ({page}) => {
+ await page.goto('/merge-excel-files.html');
+ await page.locator('#me-in').setInputFiles([fixture('sample.xlsx'), fixture('sample.csv')]);
+ let d = await download(page, async () => { await page.locator('#me-go').click(); await page.locator('#me-out [data-dl="0"]').click(); });
+ expect((await inspectBook(page, await readDownload(d))).sheets).toEqual(['sample - Customers', 'sample - Orders', 'sample']);
+ await page.locator('#me-clear').click();
+ await page.locator('#me-in').setInputFiles([fixture('sample.xlsx'), fixture('sample.xlsx')]);
+ await page.locator('#me-mode').selectOption('stack');
+ d = await download(page, async () => { await page.locator('#me-go').click(); await page.locator('#me-out [data-dl="0"]').click(); });
+ const {rows} = await inspectBook(page, await readDownload(d));
+ expect(rows).toHaveLength(11);
+ expect(rows[0]).toEqual(['Source file', 'Name', 'Email', 'Joined']);
+});
+
+test('Excel to JSON uses the header row as keys', async ({page}) => {
+ await page.goto('/excel-to-json.html');
+ await page.locator('#xj-in').setInputFiles(fixture('sample.xlsx'));
+ await expect(page.locator('#xj-out')).toBeVisible();
+ const data = JSON.parse(await page.locator('#xj-text').inputValue());
+ expect(data).toHaveLength(5);
+ expect(data[0]).toEqual({Name: 'Sam Patel', Email: 'sam@example.com', Joined: '2026-01-05'});
+});
+
+test('remove duplicate rows by all or chosen columns', async ({page}) => {
+ await page.goto('/remove-duplicate-rows.html');
+ await page.locator('#rd-in').setInputFiles(fixture('sample.xlsx'));
+ await page.locator('#rd-go').click();
+ await expect(page.locator('#rd-msg')).toHaveText('Removed 1 duplicate row; 4 rows left.');
+ for (const label of ['Name', 'Joined']) await page.locator('#rd-col-list label', {hasText: label}).locator('input').uncheck();
+ await page.locator('#rd-case').check();
+ await page.locator('#rd-go').click();
+ await expect(page.locator('#rd-msg')).toHaveText('Removed 2 duplicate rows; 3 rows left.');
+ const d = await download(page, () => page.locator('#rd-out [data-dl="0"]').click());
+ expect((await inspectBook(page, await readDownload(d))).rows).toHaveLength(4);
+});
+
+test('Excel viewer switches sheets and filters rows', async ({page}) => {
+ await page.goto('/excel-viewer.html');
+ await page.locator('#ev-in').setInputFiles(fixture('sample.xlsx'));
+ await expect(page.locator('#ev-tabs button')).toHaveCount(2);
+ await page.locator('#ev-q').fill('lee');
+ await expect(page.locator('#ev-out tbody tr')).toHaveCount(1);
+ await page.locator('#ev-tabs button', {hasText: 'Orders'}).click();
+ await expect(page.locator('#ev-out tbody')).toContainText('1001');
+});
