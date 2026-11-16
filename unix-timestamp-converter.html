@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unix Timestamp Converter – Epoch to Date &amp; Back | ToolsBravo</title>
+<meta name="description" content="Convert Unix timestamps in seconds or milliseconds to a readable date, or a date to a Unix timestamp, in your time zone or UTC. Live current epoch.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://toolsbravo.com/unix-timestamp-converter.html">
+<meta name="theme-color" content="#0B2545">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ToolsBravo">
+<meta property="og:locale" content="en_GB">
+<meta property="og:url" content="https://toolsbravo.com/unix-timestamp-converter.html">
+<meta property="og:title" content="Unix Timestamp Converter – Epoch to Date &amp; Back">
+<meta property="og:description" content="Convert Unix timestamps in seconds or milliseconds to a readable date, or a date to a Unix timestamp, in your time zone or UTC. Live current epoch.">
+<meta property="og:image" content="https://toolsbravo.com/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ToolsBravo: free online tools and UK calculators">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script>try{const t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Unix timestamp converter","url":"https://toolsbravo.com/unix-timestamp-converter.html","description":"Convert Unix timestamps in seconds or milliseconds to a readable date, or a date to a Unix timestamp, in your time zone or UTC. Live current epoch.","applicationCategory":"DeveloperApplication","operatingSystem":"Any modern web browser","isAccessibleForFree":true,"inLanguage":"en-GB","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"},"publisher":{"@type":"Organization","name":"ToolsBravo","url":"https://toolsbravo.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ToolsBravo","item":"https://toolsbravo.com/"},{"@type":"ListItem","position":2,"name":"Developer tools","item":"https://toolsbravo.com/#advanced"},{"@type":"ListItem","position":3,"name":"Unix timestamp converter","item":"https://toolsbravo.com/unix-timestamp-converter.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is the current Unix timestamp?","acceptedAnswer":{"@type":"Answer","text":"It is shown live at the top of the converter and updates every second."}},{"@type":"Question","name":"How do I convert a Unix timestamp to a date?","acceptedAnswer":{"@type":"Answer","text":"Paste it into the timestamp box and the date is shown in your local time and in UTC."}},{"@type":"Question","name":"What is the year 2038 problem?","acceptedAnswer":{"@type":"Answer","text":"Systems that store Unix time as a signed 32-bit number run out of room on 19 January 2038. Modern systems use 64-bit values and are not affected."}}]}</script>
+</head>
+<body data-tool="timestamp-converter">
+<a class="skip-link" href="#app">Skip to content</a>
+<div class="site-head"><div class="wrap">
+  <header class="top">
+    <a class="logo" href="./"><img src="assets/icon.svg" alt="" width="32" height="32"><span id="siteName">ToolsBravo</span></a>
+    <nav aria-label="Categories"><a href="./#files">PDF &amp; image</a><a href="./#finance">Finance</a><a href="./#general">General</a><a href="./#advanced">Developer</a><a href="automation-builder.html">Automations</a></nav><button class="theme-btn" type="button" aria-label="Switch theme">☾</button>
+  </header>
+</div></div>
+<main id="app" tabindex="-1">
+<div class="wrap tool">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="./">ToolsBravo</a> › <a href="./#advanced">Developer tools</a> › <span aria-current="page">Unix timestamp converter</span></nav>
+  <header class="tool-head">
+    <span class="eyebrow">DEVELOPER TOOLS</span>
+    <h1>Unix timestamp converter</h1>
+    <p class="lede">Convert a Unix timestamp to a readable date and time, or a date back to a timestamp, in your local time zone or UTC.</p>
+    <ul class="tool-meta"><li>Free, no sign-up</li><li>Runs privately in your browser</li><li>Instant results</li></ul>
+  </header>
+  <div class="tool-cols">
+  <div class="tool-main">
+  <section class="panel" aria-label="Unix timestamp converter"><div class="out" style="margin:0 0 20px"><p class="sub">Current Unix time</p><p class="big mono" id="tn" style="font-family:var(--mono)"></p></div>
+  <label for="tu">Unix timestamp (seconds or milliseconds)</label><input id="tu" class="mono" inputmode="numeric"><label for="tu-unit" style="margin-top:12px">Timestamp unit</label><select id="tu-unit"><option value="auto">Auto-detect</option><option value="seconds">Seconds</option><option value="milliseconds">Milliseconds</option></select><div class="btns"><button id="tu-now">Use current time</button></div><p id="tuo" class="note" aria-live="polite"></p>
+  <label for="td" style="margin-top:20px">Date and time</label><input id="td" type="datetime-local" step="1"><label for="td-zone" style="margin-top:12px">Interpret date in</label><select id="td-zone"><option value="local">Your local time zone</option><option value="utc">UTC</option></select><p id="tdo" class="note" aria-live="polite"></p></section>
+  <article class="guide">
+    <h2 id="how-to-use-the-unix-timestamp-converter">How to use the unix timestamp converter</h2>
+    <ol><li>To read a timestamp, paste it in. Seconds and milliseconds are detected automatically, or choose the unit yourself.</li><li>To create a timestamp, pick a date and time and choose whether it is local time or UTC.</li><li>Use 'Use current time' to fill in the live Unix time.</li></ol>
+    <h2 id="what-is-unix-time">What is Unix time?</h2>
+    <p>Unix time, or epoch time, counts the seconds since 00:00:00 UTC on 1 January 1970. It is how most computers, databases and APIs store moments in time because it is a single number with no time zone. JavaScript and many APIs use milliseconds instead, which gives a 13-digit number.</p>
+    <h2 id="seconds-or-milliseconds">Seconds or milliseconds?</h2>
+    <p>In auto-detect mode, values above 100,000,000,000 are treated as milliseconds and smaller values as seconds. A current timestamp in seconds has 10 digits; in milliseconds it has 13.</p>
+    <h2 id="worked-example">Worked example</h2>
+    <p>The timestamp <code>1767225600</code> is <strong>00:00:00 UTC on 1 January 2026</strong>. The same moment in milliseconds is <code>1767225600000</code>.</p><p>When you convert a date to a timestamp, choose whether the date you typed is in your local time zone or in UTC. The same clock time gives a different timestamp in each, by the size of your time zone offset. In the UK, local time equals UTC in winter but is one hour ahead during British Summer Time.</p><p>Log files, databases and APIs usually store UTC, so if a converted time looks an hour out, check which time zone was assumed.</p>
+    
+    <h2 id="frequently-asked-questions">Frequently asked questions</h2>
+    <div class="faq"><details><summary>What is the current Unix timestamp?</summary><p>It is shown live at the top of the converter and updates every second.</p></details><details><summary>How do I convert a Unix timestamp to a date?</summary><p>Paste it into the timestamp box and the date is shown in your local time and in UTC.</p></details><details><summary>What is the year 2038 problem?</summary><p>Systems that store Unix time as a signed 32-bit number run out of room on 19 January 2038. Modern systems use 64-bit values and are not affected.</p></details></div>
+    
+  </article>
+  <div class="related related-bottom"><h2>Related tools</h2><ul><li><a href="date-difference-calculator.html">Date difference calculator</a></li><li><a href="uuid-generator.html">UUID generator</a></li><li><a href="json-formatter.html">JSON formatter</a></li></ul></div>
+  </div>
+  <aside class="tool-aside"><div class="tool-aside-inner">
+    <nav class="aside-card toc" aria-label="On this page"><h2>On this page</h2><ul><li><a href="#how-to-use-the-unix-timestamp-converter">How to use the unix timestamp converter</a></li><li><a href="#what-is-unix-time">What is Unix time?</a></li><li><a href="#seconds-or-milliseconds">Seconds or milliseconds?</a></li><li><a href="#worked-example">Worked example</a></li><li><a href="#frequently-asked-questions">Frequently asked questions</a></li></ul></nav>
+    <div class="aside-card"><h2>Related tools</h2><ul><li><a href="date-difference-calculator.html">Date difference calculator</a></li><li><a href="uuid-generator.html">UUID generator</a></li><li><a href="json-formatter.html">JSON formatter</a></li></ul></div>
+  </div></aside>
+  </div>
+</div>
+</main>
+<footer><div class="wrap">
+  <nav class="tool-directory" aria-label="All tools"><div><h3>Finance tools</h3><ul><li><a href="uk-take-home-pay-calculator.html">UK take-home pay calculator</a></li><li><a href="loan-repayment-calculator.html">Loan repayment calculator</a></li><li><a href="savings-calculator.html">Savings calculator</a></li><li><a href="debt-payoff-calculator.html">Debt payoff calculator</a></li><li><a href="vat-calculator.html">VAT calculator</a></li><li><a href="budget-planner.html">50/30/20 budget planner</a></li><li><a href="salary-after-tax.html">Salary after tax table</a></li></ul></div><div><h3>PDF & image tools</h3><ul><li><a href="merge-pdf.html">Merge PDF</a></li><li><a href="split-pdf.html">Split PDF</a></li><li><a href="rotate-pdf.html">Rotate PDF</a></li><li><a href="delete-pdf-pages.html">Delete PDF pages</a></li><li><a href="jpg-to-pdf.html">JPG to PDF</a></li><li><a href="pdf-to-jpg.html">PDF to JPG</a></li><li><a href="pdf-to-word.html">PDF to Word</a></li><li><a href="word-to-pdf.html">Word to PDF</a></li><li><a href="compress-pdf.html">Compress PDF</a></li><li><a href="image-converter.html">Image converter</a></li><li><a href="image-compressor.html">Image compressor</a></li><li><a href="image-resizer.html">Image resizer</a></li></ul></div><div><h3>General tools</h3><ul><li><a href="time-duration-calculator.html">Time duration calculator</a></li><li><a href="aspect-ratio-calculator.html">Aspect ratio calculator</a></li><li><a href="text-line-sorter.html">Text line sorter</a></li><li><a href="date-difference-calculator.html">Date difference calculator</a></li><li><a href="bmi-calculator.html">BMI calculator</a></li><li><a href="word-counter.html">Word counter</a></li><li><a href="case-converter.html">Case converter</a></li><li><a href="password-generator.html">Password generator</a></li><li><a href="unit-converter.html">Unit converter</a></li><li><a href="age-calculator.html">Age calculator</a></li><li><a href="percentage-calculator.html">Percentage calculator</a></li></ul></div><div><h3>Developer tools</h3><ul><li><a href="json-formatter.html">JSON formatter</a></li><li><a href="base64-encoder-decoder.html">Base64 encoder and decoder</a></li><li><a href="url-encoder-decoder.html">URL encoder and decoder</a></li><li><a href="hash-generator.html">Hash generator</a></li><li><a href="uuid-generator.html">UUID generator</a></li><li><a href="unix-timestamp-converter.html" aria-current="page">Unix timestamp converter</a></li><li><a href="colour-converter.html">Colour converter</a></li></ul></div></nav>
+  <p>Every tool runs in your browser. Nothing you type is uploaded or stored.</p>
+  <p>Finance results are estimates for guidance only, not financial advice.</p>
+  <p><a href="privacy.html">Privacy</a> · <a href="about.html">About ToolsBravo</a></p>
+  <p>© <span id="yr">2026</span> <span class="sn">ToolsBravo</span></p>
+</div></footer>
+<script src="assets/tools.js"></script>
+</body>
+</html>
