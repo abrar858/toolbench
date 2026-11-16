@@ -6,6 +6,7 @@
 //   node scripts/build.mjs --check   fail if any generated file is out of date
 import {readFileSync, writeFileSync, existsSync} from "node:fs";
 import vm from "node:vm";
+import {createHash} from "node:crypto";
 import {TOOL_CONTENT} from "./content.mjs";
 
 const ROOT = new URL("../", import.meta.url);
@@ -377,6 +378,14 @@ for (const [path, body] of Object.entries(outputs)) {
 for (const c of TOOL_CONTENT) {
   const words = strip([...c.steps, ...c.sections.flat(), ...c.faqs.flat()].join(" ")).split(" ").length;
   if (words < 180) console.warn(`warn: thin content (${c.slug}, ${words} words)`);
+}
+
+// Cache busting: tag the shared CSS and JS with a hash of their content, so after every
+// deploy browsers fetch the new files instead of pairing new pages with cached old code.
+const assetVersion = Object.fromEntries(["assets/tools.js", "assets/site.css"].map(p =>
+  [p, createHash("sha256").update(read(p)).digest("hex").slice(0, 10)]));
+for (const [path, body] of Object.entries(outputs)) {
+  if (path.endsWith(".html")) outputs[path] = body.replace(/(assets\/(?:tools\.js|site\.css))(?:\?v=[0-9a-f]+)?"/g, (m, p) => `${p}?v=${assetVersion[p]}"`);
 }
 
 const check = process.argv.includes("--check");
