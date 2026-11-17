@@ -375,11 +375,33 @@ q("#sg-download").onclick = () => {
 q("#sg-confirm-yes").onclick = () => { if (q("#sg-confirm-skip").checked) state.confirmed = true; q("#sg-confirm").close(); exportPdf(); };
 q("#sg-confirm-no").onclick = () => q("#sg-confirm").close();
 const dataUrlBytes = u => Uint8Array.from(atob(u.slice(u.indexOf(",") + 1)), c => c.charCodeAt(0));
+// A PDF that was edited and re-saved can hold an object under a non-zero generation number
+// (for example its catalog as "53 1"), next to the older "53 0" it replaced. pdf-lib keeps both, but
+// a rewritten file has one cross-reference entry per number, so strict readers such as Acrobat then
+// report "the root object is missing or invalid". Give each such object a fresh number with
+// generation 0 and update every reference to it, so the written file is self-consistent.
+function normaliseGenerations(pdf, {PDFRef, PDFDict, PDFArray, PDFStream}) {
+  const ctx = pdf.context, remap = new Map();
+  for (const [ref] of ctx.enumerateIndirectObjects()) if (ref.generationNumber !== 0) remap.set(ref, ctx.nextRef());
+  if (!remap.size) return 0;
+  for (const [from, to] of remap) { ctx.assign(to, ctx.lookup(from)); ctx.delete(from); }
+  const fix = v => (v instanceof PDFRef && remap.get(v)) || v;
+  const walk = o => {
+    if (o instanceof PDFStream) o = o.dict;
+    if (o instanceof PDFDict) { for (const [k, v] of o.entries()) { const n = fix(v); n !== v ? o.set(k, n) : walk(v); } }
+    else if (o instanceof PDFArray) { for (let i = 0; i < o.size(); i++) { const v = o.get(i), n = fix(v); n !== v ? o.set(i, n) : walk(v); } }
+  };
+  for (const [, obj] of ctx.enumerateIndirectObjects()) walk(obj);
+  for (const k of ["Root", "Info", "Encrypt"]) if (ctx.trailerInfo[k]) ctx.trailerInfo[k] = fix(ctx.trailerInfo[k]);
+  return remap.size;
+}
 async function exportPdf() {
   const btn = q("#sg-download"); busy(btn, true, "Saving…");
   try {
-    const {PDFDocument, StandardFonts, rgb, degrees} = await pdfLib();
-    const pdf = await PDFDocument.load(state.bytes.slice()), font = await pdf.embedFont(StandardFonts.Helvetica), embedded = new Map();
+    const lib = await pdfLib(), {PDFDocument, StandardFonts, rgb, degrees, PDFDict, PDFName} = lib;
+    const pdf = await PDFDocument.load(state.bytes.slice());
+    normaliseGenerations(pdf, lib); // before anything else looks up pages or adds objects
+    const font = await pdf.embedFont(StandardFonts.Helvetica), embedded = new Map();
     const pages = pdf.getPages();
     if (pages.length !== state.pages.length) throw new Error("The document couldn't be read consistently. Nothing was downloaded.");
     for (const e of state.elements) {
@@ -405,7 +427,11 @@ async function exportPdf() {
     const out = await pdf.save({useObjectStreams: false});
     // Never hand over a broken file: reopen what was written and check every page is there.
     const check = await PDFDocument.load(out);
-    let readable = check.getPageCount() === state.pages.length && out.length >= 200 && String.fromCharCode(...out.subarray(0, 5)) === "%PDF-";
+    // Strict readers need: every object at generation 0 (one per number) and a trailer /Root that is the catalog.
+    const root = check.context.trailerInfo.Root, catalog = root && check.context.lookup(root);
+    let readable = check.getPageCount() === state.pages.length && out.length >= 200 && String.fromCharCode(...out.subarray(0, 5)) === "%PDF-"
+      && check.context.enumerateIndirectObjects().every(([ref]) => ref.generationNumber === 0)
+      && catalog instanceof PDFDict && catalog.get(PDFName.of("Type")) === PDFName.of("Catalog");
     if (readable) {
       // A second, independent reader (pdf.js) must also open the file and every page in it.
       const verify = await (await pdfJs()).getDocument({data: out.slice(), isEvalSupported: false}).promise;

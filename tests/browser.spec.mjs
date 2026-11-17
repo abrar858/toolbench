@@ -640,6 +640,31 @@ test('sign PDF: drag a signature onto another page', async ({page}) => {
  expect((await placed(page))[0].page).toBe(1);
 });
 
+// Acrobat reported "The root object is missing or invalid" for a signed form that had been edited and
+// saved before (catalog re-issued as generation 1). Strict readers need one object per number,
+// generation 0 throughout, a trailer /Root that is the catalog, and an xref that matches /Size.
+test('sign PDF: previously edited PDFs stay valid for strict readers like Acrobat', async ({page}) => {
+ await openToSign(page, 'sign-revised.pdf');
+ await addTypedSignature(page);
+ const boxes = await placed(page);
+ const raw = await readDownload(await downloadSigned(page)), s = raw.toString('latin1');
+ const objs = [...s.matchAll(/(?:^|\n)(\d+) (\d+) obj\b/g)].map(m => [+m[1], +m[2]]);
+ expect(objs.filter(([, g]) => g !== 0)).toEqual([]);
+ expect(new Set(objs.map(([n]) => n)).size).toBe(objs.length);
+ const trailer = s.slice(s.lastIndexOf('trailer'));
+ const [, rootNum, rootGen] = trailer.match(/\/Root (\d+) (\d+) R/);
+ expect(rootGen).toBe('0');
+ expect(s).toMatch(new RegExp(`\\n${rootNum} 0 obj\\s*<<[^]*?/Type /Catalog`));
+ const xrefAt = +s.match(/startxref\s+(\d+)\s+%%EOF\s*$/)[1];
+ const [, first, count] = s.slice(xrefAt).match(/^xref\s+(\d+) (\d+)/);
+ expect(+first).toBe(0);
+ expect(+count).toBe(+trailer.match(/\/Size (\d+)/)[1]);
+ const r = await inspectSigned(page, raw, boxes);
+ expect(r.pages).toBe(2);
+ expect(r.text[0]).toContain('Revised form page 1');
+ for (const b of r.boxes) { expect(b.inside).toBeGreaterThan(40); expect(b.control).toBe(0); }
+});
+
 test('sign PDF: clear errors for damaged, locked and non-PDF files', async ({page}) => {
  await page.goto('/sign-pdf.html');
  await page.locator('#sg-in').setInputFiles(fixture('sign-damaged.pdf'));
