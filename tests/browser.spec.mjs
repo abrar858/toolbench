@@ -786,3 +786,19 @@ test('header menus do not shift the layout on tool pages', async ({page}) => {
  }));
  expect(cls).toBeLessThan(0.05);
 });
+
+/* ---------- Footer ---------- */
+test('footer is compact: category links that open the right section', async ({page}) => {
+ for (const viewport of [{width: 1280, height: 800}, {width: 375, height: 812}]) {
+  await page.setViewportSize(viewport);
+  await page.goto('/merge-pdf.html');
+  const foot = page.locator('footer.site-foot');
+  expect((await foot.boundingBox()).height, JSON.stringify(viewport)).toBeLessThan(viewport.width > 700 ? 300 : 520);
+  await expect(foot.locator('.foot-cats a')).toHaveCount(5);
+  await expect(foot.locator('.foot-cats a.is-current')).toContainText('PDF & image');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+ }
+ await page.locator('footer .foot-cats a', {hasText: 'Finance'}).click();
+ await expect(page).toHaveURL(/#finance$/);
+ await expect(page.locator('#finance')).toBeInViewport();
+});
