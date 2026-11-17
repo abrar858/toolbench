@@ -25,3 +25,9 @@ The build script embeds a 10-character SHA-256 digest of assets/tools.js into ev
 
 ## Verification at 02:52 UK\n- Confirmed draft PR #8 branch `fix/home-popular-link-and-work-register` exists and contains `index.html`, `assets/tools.js`, and this register.\n- Added a source-level Node regression test for unique Popular links and explicit 45 core tools plus two supplementary cards. Not executed: the branch still has stale asset-version tags.\n- Live website and GitHub PR browser fetch were unavailable in this runtime; this is not evidence of a website outage.\n- Latest main commit observed remains `e7bfd0f`; CI conclusions are still unverified.\n- PR #8 must remain draft until generated HTML and tests are verified.\n\n## Change log
 - 2026-11-17 02:52: Added `tests/site.test.mjs` regression coverage (commit `1735f908`).\n- 2026-11-17: Inspected current source, workflows, generated homepage and sitemap. Removed duplicate Popular PDF-to-Excel link in source and pre-rendered index on isolated branch; pending full regeneration and CI. No changes made to main.
+
+## 2026-11-17 03:53 UTC — CI guard added
+- Commit b6c3d9f on PR #8 branch adds `node scripts/build.mjs --check` to the static GitHub Actions workflow before the Node tests, detecting stale generated pages and asset hashes.
+- Main remains at e7bfd0f. PR #8 contains the duplicate Popular-link fix and regression coverage; generated pages still need rebuilding.
+- Live-site fetch is unavailable in this environment. PR-triggered run lookup did not return a verified CI outcome.
+- Release blocker: regenerate and commit HTML on the PR branch, then verify static and Playwright workflows. Do not merge PR #8 before both pass.
