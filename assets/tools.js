@@ -1883,31 +1883,6 @@ if (siteMenu && siteHead) {
   wide.addEventListener("change", () => setDrawer(false));
 }
 
-// Footer site map: on phones each category folds away behind its heading, so the footer stays short.
-// The links stay in the page (for search engines and without JavaScript); only their display changes.
-const footDir = $(".site-foot .tool-directory");
-if (footDir) {
-  const narrow = matchMedia("(max-width: 700px)");
-  const groups = $$(":scope > div", footDir).map((div, i) => {
-    const h = $("h2", div), list = $("ul", div), label = h.textContent;
-    list.id ||= `fd-list-${i}`;
-    const btn = document.createElement("button");
-    btn.type = "button"; btn.className = "fd-toggle"; btn.setAttribute("aria-controls", list.id);
-    btn.innerHTML = `<span>${esc(label)}</span><small>${list.children.length}</small><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-    btn.addEventListener("click", () => { const open = !div.classList.contains("open"); div.classList.toggle("open", open); btn.setAttribute("aria-expanded", String(open)); });
-    return {div, h, btn, label};
-  });
-  const apply = () => {
-    footDir.classList.toggle("folding", narrow.matches);
-    for (const g of groups) {
-      if (narrow.matches) { g.h.replaceChildren(g.btn); g.btn.setAttribute("aria-expanded", String(g.div.classList.contains("open"))); }
-      else { g.h.replaceChildren(g.label); g.div.classList.remove("open"); }
-    }
-  };
-  apply();
-  narrow.addEventListener("change", apply);
-}
-
 // Header search on every page: type to find any tool, arrow keys to choose, Enter to open.
 const searchBtn = $(".search-btn"), searchBox = $("#site-search");
 if (searchBtn && searchBox) {

@@ -71,11 +71,14 @@ ${url ? `<meta property="og:url" content="${url}">\n` : ""}<meta property="og:ti
 <link rel="stylesheet" href="assets/site.css">
 <script>try{const t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>`;
 
-const directory = current => Object.entries(CATS).map(([cat, label]) =>
-  `<div><h2>${label} tools</h2><ul>${TOOLS.filter(t => t.cat === cat).map(t =>
-    `<li><a href="${byId.get(t.id).slug}"${t.id === current ? ' aria-current="page"' : ""}>${esc(t.name)}</a></li>`).join("")}${
-    // Same extras as the homepage cards and header menu (salary table, automation builder).
-    (EXTRA_CARDS[cat] || []).map(x => `<li><a href="${x.href}"${x.href === "salary-after-tax.html" && current === "salary" ? ' aria-current="page"' : ""}>${esc(x.name)}</a></li>`).join("")}</ul></div>`).join("");
+// Footer: one link per category, to that category's tools on the home page.
+const footCats = current => {
+  const cur = current === "salary" ? "finance" : tool(current)?.cat;
+  return Object.entries(CATS).map(([cat, label]) => {
+    const n = TOOLS.filter(t => t.cat === cat).length + (EXTRA_CARDS[cat] || []).length;
+    return `<a href="./#${cat}"${cat === cur ? ' class="is-current"' : ""}>${esc(label)} tools <small>${n}</small></a>`;
+  }).join("");
+};
 
 // Tool icons and the category menu shown in every page header.
 const ICONS = vm.runInNewContext("(" + js.match(/const ICONS = (\{[\s\S]*?\});/)[1] + ")");
@@ -126,9 +129,9 @@ const toolHead = ({eyebrow, h1, lede, meta}) => `<header class="tool-head">
 const footer = current => `<footer class="site-foot"><div class="wrap">
   <div class="foot-brand">
     <a class="logo" href="./" aria-label="${SITE} home"><img src="assets/icon.svg" alt="" width="28" height="28" loading="lazy"><span>${SITE}</span></a>
-    <p>Free tools for PDFs, Office files, money and code. Everything runs in your browser and nothing you add is uploaded. Only your theme choice and saved automation workflows may be stored locally on your device.</p>
+    <p>Free browser tools for PDFs, Office files, money and code. Nothing you add is uploaded; only your theme and saved automation workflows may be stored locally on your device.</p>
   </div>
-  <nav class="tool-directory" aria-label="All tools">${directory(current)}</nav>
+  <nav class="foot-cats" aria-label="Tool categories">${footCats(current)}</nav>
   <div class="foot-bar">
     <p>© <span id="yr">2026</span> <span class="sn">${SITE}</span> · Finance results are estimates for guidance only, not financial advice.</p>
     <p class="foot-links"><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="automation-builder.html">Automations</a></p>

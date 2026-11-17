@@ -788,23 +788,17 @@ test('header menus do not shift the layout on tool pages', async ({page}) => {
 });
 
 /* ---------- Footer ---------- */
-test('footer stays compact: one screen on desktop, folded categories on phones', async ({page}) => {
- await page.setViewportSize({width: 1280, height: 800});
- await page.goto('/merge-pdf.html');
- const foot = page.locator('footer.site-foot');
- expect((await foot.boundingBox()).height).toBeLessThan(700);
- await expect(foot.locator('.tool-directory a[aria-current=page]')).toHaveText('Merge PDF');
- await expect(foot.locator('.fd-toggle')).toHaveCount(0);
- await page.setViewportSize({width: 375, height: 812});
- await page.goto('/merge-pdf.html');
- const toggles = foot.locator('.fd-toggle');
- await expect(toggles).toHaveCount(5);
- expect((await foot.boundingBox()).height).toBeLessThan(650);
- await expect(foot.locator('a[href="split-pdf.html"]')).toBeHidden();
- await toggles.first().click();
- await expect(toggles.first()).toHaveAttribute('aria-expanded', 'true');
- await expect(foot.locator('a[href="split-pdf.html"]')).toBeVisible();
- expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
- await foot.locator('a[href="split-pdf.html"]').click();
- await expect(page).toHaveURL(/split-pdf\.html$/);
+test('footer is compact: category links that open the right section', async ({page}) => {
+ for (const viewport of [{width: 1280, height: 800}, {width: 375, height: 812}]) {
+  await page.setViewportSize(viewport);
+  await page.goto('/merge-pdf.html');
+  const foot = page.locator('footer.site-foot');
+  expect((await foot.boundingBox()).height, JSON.stringify(viewport)).toBeLessThan(viewport.width > 700 ? 300 : 520);
+  await expect(foot.locator('.foot-cats a')).toHaveCount(5);
+  await expect(foot.locator('.foot-cats a.is-current')).toContainText('PDF & image');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+ }
+ await page.locator('footer .foot-cats a', {hasText: 'Finance'}).click();
+ await expect(page).toHaveURL(/#finance$/);
+ await expect(page.locator('#finance')).toBeInViewport();
 });

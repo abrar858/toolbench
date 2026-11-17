@@ -269,12 +269,14 @@ test('every page header carries the full category menu, built into the HTML',()=
  }
 });
 
-test('footer is one compact site map with every tool linked',()=>{
+test('footer links each category (not every tool) plus About and Privacy',()=>{
  for(const p of ['index.html','about.html','404.html','salary-after-tax.html',...TOOL_CONTENT.map(c=>c.slug)]){
   const page=readPage(p).replace(/href="\//g,'href="'), foot=page.match(/<footer class="site-foot">([\s\S]*?)<\/footer>/)?.[1];
-  assert.ok(foot,`${p}: compact footer missing`);
-  for(const c of TOOL_CONTENT)assert.ok(foot.includes(`href="${c.slug}"`),`${p}: footer link to ${c.slug}`);
-  for(const h of ['salary-after-tax.html','automation-builder.html','about.html','privacy.html'])assert.ok(foot.includes(`href="${h}"`),`${p}: footer link to ${h}`);
+  assert.ok(foot,`${p}: footer missing`);
+  const cats=[...foot.matchAll(/<nav class="foot-cats"[^>]*>([\s\S]*?)<\/nav>/g)][0]?.[1]||'';
+  assert.deepEqual([...cats.matchAll(/href="([^"]+)"/g)].map(m=>m[1]),['#files','#office','#finance','#general','#advanced'].map(h=>(p==='404.html'?'':'./')+h).map(h=>h.replace(/^\.\//,p==='404.html'?'':'./')),`${p}: five category links`);
+  for(const c of TOOL_CONTENT)assert.ok(!foot.includes(`href="${c.slug}"`),`${p}: footer should not list ${c.slug}`);
+  for(const h of ['about.html','privacy.html','automation-builder.html'])assert.ok(foot.includes(`href="${h}"`),`${p}: footer link to ${h}`);
   assert.equal((page.match(/<footer/g)||[]).length,1,`${p}: one footer`);
  }
 });
