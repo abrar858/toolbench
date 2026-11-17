@@ -16,13 +16,13 @@ export const DEPTH = {
 "compress-pdf": {
   sections: [
     ["Why some PDFs are so big", "<p>The size of a PDF depends mostly on its images. A page scanned at 300 or 600 dpi, or a phone photo turned into a PDF, can be several megabytes on its own, while a page of plain text is usually only a few kilobytes. That's why scans and photo-heavy documents shrink dramatically here, and text-only documents don't.</p>"],
-    ["Common size limits", "<ul><li>Gmail attachments: up to 25 MB.</li><li>Outlook.com attachments: around 20 MB.</li><li>Job, university and government upload forms: often between 2 MB and 10 MB, and sometimes as low as 1 MB. Check the form's own limit.</li></ul><p>If you have a 15 MB scanned document and a 5 MB limit, start with Balanced. If it's still too big, try Strong, or split the document with <a href=\"split-pdf.html\">Split PDF</a> and send it in parts.</p>"],
+    ["Common size limits", "<ul><li>Gmail attachments: up to 25 MB.</li><li>Outlook.com attachments: around 20 MB.</li><li>Job, university and government upload forms: often between 2 MB and 10 MB, and sometimes as low as 1 MB. Check the form's own limit.</li></ul><p>If you have a 15 MB scanned document and a 5 MB limit, choose <em>Size limit: Under 5 MB</em> and the tool finds the best quality that fits. If even the smallest setting is too big, split the document with <a href=\"split-pdf.html\">Split PDF</a> and send it in parts.</p>"],
     ["Better options for text documents", "<p>If your PDF is mostly text and came from Word, Google Docs or another app, the smallest file usually comes from exporting it again from that app: in Word, use <em>File → Save as → PDF</em> and choose <em>Minimum size</em>. On a Mac, Preview's <em>Export → Quartz Filter → Reduce File Size</em> also works, though it can reduce image quality a lot.</p>"],
     ["If something goes wrong", "<ul><li><strong>The file got bigger:</strong> the tool tells you and doesn't offer the bigger file. Keep the original.</li><li><strong>I can't select or search the text:</strong> that's expected, because pages are saved as images. Keep the original for anything that needs searchable text.</li><li><strong>Small print is blurry:</strong> use Light compression.</li><li><strong>Signatures or form fields disappeared:</strong> they become part of the page image. Sign and fill in the original instead.</li></ul>"],
     ["Step by step: shrink a scan for email","<ol><li>Choose the PDF and note its size.</li><li>Pick Balanced and press Compress PDF.</li><li>Check the new size against the limit, and open the file to make sure the text is still readable.</li><li>If it's still too big, run the original again on Strong.</li></ol>"],
   ],
   faqs: [
-    ["How do I compress a PDF to under 1 MB?", "Choose Strong compression. For long scans, if it's still over 1 MB, split the PDF into smaller parts and compress each one."],
+    ["How do I compress a PDF to under 1 MB?", "Set Size limit to Under 1 MB and press Compress PDF. For long scans that still can't fit, split the PDF into smaller parts and compress each one."],
   ],
 },
 "pdf-to-word": {

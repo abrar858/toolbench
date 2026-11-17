@@ -1026,31 +1026,62 @@ const TOOLS = [
  }},
 {id: "compress-pdf", cat: "files", name: "Compress PDF", desc: "Shrink large, scanned or image-heavy PDFs.",
  ui: `${dropUI("cp-in", "application/pdf,.pdf", "Choose a PDF file", false)}<p id="cp-file" class="file-picked" hidden></p>
-  <label for="cp-level">Compression</label><select id="cp-level"><option value="72,0.55">Strong: smallest file (72 dpi)</option><option value="110,0.65" selected>Balanced (110 dpi)</option><option value="150,0.75">Light: best quality (150 dpi)</option></select>
+  <div class="row"><div><label for="cp-goal">Size limit</label><select id="cp-goal"><option value="0" selected>No limit: choose a level</option><option value="100">Under 100 KB</option><option value="200">Under 200 KB</option><option value="300">Under 300 KB</option><option value="500">Under 500 KB</option><option value="1024">Under 1 MB</option><option value="2048">Under 2 MB</option><option value="5120">Under 5 MB</option></select></div>
+  <div id="cp-level-wrap"><label for="cp-level">Compression</label><select id="cp-level"><option value="72,0.55">Strong: smallest file (72 dpi)</option><option value="110,0.65" selected>Balanced (110 dpi)</option><option value="150,0.75">Light: best quality (150 dpi)</option></select></div></div>
+  <p id="cp-goal-note" class="note" hidden>Finds the best quality that fits under the limit, for upload forms with a maximum file size. Very long documents may not fit under the smallest limits.</p>
   <p class="note">Pages are saved as images, so text in the compressed PDF can't be selected or searched. Best for scans and photo-heavy documents.</p>
   <div class="btns"><button class="primary" id="cp-go" disabled>Compress PDF</button></div><p id="cp-msg" class="note" aria-live="polite">Choose a PDF to start.</p><div id="cp-out"></div>`,
  init(el) {
   let file = null; const go = $("#cp-go", el), msg = $("#cp-msg", el);
-  wireDrop(el, "cp-in", f => { file = f[0]; $("#cp-out", el).innerHTML = ""; const p = $("#cp-file", el); p.hidden = false; p.textContent = `${file.name} · ${fsize(file.size)}`; go.disabled = false; say(msg, "Choose a level, then compress."); });
+  const goal = $("#cp-goal", el), goalOn = () => +goal.value > 0;
+  goal.onchange = () => { $("#cp-level-wrap", el).hidden = goalOn(); $("#cp-goal-note", el).hidden = !goalOn(); };
+  wireDrop(el, "cp-in", f => { file = f[0]; $("#cp-out", el).innerHTML = ""; const p = $("#cp-file", el); p.hidden = false; p.textContent = `${file.name} · ${fsize(file.size)}`; go.disabled = false; say(msg, "Choose a level or a size limit, then compress."); });
+  // Renders every page as a JPEG at the given resolution and quality, and returns the new PDF.
+  const build = async (src, dpi, q, label) => {
+    const {PDFDocument} = await pdfLib(), out = await PDFDocument.create();
+    for (let i = 1; i <= src.numPages; i++) {
+      say(msg, `${label}page ${i} of ${src.numPages}…`);
+      const page = await src.getPage(i), v1 = page.getViewport({scale: 1}), vp = page.getViewport({scale: dpi / 72});
+      const c = document.createElement("canvas"); c.width = Math.max(1, Math.ceil(vp.width)); c.height = Math.max(1, Math.ceil(vp.height));
+      const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+      await page.render({canvasContext: x, viewport: vp}).promise; page.cleanup();
+      const img = await out.embedJpg(new Uint8Array(await (await canvasBlob(c, "image/jpeg", q)).arrayBuffer()));
+      out.addPage([v1.width, v1.height]).drawImage(img, {x: 0, y: 0, width: v1.width, height: v1.height});
+      c.width = c.height = 0;
+    }
+    return new Blob([await out.save()], {type: "application/pdf"});
+  };
+  // Settings from best quality to smallest file, used when aiming for a size limit.
+  const LADDER = [[150, 0.8], [150, 0.7], [125, 0.65], [110, 0.6], [96, 0.55], [80, 0.5], [72, 0.45], [60, 0.4], [50, 0.35]];
   go.onclick = async () => {
     busy(go, true, "Compressing…");
+    let src;
     try {
-      const [dpi, q] = $("#cp-level", el).value.split(",").map(Number), src = await openPdfJs(file), {PDFDocument} = await pdfLib(), out = await PDFDocument.create();
-      for (let i = 1; i <= src.numPages; i++) {
-        say(msg, `Compressing page ${i} of ${src.numPages}…`);
-        const page = await src.getPage(i), v1 = page.getViewport({scale: 1}), vp = page.getViewport({scale: dpi / 72});
-        const c = document.createElement("canvas"); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
-        const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
-        await page.render({canvasContext: x, viewport: vp}).promise; page.cleanup();
-        const img = await out.embedJpg(new Uint8Array(await (await canvasBlob(c, "image/jpeg", q)).arrayBuffer()));
-        out.addPage([v1.width, v1.height]).drawImage(img, {x: 0, y: 0, width: v1.width, height: v1.height});
+      const name = `${baseName(file)}-compressed.pdf`, limit = +goal.value * 1024, cap = goal.selectedOptions[0].textContent.replace(/^Under /, "");
+      if (limit && file.size <= limit) { $("#cp-out", el).innerHTML = ""; return say(msg, `This PDF is already ${fsize(file.size)}, under the ${cap} limit. You can use the original as it is.`); }
+      src = await openPdfJs(file);
+      if (!limit) {
+        const [dpi, q] = $("#cp-level", el).value.split(",").map(Number), blob = await build(src, dpi, q, "Compressing "), saved = 1 - blob.size / file.size;
+        if (saved <= 0.02) { $("#cp-out", el).innerHTML = ""; return say(msg, `This PDF is already well compressed (${fsize(file.size)}); compressing would not make it smaller. Keep the original.`); }
+        showResults($("#cp-out", el), [{name, blob, note: `${fsize(file.size)} → ${fsize(blob.size)}`}]);
+        return say(msg, `Reduced by ${Math.round(saved * 100)}%.`);
       }
-      src.destroy();
-      const blob = new Blob([await out.save()], {type: "application/pdf"}), saved = 1 - blob.size / file.size;
-      if (saved <= 0.02) { $("#cp-out", el).innerHTML = ""; return say(msg, `This PDF is already well compressed (${fsize(file.size)}); compressing would not make it smaller. Keep the original.`); }
-      showResults($("#cp-out", el), [{name: `${baseName(file)}-compressed.pdf`, blob, note: `${fsize(file.size)} → ${fsize(blob.size)}`}]);
-      say(msg, `Reduced by ${Math.round(saved * 100)}%.`);
-    } catch (e) { say(msg, e.message, true); } finally { busy(go, false); }
+      // Binary search along the ladder for the best quality that fits; file size falls steadily along it.
+      let lo = 0, hi = LADDER.length - 1, best = null, smallest = null, tries = 0;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1, [dpi, q] = LADDER[mid];
+        const blob = await build(src, dpi, q, `Try ${++tries}: ${dpi} dpi, `);
+        if (mid === LADDER.length - 1) smallest = blob;
+        if (blob.size <= limit) { best = {blob, dpi}; hi = mid - 1; } else lo = mid + 1;
+      }
+      if (best) {
+        showResults($("#cp-out", el), [{name, blob: best.blob, note: `${fsize(file.size)} → ${fsize(best.blob.size)} (under ${cap}, ${best.dpi} dpi)`}]);
+        return say(msg, `Done: ${fsize(best.blob.size)}, under your ${cap} limit, at the best quality that fits.`);
+      }
+      smallest ||= await build(src, ...LADDER[LADDER.length - 1], "Smallest setting: ");
+      if (smallest.size < file.size) showResults($("#cp-out", el), [{name, blob: smallest, note: `${fsize(file.size)} → ${fsize(smallest.size)}`}]); else $("#cp-out", el).innerHTML = "";
+      say(msg, `Couldn't get under ${cap}: the smallest this PDF goes is ${fsize(smallest.size)} (${src.numPages} pages). Try a higher limit, or split the PDF and send it in parts.`, true);
+    } catch (e) { say(msg, e.message, true); } finally { src?.destroy(); busy(go, false); }
   };
  }},
 {id: "image-converter", cat: "files", name: "Image converter", desc: "Convert images between JPG, PNG and WebP.",
@@ -1065,7 +1096,7 @@ const TOOLS = [
   <div><label for="ix-max">Maximum width</label><select id="ix-max"><option value="0">Keep original size</option><option value="2560">2560 px</option><option value="1920" selected>1920 px (Full HD)</option><option value="1280">1280 px</option><option value="800">800 px</option></select></div>
   <div><label for="ix-mode">How to compress</label><select id="ix-mode"><option value="quality">Choose the quality</option><option value="size">Aim for a file size</option></select></div>
   <div id="ix-qwrap"><label for="ix-q">Quality: <span id="ix-qv">70</span>%</label><input id="ix-q" type="range" min="30" max="95" value="70"></div>
-  <div id="ix-twrap" hidden><label for="ix-target">Maximum size per image</label><select id="ix-target"><option value="50">50 KB</option><option value="100" selected>100 KB</option><option value="200">200 KB</option><option value="500">500 KB</option><option value="1000">1 MB</option><option value="2000">2 MB</option></select></div></div>
+  <div id="ix-twrap" hidden><label for="ix-target">Maximum size per image</label><select id="ix-target"><option value="20">20 KB</option><option value="50">50 KB</option><option value="100" selected>100 KB</option><option value="200">200 KB</option><option value="500">500 KB</option><option value="1000">1 MB</option><option value="2000">2 MB</option></select></div></div>
   <p id="ix-tnote" class="note" hidden>Each image gets the highest quality that fits. If that isn't enough, it is made smaller in width too. Useful for visa, passport and job application forms.</p>
   <div class="btns"><button class="primary" id="ix-go" disabled>Compress</button></div><p id="ix-msg" class="note" aria-live="polite">Choose one or more images.</p><div id="ix-out"></div>`,
  init(el) {

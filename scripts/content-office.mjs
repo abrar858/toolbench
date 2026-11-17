@@ -128,10 +128,13 @@ export const OFFICE_CONTENT = [
   steps: ["Choose an Excel or CSV file and pick the sheet.", "Choose the columns that must match for two rows to count as duplicates. For example, just the email column.", "Optionally ignore upper and lower case and extra spaces.", "Press Remove duplicates, check the result and download it as Excel or CSV."],
   sections: [
     ["Which rows are kept", "<p>The first time a row appears it is kept, and later copies are removed, so the original order of your data is preserved. The header row is always kept.</p>"],
+    ["Removing duplicates in Excel itself", "<p>If you have Excel, you can also do it there:</p><ol><li>Select the data, including the header row.</li><li>On the <strong>Data</strong> tab, choose <strong>Remove Duplicates</strong>. On Windows the keyboard shortcut is <kbd>Alt</kbd>, then <kbd>A</kbd>, then <kbd>M</kbd>, pressed one after another.</li><li>Tick the columns that must match. To remove duplicates based on two columns, tick only those two.</li><li>Press OK. Excel keeps the first copy of each row and deletes the rest from your sheet.</li></ol><p>To see duplicates before deleting anything, use <strong>Home › Conditional Formatting › Highlight Cells Rules › Duplicate Values</strong>. In Excel 365 and Excel 2021, the formula <code>=UNIQUE(A2:C100)</code> lists each distinct row in a new place and leaves the original untouched.</p><p>This tool helps when you don't have Excel, when the file is a large CSV, or when you want to keep the original file unchanged and download a cleaned copy.</p>"],
     ["Matching on some columns", "<p>Two customer rows might have the same email address but different sign-up dates. Untick every column except Email to treat them as duplicates. Tick <em>Ignore upper/lower case and extra spaces</em> so that <code>Sam@Example.com </code> and <code>sam@example.com</code> count as the same.</p>"],
   ],
   faqs: [
-    ["How do I remove duplicates in Excel?", "Choose the file here, pick the columns to compare and press Remove duplicates. Download the cleaned file."],
+    ["How do I remove duplicates in Excel?", "In Excel, select the data and choose Data › Remove Duplicates, tick the columns to compare and press OK. Without Excel, or to keep your original file unchanged, choose the file here, pick the columns and press Remove duplicates."],
+    ["What is the shortcut to remove duplicates in Excel?", "On Windows, press Alt, then A, then M, one after another, to open Remove Duplicates. On a Mac, use Data › Remove Duplicates."],
+    ["How do I remove duplicates based on two columns?", "Tick only those two columns, in Excel's Remove Duplicates or here. Rows count as duplicates only when both columns match."],
     ["Does it change my original file?", "No. A new file is downloaded; the original stays as it was."],
     ["Can I remove duplicates from a CSV?", "Yes, and you can save the result as CSV again."],
     PRIVATE,
