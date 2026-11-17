@@ -107,7 +107,7 @@ const BASE_CONTENT = [
 },
 {
   id: "word-counter", slug: "word-counter.html",
-  title: "Word Counter – Count Words, Characters & Reading Time",
+  title: "Word Counter – Words, Characters & Reading Time",
   description: "Free word counter: count words, characters with and without spaces, sentences, paragraphs, reading time and speaking time. Nothing is uploaded.",
   h1: "Word counter and character counter",
   lede: "Paste or type text to count words, characters, sentences and paragraphs, and see how long it takes to read or say out loud.",
@@ -281,7 +281,7 @@ const BASE_CONTENT = [
 },
 {
   id: "hash-generator", slug: "hash-generator.html",
-  title: "MD5 & SHA-256 Hash Generator – Text and File Checksums",
+  title: "Hash Generator – MD5 & SHA-256 for Text and Files",
   description: "Generate MD5, SHA-1, SHA-256, SHA-384 and SHA-512 hashes of text or any file, and check a download against its published checksum. Private.",
   h1: "Hash generator (SHA-256 and more)",
   lede: "Create MD5 and SHA hashes of any text or file, and check that a download matches the checksum its publisher lists.",
@@ -380,7 +380,7 @@ const BASE_CONTENT = [
 },
 {
   id: "loan-calculator", slug: "loan-repayment-calculator.html",
-  title: "Loan Repayment Calculator UK – Schedule & Overpayments",
+  title: "Loan Repayment Calculator UK – With Overpayments",
   description: "Calculate monthly loan or mortgage repayments, total interest, a year-by-year repayment schedule and how much overpaying saves. Free UK calculator.",
   h1: "Loan repayment calculator",
   lede: "Work out the monthly payment and total interest on a loan, car finance deal or mortgage, see the repayment schedule, and find out how much overpaying saves.",

@@ -1,7 +1,8 @@
 // Run with: node --test tests/site.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync, statSync} from 'node:fs';
+import {readFileSync, statSync, readdirSync, existsSync} from 'node:fs';
+const require_fs={readdirSync,existsSync};
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import vm from 'node:vm';
@@ -278,5 +279,28 @@ test('footer links each category (not every tool) plus About and Privacy',()=>{
   for(const c of TOOL_CONTENT)assert.ok(!foot.includes(`href="${c.slug}"`),`${p}: footer should not list ${c.slug}`);
   for(const h of ['about.html','privacy.html','automation-builder.html'])assert.ok(foot.includes(`href="${h}"`),`${p}: footer link to ${h}`);
   assert.equal((page.match(/<footer/g)||[]).length,1,`${p}: one footer`);
+ }
+});
+
+test('site-wide crawl: every page is in the sitemap, every internal link resolves, one H1, titles fit',()=>{
+ const {readdirSync,existsSync}=require_fs;
+ const root=new URL('../',import.meta.url);
+ const htmlFiles=readdirSync(root).filter(f=>f.endsWith('.html'));
+ const sitemap=readPage('sitemap.xml'), locs=[...sitemap.matchAll(/<loc>https:\/\/toolsbravo\.com\/([^<]*)<\/loc>/g)].map(m=>m[1]||'index.html');
+ assert.equal(new Set(locs).size,locs.length,'duplicate sitemap URLs');
+ for(const l of locs)assert.ok(existsSync(new URL(l,root)),`sitemap lists missing file ${l}`);
+ for(const f of htmlFiles){
+  const h=readPage(f), noindex=/<meta name="robots" content="[^"]*noindex/.test(h);
+  if(f!=='404.html'&&!noindex)assert.ok(locs.includes(f),`${f} is indexable but not in the sitemap`);
+  if(f==='404.html')continue;
+  assert.equal((h.match(/<h1\b/g)||[]).length,1,`${f}: exactly one H1`);
+  const title=(h.match(/<title>([^<]*)<\/title>/)||[])[1].replace(/&amp;/g,'&');
+  assert.ok(title.length<=65,`${f}: title ${title.length} chars: ${title}`);
+  for(const [,href] of h.matchAll(/<a\b[^>]*\shref="([^"]+)"/g)){
+   if(/^(https?:|mailto:|tel:|#)/.test(href))continue;
+   const [path,hash]=href.replace(/^\.\//,'').split('#'), target=path||'index.html';
+   assert.ok(existsSync(new URL(target,root)),`${f}: broken link ${href}`);
+   if(hash&&target==='index.html')assert.ok(readPage('index.html').includes(`id="${hash}"`),`${f}: link ${href} has no target on the home page`);
+  }
  }
 });

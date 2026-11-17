@@ -140,7 +140,7 @@ export const OFFICE_CONTENT = [
 },
 {
   id: "excel-viewer", howTo: "How to open an Excel file without Excel", slug: "excel-viewer.html",
-  title: "Excel Viewer – Open XLSX, XLS & CSV Files Free Online",
+  title: "Excel Viewer – Open XLSX, XLS & CSV Files Online",
   description: "Open and search .xlsx, .xls, .ods and CSV files in your browser without Excel. Switch sheets and filter rows. Free and private.",
   h1: "Excel file viewer",
   lede: "Open spreadsheets on any computer or phone without Excel. Switch between sheets and search for rows instantly.",
