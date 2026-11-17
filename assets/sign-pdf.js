@@ -133,7 +133,8 @@ function drawElements() {
 }
 function textSize(text, size) {
   const c = document.createElement("canvas").getContext("2d"); c.font = `${size}px Helvetica, Arial, sans-serif`;
-  return {w: Math.max(size, c.measureText(text).width) + 2, h: size * TEXT_SCALE};
+  // Room for the 1.5px borders and 1px padding, so the preview never clips the last character.
+  return {w: Math.max(size, c.measureText(text).width) + 6, h: size * TEXT_SCALE};
 }
 function addElement(e) {
   const p = state.pages[state.current] || state.pages[0], page = state.pages.indexOf(p);
