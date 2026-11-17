@@ -1681,7 +1681,7 @@ const ICONS = {"merge-word": "W+", "pdf-to-excel": "XLS", "excel-to-pdf": "PDF",
   "json-formatter": "{ }", "base64": "64", "url-encoder": "%20", "hash-generator": "#", "uuid-generator": "ID", "timestamp-converter": "⏱",
   "colour-converter": "◐", "take-home-pay": "£", "loan-calculator": "⌂", "savings-calculator": "↗", "debt-payoff": "↘", "vat-calculator": "VAT", "budget-planner": "◔"};
 const HOME_ORDER = ["files", "office", "finance", "general", "advanced"];
-const POPULAR = [["Merge PDF", "merge-pdf.html"], ["PDF to Word", "pdf-to-word.html"], ["JPG to PDF", "jpg-to-pdf.html"], ["PDF to Excel", "pdf-to-excel.html"], ["PDF to Excel", "pdf-to-excel.html"], ["UK take-home pay", "uk-take-home-pay-calculator.html"], ["VAT", "vat-calculator.html"],
+const POPULAR = [["Merge PDF", "merge-pdf.html"], ["PDF to Word", "pdf-to-word.html"], ["JPG to PDF", "jpg-to-pdf.html"], ["PDF to Excel", "pdf-to-excel.html"], ["UK take-home pay", "uk-take-home-pay-calculator.html"], ["VAT", "vat-calculator.html"],
   ["Loan repayments", "loan-repayment-calculator.html"], ["Word counter", "word-counter.html"], ["Password generator", "password-generator.html"], ["Percentage", "percentage-calculator.html"]];
 // Pages that are not in TOOLS but deserve their own card on the home page.
 const EXTRA_CARDS = {
