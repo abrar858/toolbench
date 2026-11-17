@@ -53,15 +53,15 @@
   <section class="panel" aria-label="CSV to Excel"><div class="drop"><input id="cx-in" type="file" accept=".csv,.tsv,.txt,text/csv" multiple aria-label="Choose CSV files"><span class="drop-icon" aria-hidden="true">⇪</span><strong>Choose CSV files</strong><span>or drag and drop files here · files stay on your device</span></div><p id="cx-file" class="file-picked" hidden></p>
   <div class="row"><div><label for="cx-sep">Separator</label><select id="cx-sep"><option value="">Detect automatically</option><option value=",">Comma ,</option><option value=";">Semicolon ;</option><option value="	">Tab</option><option value="|">Pipe |</option></select></div>
   <div><label for="cx-mode">Output</label><select id="cx-mode"><option value="each">One Excel file per CSV</option><option value="one">One Excel file, one sheet per CSV</option></select></div></div>
-  <label class="check"><input id="cx-text" type="checkbox"> Keep every value as text (keeps leading zeros in codes and phone numbers)</label>
+  <label class="check"><input id="cx-text" type="checkbox"> Keep every value as text (no numbers or dates; codes with leading zeros are kept either way)</label>
   <div class="btns"><button class="primary" id="cx-go" disabled>Convert to Excel</button></div><p id="cx-msg" class="note" aria-live="polite">Choose one or more CSV files.</p><div id="cx-out"></div></section>
   <article class="guide">
     <h2 id="how-to-convert-csv-to-excel">How to convert CSV to Excel</h2>
     <ol><li>Choose one or more CSV files.</li><li>Leave the separator on Detect automatically, or pick comma, semicolon, tab or pipe.</li><li>Choose one Excel file per CSV, or one workbook with a sheet for each CSV.</li><li>Press Convert to Excel and download.</li></ol>
     <h2 id="why-csv-files-open-badly-in-excel">Why CSV files open badly in Excel</h2>
     <p>Excel guesses how to read a CSV and often gets it wrong: everything lands in one column when the file uses semicolons, accented letters turn into odd symbols, and codes like <code>00123</code> lose their leading zeros. Converting to .xlsx fixes the structure once, so the file opens correctly everywhere.</p>
-    <h2 id="keeping-leading-zeros">Keeping leading zeros</h2>
-    <p>Tick <em>Keep every value as text</em> for files with product codes, account numbers, phone numbers or postcodes. Leave it off when the file contains amounts and dates you want to calculate with.</p>
+    <h2 id="leading-zeros-phone-numbers-and-dates">Leading zeros, phone numbers and dates</h2>
+    <p>Values are only turned into numbers when nothing would be lost. Product codes like <code>00123</code>, phone numbers like <code>+447700900123</code> and IDs longer than 15 digits stay exactly as written, while amounts like <code>3.50</code> become real numbers you can add up, keeping their decimal places. Dates written as <code>2026-01-05</code> become real dates. Dates with slashes, like <code>05/01/2026</code>, stay as text, because they could mean 5 January or 1 May depending on where the file came from; convert them in Excel with <em>Data → Text to Columns → Date: DMY</em>. Tick <em>Keep every value as text</em> if you want nothing converted at all.</p>
     
     <h2 id="frequently-asked-questions">Frequently asked questions</h2>
     <div class="faq"><details><summary>How do I convert CSV to Excel?</summary><p>Choose the CSV file, press Convert to Excel and open the downloaded .xlsx file.</p></details><details><summary>My CSV uses semicolons. Will it work?</summary><p>Yes. The separator is detected automatically, or you can choose semicolon yourself.</p></details><details><summary>Can I combine several CSV files into one workbook?</summary><p>Yes. Choose 'One Excel file, one sheet per CSV'.</p></details><details><summary>Is my spreadsheet uploaded?</summary><p>No. The file is opened by your own browser and never leaves your device, so it is safe for payroll, customer lists and other confidential data.</p></details></div>
@@ -70,7 +70,7 @@
   <div class="related related-bottom"><h2>Related tools</h2><ul><li><a href="excel-to-csv.html">Excel to CSV</a></li><li><a href="merge-excel-files.html">Merge Excel files</a></li><li><a href="excel-viewer.html">Excel file viewer</a></li></ul></div>
   </div>
   <aside class="tool-aside"><div class="tool-aside-inner">
-    <nav class="aside-card toc" aria-label="On this page"><h2>On this page</h2><ul><li><a href="#how-to-convert-csv-to-excel">How to convert CSV to Excel</a></li><li><a href="#why-csv-files-open-badly-in-excel">Why CSV files open badly in Excel</a></li><li><a href="#keeping-leading-zeros">Keeping leading zeros</a></li><li><a href="#frequently-asked-questions">Frequently asked questions</a></li></ul></nav>
+    <nav class="aside-card toc" aria-label="On this page"><h2>On this page</h2><ul><li><a href="#how-to-convert-csv-to-excel">How to convert CSV to Excel</a></li><li><a href="#why-csv-files-open-badly-in-excel">Why CSV files open badly in Excel</a></li><li><a href="#leading-zeros-phone-numbers-and-dates">Leading zeros, phone numbers and dates</a></li><li><a href="#frequently-asked-questions">Frequently asked questions</a></li></ul></nav>
     <div class="aside-card"><h2>Related tools</h2><ul><li><a href="excel-to-csv.html">Excel to CSV</a></li><li><a href="merge-excel-files.html">Merge Excel files</a></li><li><a href="excel-viewer.html">Excel file viewer</a></li></ul></div>
   </div></aside>
   </div>
@@ -83,6 +83,6 @@
   <p><a href="privacy.html">Privacy</a> · <a href="about.html">About ToolsBravo</a></p>
   <p>© <span id="yr">2026</span> <span class="sn">ToolsBravo</span></p>
 </div></footer>
-<script src="assets/tools.js?v=77e2ec0a8c"></script>
+<script src="assets/tools.js?v=f86a814e16"></script>
 </body>
 </html>

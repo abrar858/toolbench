@@ -204,20 +204,22 @@ async function makeDocx(paras) {
 }
 // Finds the highest quality (then, if needed, a smaller width) that keeps an image under opt.targetBytes.
 async function fitImage(file, opt) {
-  let width = opt.maxWidth || 0, smallest = null;
+  // First find a width at which even the lowest quality fits, estimating the shrink from the size
+  // ratio (file size scales roughly with pixel count), then pick the highest quality at that width.
+  let width = opt.maxWidth || 0, low = null;
   for (let round = 0; round < 8; round++) {
-    let lo = 0.3, hi = 0.95, found = null;
-    for (let i = 0; i < 7; i++) {
-      const q = (lo + hi) / 2, r = await convertImage(file, {...opt, quality: q, maxWidth: width || undefined});
-      if (r.blob.size <= opt.targetBytes) { found = r; lo = q; } else hi = q;
-    }
-    if (found) return found;
-    smallest = await convertImage(file, {...opt, quality: 0.3, maxWidth: width || undefined});
-    if (smallest.blob.size <= opt.targetBytes) return smallest;
-    width = Math.round(smallest.w * 0.75);
-    if (width < 160) break;
+    low = await convertImage(file, {...opt, quality: 0.3, maxWidth: width || undefined});
+    if (low.blob.size <= opt.targetBytes) break;
+    width = Math.round(low.w * Math.min(0.9, Math.max(0.4, Math.sqrt(opt.targetBytes / low.blob.size) * 0.95)));
+    if (width < 160) throw new Error(`${file.name} can't get under ${fsize(opt.targetBytes)} without becoming unusable (smallest: ${fsize(low.blob.size)}). Choose a larger size.`);
   }
-  throw new Error(`${file.name} can't get under ${fsize(opt.targetBytes)} without becoming unusable (smallest: ${fsize(smallest.blob.size)}). Choose a larger size.`);
+  if (low.blob.size > opt.targetBytes) throw new Error(`${file.name} can't get under ${fsize(opt.targetBytes)}. Choose a larger size.`);
+  let lo = 0.3, hi = 0.95, best = low;
+  for (let i = 0; i < 6; i++) {
+    const q = (lo + hi) / 2, r = await convertImage(file, {...opt, quality: q, maxWidth: width || undefined});
+    if (r.blob.size <= opt.targetBytes) { best = r; lo = q; } else hi = q;
+  }
+  return best;
 }
 // Shared flow for the image converter, compressor and resizer. options(file, {type, q}) returns convertImage options.
 function imageTool(el, p, options, showSaving) {
@@ -274,11 +276,32 @@ function pdfParagraphs(items) {
 const sheetLib = () => loadScript("xlsx.full.min.js").then(() => window.XLSX);
 const SHEET_ACCEPT = ".xlsx,.xlsm,.xls,.ods,.csv,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.oasis.opendocument.spreadsheet,text/csv";
 const BOOK_MIME = {xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", csv: "text/csv;charset=utf-8"};
+// CSV cells are read as text first, then converted only where nothing can be lost:
+// plain numbers (keeping their decimal places), TRUE/FALSE and ISO dates (2026-01-05).
+// Codes with leading zeros (0123), phone numbers (+44…), IDs longer than 15 digits and
+// slash dates (05/01/2026, which could be day/month or month/day) stay exactly as written.
+// Converted cells keep the original text as their displayed value.
+function typeCsvCells(wb) {
+  for (const ws of Object.values(wb.Sheets)) for (const [ref, c] of Object.entries(ws)) {
+    if (ref[0] === "!" || !c || c.t !== "s") continue;
+    const v = String(c.v).trim(); let m;
+    if ((m = /^-?(?:0|[1-9]\d*)(?:\.(\d+))?$/.exec(v)) && v.replace(/\D/g, "").length <= 15) {
+      const z = m[1] ? "0." + "0".repeat(m[1].length) : v.replace(/\D/g, "").length > 11 ? "0" : undefined;
+      ws[ref] = {t: "n", v: Number(v), w: v, ...(z ? {z} : {})};
+    } else if (/^(?:true|false)$/i.test(v)) ws[ref] = {t: "b", v: /^true$/i.test(v), w: v};
+    else if ((m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v))) {
+      const d = new Date(+m[1], +m[2] - 1, +m[3]);
+      if (d.getMonth() === +m[2] - 1 && d.getDate() === +m[3]) ws[ref] = {t: "d", v: d, w: v, z: "yyyy-mm-dd"};
+    }
+  }
+  return wb;
+}
 async function readBook(file, opts = {}) {
   const X = await sheetLib();
   try {
     const isText = /\.(csv|tsv|txt)$/i.test(file.name);
-    return X.read(isText ? await file.text() : new Uint8Array(await file.arrayBuffer()), {type: isText ? "string" : "array", cellDates: true, ...opts});
+    if (isText) { const wb = X.read((await file.text()).replace(/^﻿/, ""), {type: "string", raw: true, ...opts}); return opts.raw ? wb : typeCsvCells(wb); }
+    return X.read(new Uint8Array(await file.arrayBuffer()), {type: "array", cellDates: true, ...opts});
   } catch (e) {
     throw new Error(/password|encrypt/i.test(e.message) ? `${file.name} is password-protected. Open it in Excel, remove the password, then try again.` : `${file.name} could not be read as a spreadsheet. Use .xlsx, .xls, .ods or .csv files.`);
   }
@@ -574,7 +597,7 @@ const TOOLS = [
  ui: `${dropUI("cx-in", ".csv,.tsv,.txt,text/csv", "Choose CSV files", true)}<p id="cx-file" class="file-picked" hidden></p>
   <div class="row"><div><label for="cx-sep">Separator</label><select id="cx-sep"><option value="">Detect automatically</option><option value=",">Comma ,</option><option value=";">Semicolon ;</option><option value="\t">Tab</option><option value="|">Pipe |</option></select></div>
   <div><label for="cx-mode">Output</label><select id="cx-mode"><option value="each">One Excel file per CSV</option><option value="one">One Excel file, one sheet per CSV</option></select></div></div>
-  <label class="check"><input id="cx-text" type="checkbox"> Keep every value as text (keeps leading zeros in codes and phone numbers)</label>
+  <label class="check"><input id="cx-text" type="checkbox"> Keep every value as text (no numbers or dates; codes with leading zeros are kept either way)</label>
   <div class="btns"><button class="primary" id="cx-go" disabled>Convert to Excel</button></div><p id="cx-msg" class="note" aria-live="polite">Choose one or more CSV files.</p><div id="cx-out"></div>`,
  init(el) {
   let files = []; const go = $("#cx-go", el), msg = $("#cx-msg", el);
@@ -585,8 +608,8 @@ const TOOLS = [
       const X = await sheetLib(), sep = $("#cx-sep", el).value, text = $("#cx-text", el).checked, one = $("#cx-mode", el).value === "one", items = [], book = X.utils.book_new(), used = new Set();
       let preview = null;
       for (const f of files) {
-        const src = (await f.text()).replace(/^﻿/, ""), opts = {type: "string", raw: text, cellDates: !text, ...(sep ? {FS: sep} : {})};
-        let wb; try { wb = X.read(src, opts); } catch { throw new Error(`${f.name} could not be read as CSV.`); }
+        const src = (await f.text()).replace(/^﻿/, ""), opts = {type: "string", raw: true, ...(sep ? {FS: sep} : {})};
+        let wb; try { wb = X.read(src, opts); if (!text) typeCsvCells(wb); } catch { throw new Error(`${f.name} could not be read as CSV.`); }
         const ws = wb.Sheets[wb.SheetNames[0]]; preview ||= sheetRows(X, ws);
         if (one) X.utils.book_append_sheet(book, ws, safeSheetName(baseName(f), used));
         else { const nb = X.utils.book_new(); X.utils.book_append_sheet(nb, ws, safeSheetName(baseName(f), new Set())); items.push({name: `${baseName(f)}.xlsx`, blob: new Blob([X.write(nb, {bookType: "xlsx", type: "array", compression: true})], {type: BOOK_MIME.xlsx})}); }
