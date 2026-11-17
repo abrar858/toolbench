@@ -76,14 +76,41 @@ const directory = current => Object.entries(CATS).map(([cat, label]) =>
     `<li><a href="${byId.get(t.id).slug}"${t.id === current ? ' aria-current="page"' : ""}>${esc(t.name)}</a></li>`).join("")}${
     cat === "finance" ? `<li><a href="salary-after-tax.html"${current === "salary" ? ' aria-current="page"' : ""}>Salary after tax table</a></li>` : ""}</ul></div>`).join("");
 
-const header = `<a class="skip-link" href="#app">Skip to content</a>
-<div class="site-head"><div class="wrap">
-  <header class="top">
+// Tool icons and the category menu shown in every page header.
+const ICONS = vm.runInNewContext("(" + js.match(/const ICONS = (\{[\s\S]*?\});/)[1] + ")");
+// Extra homepage cards (salary table, automation builder) also appear in their category menu.
+const EXTRA_CARDS = vm.runInNewContext("(" + js.match(/const EXTRA_CARDS = (\{[\s\S]*?\n\});/)[1] + ")");
+const CAT_BLURB = {
+  files: "Merge, split, sign, compress and convert PDFs and images.",
+  office: "Convert, merge and tidy Word, Excel and CSV files.",
+  finance: "UK take-home pay, VAT, loans, savings and budgets.",
+  general: "Everyday calculators, converters and text tools.",
+  advanced: "Formatters, encoders and generators for developers.",
+};
+const CHEVRON = '<svg class="chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const menuItem = (href, icon, name, desc, current) =>
+  `<li><a href="${href}"${current ? ' aria-current="page"' : ""}><span class="mm-ico" aria-hidden="true">${esc(icon)}</span><span class="mm-text"><strong>${esc(name)}</strong><small>${esc(desc)}</small></span></a></li>`;
+function siteMenu(current) {
+  const currentCat = current === "salary" ? "finance" : tool(current)?.cat;
+  return `<nav class="mega" id="site-menu" aria-label="Tool categories">${Object.entries(CATS).map(([cat, label]) => {
+    const list = TOOLS.filter(t => t.cat === cat);
+    const items = list.map(t => menuItem(byId.get(t.id).slug, ICONS[t.id] || "•", t.name, t.desc, t.id === current)).join("")
+      + (EXTRA_CARDS[cat] || []).map(x => menuItem(x.href, x.icon, x.name, x.desc, x.href === "salary-after-tax.html" && current === "salary")).join("");
+    const count = list.length + (EXTRA_CARDS[cat] || []).length;
+    return `<details class="mm${cat === currentCat ? " is-current" : ""}" data-cat="${cat}"><summary>${esc(label)}${CHEVRON}</summary><div class="mm-panel"><div class="mm-intro"><p class="mm-count">${count} tools</p><p class="mm-title">${esc(label)}</p><p class="mm-blurb">${CAT_BLURB[cat]}</p><a class="mm-all" href="./#${cat}">All ${esc(label)} tools <span aria-hidden="true">→</span></a></div><ul class="mm-list" aria-label="${esc(label)} tools">${items}</ul></div></details>`;
+  }).join("")}<a class="mm-link" href="automation-builder.html">Automations</a></nav>`;
+}
+const MENU_BTN = '<button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path class="l1" d="M4 7h16"/><path class="l2" d="M4 12h16"/><path class="l3" d="M4 17h16"/></svg></button>';
+const headerBar = current => `<header class="top">
     <a class="logo" href="./" aria-label="ToolsBravo home"><img src="assets/icon.svg" alt="" width="32" height="32"><span id="siteName">${SITE}</span></a>
-    <nav aria-label="Categories"><a href="./#files">PDF &amp; image</a><a href="./#office">Office</a><a href="./#finance">Finance</a><a href="./#general">General</a><a href="./#advanced">Developer</a><a href="automation-builder.html">Automations</a></nav><button class="search-btn" type="button" aria-label="Search tools" aria-expanded="false" aria-controls="site-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button><button class="theme-btn" type="button" aria-label="Switch theme">☾</button>
-  </header>
+    ${siteMenu(current)}<button class="search-btn" type="button" aria-label="Search tools" aria-expanded="false" aria-controls="site-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button><button class="theme-btn" type="button" aria-label="Switch theme">☾</button>${MENU_BTN}
+  </header>`;
+const headerFor = (current = null, skip = "Skip to content") => `<a class="skip-link" href="#app">${skip}</a>
+<div class="site-head"><div class="wrap">
+  ${headerBar(current)}
   <div class="site-search" id="site-search" hidden><label class="sr-only" for="site-q">Search tools</label><input id="site-q" type="search" placeholder="Search all tools, e.g. merge PDF, VAT, JSON" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="site-results" aria-expanded="true"><ul id="site-results" role="listbox" aria-label="Matching tools"></ul></div>
 </div></div>`;
+const header = headerFor();
 const hid = s => strip(s).toLowerCase().replace(/&[a-z]+;/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const h2 = text => `<h2 id="${hid(text)}">${esc(text)}</h2>`;
 const toc = titles => `<nav class="aside-card toc" aria-label="On this page"><h2>On this page</h2><ul>${titles.map(t => `<li><a href="#${hid(t)}">${esc(t)}</a></li>`).join("")}</ul></nav>`;
@@ -127,7 +154,7 @@ ${ld(crumbsLd(trail))}
 ${ld(faqLd(c.faqs.map(([q, a]) => [q, esc(a)])))}
 </head>
 <body data-tool="${t.id}">
-${header}
+${headerFor(c.id)}
 <main id="app" tabindex="-1">
 <div class="wrap tool">
   ${crumbs(trail)}
@@ -198,7 +225,7 @@ ${ld(crumbsLd(trail))}
 ${ld(faqLd(faqs))}
 </head>
 <body data-tool="take-home-pay">
-${header}
+${headerFor("salary")}
 <main id="app" tabindex="-1">
 <div class="wrap tool">
   ${crumbs(trail)}
@@ -269,7 +296,7 @@ function salaryHub() {
 ${ld(crumbsLd(trail))}
 </head>
 <body>
-${header}
+${headerFor("salary")}
 <main id="app" tabindex="-1">
 <div class="wrap tool">
   ${crumbs(trail)}
@@ -365,6 +392,7 @@ const homeCtx = {document: {title: "", querySelector: () => ({content: "", textC
 vm.createContext(homeCtx);
 vm.runInContext(js.slice(0, js.indexOf("function showHome(")) + ";globalThis.HOME = homeHTML();", homeCtx);
 const home = read("index.html")
+  .replace(/<header class="top">[\s\S]*?<\/header>/, () => headerBar(null))
   .replace(/<main id="app" tabindex="-1">[\s\S]*?<\/main>/, () => `<main id="app" tabindex="-1">${homeCtx.HOME}</main>`)
   .replace(/<!-- tool-directory:start -->[\s\S]*?<!-- tool-directory:end -->/,
     () => `<!-- tool-directory:start --><nav class="tool-directory" aria-label="All tools">${directory(null)}</nav><!-- tool-directory:end -->`);
@@ -386,17 +414,9 @@ for (const c of TOOL_CONTENT) {
   if (words < 180) console.warn(`warn: thin content (${c.slug}, ${words} words)`);
 }
 
-// Enhance every generated page with category dropdowns, retaining fallback links.
-for (const [path, body] of Object.entries(outputs)) {
-  if (!path.endsWith(".html") || body.includes("assets/category-dropdowns.js")) continue;
-  outputs[path] = body.replace(/<script src="assets[^"]*tools[.]js[^"]*"><[/]script>/,
-    match => match + String.fromCharCode(10) +
-    '<script defer src="assets/category-dropdowns.js"></script>');
-}
-
 // Cache busting: tag the shared CSS and JS with a hash of their content, so after every
 // deploy browsers fetch the new files instead of pairing new pages with cached old code.
-const VERSIONED = ["assets/tools.js", "assets/site.css", "assets/category-dropdowns.js", ...new Set(TOOL_CONTENT.map(c => c.script).filter(Boolean))];
+const VERSIONED = ["assets/tools.js", "assets/site.css", ...new Set(TOOL_CONTENT.map(c => c.script).filter(Boolean))];
 const assetVersion = Object.fromEntries(VERSIONED.map(p => [p, createHash("sha256").update(read(p)).digest("hex").slice(0, 10)]));
 const versionedRe = new RegExp(`(${VERSIONED.map(p => p.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")).join("|")})(?:\\?v=[0-9a-f]+)?"`, "g");
 for (const [path, body] of Object.entries(outputs)) {

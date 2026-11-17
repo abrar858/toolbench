@@ -711,3 +711,78 @@ test('sign PDF: phone layout with touch drawing', async ({browser}) => {
  expect(d.suggestedFilename()).toBe('sign-a4-signed.pdf');
  await context.close();
 });
+
+/* ---------- Header category menus ---------- */
+test('header menus: click, hover, keyboard, Escape and outside click on desktop', async ({page}) => {
+ await page.setViewportSize({width: 1280, height: 800});
+ await page.goto('/sign-pdf.html');
+ const files = page.locator('.mm[data-cat=files]'), office = page.locator('.mm[data-cat=office]');
+ await expect(files).toHaveClass(/is-current/);
+ await files.locator('summary').click();
+ await expect(files.locator('.mm-panel')).toBeVisible();
+ await expect(files.locator('a[aria-current=page]')).toContainText('Sign PDF');
+ await expect(files.locator('.mm-list a')).toHaveCount(13);
+ // Only one menu open at a time.
+ await office.locator('summary').click();
+ await expect(office.locator('.mm-panel')).toBeVisible();
+ await expect(files.locator('.mm-panel')).toBeHidden();
+ // Escape closes and returns focus to the trigger; arrow keys walk the links.
+ await page.keyboard.press('Escape');
+ await expect(office.locator('.mm-panel')).toBeHidden();
+ await expect(office.locator('summary')).toBeFocused();
+ await page.keyboard.press('Enter');
+ await expect(office.locator('.mm-panel')).toBeVisible();
+ await page.keyboard.press('ArrowDown');
+ await expect(office.locator('.mm-panel a').first()).toBeFocused();
+ // Clicking elsewhere closes it.
+ await page.mouse.click(640, 700);
+ await expect(office.locator('.mm-panel')).toBeHidden();
+ // Hover opens, moving away closes.
+ await page.locator('.mm[data-cat=finance] summary').hover();
+ await expect(page.locator('.mm[data-cat=finance] .mm-panel')).toBeVisible();
+ await page.mouse.move(640, 760);
+ await expect(page.locator('.mm[data-cat=finance] .mm-panel')).toBeHidden();
+ // Links go to the tool.
+ await page.locator('.mm[data-cat=general] summary').click();
+ await page.locator('.mm[data-cat=general] .mm-list a').first().click();
+ await expect(page.locator('main h1')).toBeVisible();
+ await expect(page.locator('.mm[data-cat=general]')).toHaveClass(/is-current/);
+});
+
+test('header menu on phones: menu button, current section open, no sideways scroll', async ({page}) => {
+ await page.setViewportSize({width: 375, height: 812});
+ await page.goto('/30000-after-tax.html');
+ await expect(page.locator('#site-menu')).toBeHidden();
+ await expect(page.locator('.site-head .logo span')).toBeVisible();
+ const btn = page.locator('.menu-btn');
+ await btn.click();
+ await expect(btn).toHaveAttribute('aria-expanded', 'true');
+ await expect(page.locator('#site-menu')).toBeVisible();
+ await expect(page.locator('.mm[data-cat=finance] .mm-panel')).toBeVisible();
+ await expect(page.locator('.mm[data-cat=finance] a[aria-current=page]')).toContainText('Salary after tax table');
+ await expect(page.locator('.mm-link')).toBeInViewport();
+ expect(await page.evaluate(() => { const n = document.querySelector('#site-menu'); return [n.scrollWidth <= n.clientWidth, document.documentElement.scrollWidth <= innerWidth]; })).toEqual([true, true]);
+ await page.locator('.mm[data-cat=files] summary').click();
+ await expect(page.locator('.mm[data-cat=files] .mm-panel')).toBeVisible();
+ await expect(page.locator('.mm[data-cat=finance] .mm-panel')).toBeHidden();
+ await page.keyboard.press('Escape');
+ await page.keyboard.press('Escape');
+ await expect(page.locator('#site-menu')).toBeHidden();
+ await expect(btn).toHaveAttribute('aria-expanded', 'false');
+ await btn.click();
+ await page.locator('.mm[data-cat=files] summary').click();
+ await page.locator('.mm[data-cat=files] .mm-list a', {hasText: 'Merge PDF'}).click();
+ await expect(page).toHaveURL(/merge-pdf\.html$/);
+});
+
+test('header menus do not shift the layout on tool pages', async ({page}) => {
+ await page.setViewportSize({width: 1280, height: 800});
+ await page.goto('/merge-pdf.html');
+ await page.waitForLoadState('load');
+ const cls = await page.evaluate(() => new Promise(done => {
+  let total = 0;
+  new PerformanceObserver(list => { for (const e of list.getEntries()) if (!e.hadRecentInput) total += e.value; }).observe({type: 'layout-shift', buffered: true});
+  setTimeout(() => done(total), 1200);
+ }));
+ expect(cls).toBeLessThan(0.05);
+});
