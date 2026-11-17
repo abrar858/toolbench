@@ -15,6 +15,19 @@ test('HTML has main landmark and description',()=>{
  assert.match(html,/<meta name="description"/);
  assert.match(html,/<meta name="viewport"/);
 });
+
+test('popular homepage links are unique and supplemental pages do not inflate core tool count',()=>{
+ const quick=html.match(/<nav class="quick"[^>]*>([\s\S]*?)<\/nav>/)?.[1];
+ assert.ok(quick,'Popular tools navigation missing');
+ const links=[...quick.matchAll(/href="([^"]+)"/g)].map(m=>m[1]);
+ assert.ok(links.length>0,'Popular navigation should not be empty');
+ assert.equal(new Set(links).size,links.length,'Duplicate links in Popular tools navigation');
+ const core=[...script.matchAll(/\{id:\s*"([^"]+)"\s*,\s*cat:\s*"([^"]+)"/g)];
+ const cards=[...html.matchAll(/class="tcard tcard-/g)];
+ assert.equal(core.length,45,'Update the published core tool count deliberately if the catalog changes');
+ assert.equal(cards.length,core.length+2,'Homepage should show 45 tools plus salary hub and automation builder');
+ assert.match(html,/45 fast, simple tools/);
+});
 test('shared JavaScript parses',()=>{assert.ok(script);new vm.Script(script)});
 test('all tool IDs are unique',()=>{
  const ids=[...script.matchAll(/\{id:\s*"([^"]+)"\s*,\s*cat:/g)].map(x=>x[1]);
