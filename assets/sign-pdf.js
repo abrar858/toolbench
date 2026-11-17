@@ -400,10 +400,19 @@ async function exportPdf() {
         }
       }
     }
-    const out = await pdf.save();
+    // Classic cross-reference table, no object streams: the layout every PDF reader understands,
+    // including older phone and desktop apps that refuse compressed (PDF 1.5+) structures.
+    const out = await pdf.save({useObjectStreams: false});
     // Never hand over a broken file: reopen what was written and check every page is there.
     const check = await PDFDocument.load(out);
-    if (check.getPageCount() !== state.pages.length || out.length < 200) throw new Error("The signed file didn't pass its check, so it wasn't downloaded. Please try again.");
+    let readable = check.getPageCount() === state.pages.length && out.length >= 200 && String.fromCharCode(...out.subarray(0, 5)) === "%PDF-";
+    if (readable) {
+      // A second, independent reader (pdf.js) must also open the file and every page in it.
+      const verify = await (await pdfJs()).getDocument({data: out.slice(), isEvalSupported: false}).promise;
+      try { readable = verify.numPages === state.pages.length; for (let i = 1; readable && i <= verify.numPages; i++) await verify.getPage(i); }
+      finally { verify.destroy(); }
+    }
+    if (!readable) throw new Error("The signed file didn't pass its check, so it wasn't downloaded. Please try again.");
     saveBlob(new Blob([out], {type: "application/pdf"}), `${baseName(state.file)}-signed.pdf`);
     state.dirty = false;
     announce(`Signed PDF downloaded: ${plural(state.elements.length, "item")} added, ${plural(state.pages.length, "page")}, ${fsize(out.length)}.`);
