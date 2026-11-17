@@ -374,13 +374,17 @@ test('password generator makes passphrases with a strength rating', async ({page
 
 test('image compressor reaches a target file size', async ({page}) => {
  await page.goto('/image-compressor.html');
- const big = await page.evaluate(async () => {
+ // Build a hard-to-compress 2400 × 1600 photo inside the page and hand it straight to the file input
+ // (sending megabytes through the test runner would take longer than the tool itself).
+ const inputSize = await page.evaluate(async () => {
   const c = document.createElement('canvas'); c.width = 2400; c.height = 1600; const x = c.getContext('2d'), d = x.createImageData(2400, 1600);
   for (let i = 0; i < d.data.length; i += 4) { d.data[i] = (i / 4) % 251; d.data[i + 1] = (i / 7) % 241; d.data[i + 2] = Math.random() * 255; d.data[i + 3] = 255; }
   x.putImageData(d, 0, 0); const b = await new Promise(r => c.toBlob(r, 'image/jpeg', .95));
-  return [...new Uint8Array(await b.arrayBuffer())];
+  const dt = new DataTransfer(); dt.items.add(new File([b], 'photo.jpg', {type: 'image/jpeg'}));
+  const input = document.querySelector('#ix-in'); input.files = dt.files; input.dispatchEvent(new Event('change'));
+  return b.size;
  });
- await page.locator('#ix-in').setInputFiles({name: 'photo.jpg', mimeType: 'image/jpeg', buffer: Buffer.from(big)});
+ expect(inputSize).toBeGreaterThan(1024 * 1024);
  await page.locator('#ix-mode').selectOption('size');
  await page.locator('#ix-target').selectOption('100');
  await page.locator('#ix-go').click();
@@ -445,4 +449,49 @@ test('guide tables stay inside the screen on phones', async ({page}) => {
   }).length);
   expect(overflow, c.slug).toBe(0);
  }
+});
+
+/* ---------- CSV values are never altered (leading zeros, phone numbers, long IDs, slash dates) ---------- */
+const TRICKY = ['Code', 'Phone', 'Price', 'Date', 'UK date', 'Account', 'Active'];
+test('CSV to Excel keeps codes, phones, IDs and dates as written', async ({page}) => {
+ await page.goto('/csv-to-excel.html');
+ await page.locator('#cx-in').setInputFiles(fixture('tricky.csv'));
+ await page.locator('#cx-go').click();
+ const d = await download(page, () => page.locator('#cx-out [data-dl="0"]').click());
+ const shown = await page.evaluate(async b64 => {
+  const wb = XLSX.read(Uint8Array.from(atob(b64), c => c.charCodeAt(0)), {type: 'array', cellDates: true}), ws = wb.Sheets[wb.SheetNames[0]];
+  return {text: XLSX.utils.sheet_to_json(ws, {header: 1, raw: false}), types: ['A2', 'B2', 'C2', 'D2', 'E2', 'F2', 'G2'].map(r => ws[r].t).join('')};
+ }, (await readDownload(d)).toString('base64'));
+ expect(shown.text[0]).toEqual(TRICKY);
+ expect(shown.text[1]).toEqual(['00123', '+447700900123', '3.50', '2026-01-05', '05/01/2026', '12345678901234567890', 'TRUE']);
+ expect(shown.types).toBe('ssndssb');
+});
+
+test('merging, viewing and converting a CSV never alters its values', async ({page}) => {
+ await page.goto('/merge-excel-files.html');
+ await page.locator('#me-in').setInputFiles([fixture('tricky.csv'), fixture('tricky.csv')]);
+ await page.locator('#me-mode').selectOption('stack');
+ await page.locator('#me-src').uncheck();
+ const d = await download(page, async () => { await page.locator('#me-go').click(); await page.locator('#me-out [data-dl="0"]').click(); });
+ const rows = await page.evaluate(async b64 => { const wb = XLSX.read(Uint8Array.from(atob(b64), c => c.charCodeAt(0)), {type: 'array'}); return XLSX.utils.sheet_to_json(wb.Sheets.Merged, {header: 1, raw: false}); }, (await readDownload(d)).toString('base64'));
+ expect(rows).toHaveLength(5);
+ expect(rows[2].slice(0, 2)).toEqual(['0456', '07700900456']);
+
+ await page.goto('/excel-viewer.html');
+ await page.locator('#ev-in').setInputFiles(fixture('tricky.csv'));
+ await expect(page.locator('#ev-out tbody')).toContainText('05/01/2026');
+ await expect(page.locator('#ev-out tbody')).toContainText('12345678901234567890');
+
+ await page.goto('/excel-to-json.html');
+ await page.locator('#xj-in').setInputFiles(fixture('tricky.csv'));
+ await expect(page.locator('#xj-out')).toBeVisible();
+ const json = JSON.parse(await page.locator('#xj-text').inputValue());
+ expect(json[0]).toMatchObject({Code: '00123', Phone: '+447700900123', Price: 3.5, 'UK date': '05/01/2026', Account: '12345678901234567890', Active: true});
+
+ await page.goto('/excel-to-csv.html');
+ await page.locator('#xc-in').setInputFiles(fixture('tricky.csv'));
+ await page.locator('#xc-bom').uncheck();
+ await page.locator('#xc-go').click();
+ const c = await download(page, () => page.locator('#xc-out [data-dl="0"]').click());
+ expect((await readDownload(c)).toString('utf8').trimEnd()).toBe(readFileSync(fixture('tricky.csv'), 'utf8').trimEnd().replace(/\r\n/g, '\n'));
 });

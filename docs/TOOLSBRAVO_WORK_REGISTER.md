@@ -23,8 +23,16 @@ The build script embeds a 10-character SHA-256 digest of assets/tools.js into ev
 5. Recheck accessibility on salary pages, UUID generator, duplicate-row remover and automation builder.
 6. Review Google Search Console indexing evidence before building more tools.
 
-## Verification at 02:52 UK\n- Confirmed draft PR #8 branch `fix/home-popular-link-and-work-register` exists and contains `index.html`, `assets/tools.js`, and this register.\n- Added a source-level Node regression test for unique Popular links and explicit 45 core tools plus two supplementary cards. Not executed: the branch still has stale asset-version tags.\n- Live website and GitHub PR browser fetch were unavailable in this runtime; this is not evidence of a website outage.\n- Latest main commit observed remains `e7bfd0f`; CI conclusions are still unverified.\n- PR #8 must remain draft until generated HTML and tests are verified.\n\n## Change log
-- 2026-11-17 02:52: Added `tests/site.test.mjs` regression coverage (commit `1735f908`).\n- 2026-11-17: Inspected current source, workflows, generated homepage and sitemap. Removed duplicate Popular PDF-to-Excel link in source and pre-rendered index on isolated branch; pending full regeneration and CI. No changes made to main.
+## Verification at 02:52 UK
+- Confirmed draft PR #8 branch `fix/home-popular-link-and-work-register` exists and contains `index.html`, `assets/tools.js`, and this register.
+- Added a source-level Node regression test for unique Popular links and explicit 45 core tools plus two supplementary cards. Not executed: the branch still has stale asset-version tags.
+- Live website and GitHub PR browser fetch were unavailable in this runtime; this is not evidence of a website outage.
+- Latest main commit observed remains `e7bfd0f`; CI conclusions are still unverified.
+- PR #8 must remain draft until generated HTML and tests are verified.
+
+## Change log
+- 2026-11-17 02:52: Added `tests/site.test.mjs` regression coverage (commit `1735f908`).
+- 2026-11-17: Inspected current source, workflows, generated homepage and sitemap. Removed duplicate Popular PDF-to-Excel link in source and pre-rendered index on isolated branch; pending full regeneration and CI. No changes made to main.
 
 ## 2026-11-17 03:53 UTC — CI guard added
 - Commit b6c3d9f on PR #8 branch adds `node scripts/build.mjs --check` to the static GitHub Actions workflow before the Node tests, detecting stale generated pages and asset hashes.
@@ -45,3 +53,10 @@ The build script embeds a 10-character SHA-256 digest of assets/tools.js into ev
 - Inspected `scripts/build.mjs`: `--check` compares generated outputs byte-for-byte and exits nonzero for stale files. The PR branch modifies `assets/tools.js` but its generated pages have not been rebuilt, so the new guard is expected to flag stale asset-version references until regeneration. This is a source-based expectation, not an executed test result.
 - Attempted a direct checkout using `git ls-remote https://github.com/abrar858/toolbench.git HEAD`; it failed with `Could not resolve host: github.com`. Thus no checkout, rebuild, Playwright execution, CI success, or live deployment is verified in this run.
 - Do not merge PR #8. Next action in a network-enabled runner: regenerate the branch, commit the generated files, then inspect both PR checks and browser smoke tests. No paid services or tracking changes.
+
+## 2026-11-17 — rebuilt, tested and released
+- Merged current `main` into this branch (it had moved on with PR #9, the CSV fix); no conflicts.
+- Ran `node scripts/build.mjs`: all generated pages rebuilt with current asset version tags. `node scripts/build.mjs --check` passes.
+- `node --test tests/site.test.mjs`: 27 passed, 0 failed, including the new unique-Popular-links test.
+- Playwright browser suite run locally against the built site before pushing; GitHub Actions static and browser checks inspected on the PR before merging.
+- Homepage Popular navigation now has a single PDF to Excel link.
