@@ -795,6 +795,51 @@ const TOOLS = [
     } catch (e) { say(msg, e.message, true); } finally { busy(go, false); }
   };
  }},
+{id: "sign-pdf", cat: "files", name: "Sign PDF", desc: "Add your signature, initials, name and date to a PDF.",
+ ui: `<div id="sg-start">${dropUI("sg-in", "application/pdf,.pdf", "Choose a PDF to sign", false)}<p id="sg-msg" class="note" aria-live="polite">Your document stays on your device. Nothing is uploaded.</p></div>
+  <div id="sg-work" hidden>
+   <p id="sg-file" class="file-picked"></p>
+   <div class="sg-bar" role="toolbar" aria-label="Signing tools">
+    <div class="sg-group"><button type="button" class="primary" data-add="signature">✍ Signature</button><button type="button" data-add="initials">Initials</button><button type="button" data-add="name">Name</button><button type="button" data-add="date">Date</button><button type="button" data-add="text">Text</button></div>
+    <div class="sg-group"><button type="button" id="sg-undo" aria-label="Undo" title="Undo (Ctrl+Z)" disabled>↶</button><button type="button" id="sg-redo" aria-label="Redo" title="Redo (Ctrl+Y)" disabled>↷</button>
+     <button type="button" id="sg-zoom-out" aria-label="Zoom out">−</button><span id="sg-zoom" class="sg-zoom" aria-live="polite">100%</span><button type="button" id="sg-zoom-in" aria-label="Zoom in">+</button><button type="button" id="sg-fit">Fit</button>
+     <label class="sg-page-nav">Page <input id="sg-pageno" type="number" min="1" value="1" inputmode="numeric" aria-label="Go to page"> of <span id="sg-pages">1</span></label></div>
+    <div class="sg-group sg-end"><button type="button" id="sg-reset">Start over</button><button type="button" class="primary" id="sg-download">Download signed PDF</button></div>
+   </div>
+   <p id="sg-status" class="note" role="status" aria-live="polite"></p>
+   <div id="sg-viewer" class="sg-viewer" tabindex="-1" aria-label="Document pages"></div>
+  </div>
+  <dialog id="sg-dialog" class="sg-dialog" aria-labelledby="sg-dtitle">
+   <h2 id="sg-dtitle">Add your signature</h2>
+   <div id="sg-saved" hidden><p class="note">Use one you made earlier:</p><div id="sg-saved-list" class="sg-saved-list"></div></div>
+   <div class="sg-tabs" role="tablist" aria-label="How to make your signature"><button type="button" role="tab" data-tab="draw" aria-selected="true">Draw</button><button type="button" role="tab" data-tab="type" aria-selected="false" tabindex="-1">Type</button><button type="button" role="tab" data-tab="upload" aria-selected="false" tabindex="-1">Upload</button></div>
+   <div data-pane="draw"><canvas id="sg-pad" class="sg-pad" aria-label="Signature drawing area. Draw with a mouse, finger or stylus. To use the keyboard, choose Type instead."></canvas><div class="btns"><button type="button" id="sg-clear">Clear</button></div></div>
+   <div data-pane="type" hidden><label for="sg-type-in">Type your name</label><input id="sg-type-in" autocomplete="name" maxlength="60"><div id="sg-type-preview" class="sg-type-preview" aria-hidden="true"></div></div>
+   <div data-pane="upload" hidden><label for="sg-up-in">Choose an image of your signature (PNG with a transparent background works best)</label><input id="sg-up-in" type="file" accept="image/png,image/jpeg,image/webp">
+    <label class="check"><input id="sg-up-white" type="checkbox" checked> Make a white background transparent</label><img id="sg-up-preview" class="sg-up-preview" alt="Preview of the uploaded signature" hidden></div>
+   <fieldset class="sg-ink"><legend>Ink colour</legend><label class="check"><input type="radio" name="sg-ink" value="black" checked> Black</label><label class="check"><input type="radio" name="sg-ink" value="blue"> Blue</label></fieldset>
+   <p id="sg-err" class="err" aria-live="polite"></p>
+   <div class="btns"><button type="button" class="primary" id="sg-use">Use this signature</button><button type="button" id="sg-cancel">Cancel</button></div>
+  </dialog>
+  <dialog id="sg-tdialog" class="sg-dialog" aria-labelledby="sg-ttitle">
+   <h2 id="sg-ttitle">Add text</h2>
+   <div id="sg-date-row" hidden><label for="sg-date-fmt">Date format</label><select id="sg-date-fmt"><option value="short">Day/month/year (numbers)</option><option value="long">Day month year (words)</option><option value="iso">Year-month-day (ISO)</option></select></div>
+   <label for="sg-t-in">Text</label><input id="sg-t-in" maxlength="200">
+   <label for="sg-t-size">Text size</label><select id="sg-t-size"><option value="9">Small (9 pt)</option><option value="11">11 pt</option><option value="12" selected>Normal (12 pt)</option><option value="14">14 pt</option><option value="18">Large (18 pt)</option><option value="24">24 pt</option></select>
+   <p id="sg-terr" class="err" aria-live="polite"></p>
+   <div class="btns"><button type="button" class="primary" id="sg-t-ok">Add to page</button><button type="button" id="sg-t-cancel">Cancel</button></div>
+  </dialog>
+  <dialog id="sg-confirm" class="sg-dialog" aria-labelledby="sg-ctitle">
+   <h2 id="sg-ctitle">Ready to download?</h2>
+   <p>Check that each signature and piece of text is in the right place: <strong id="sg-summary"></strong></p>
+   <label class="check"><input id="sg-confirm-skip" type="checkbox"> Don't ask again for this document</label>
+   <div class="btns"><button type="button" class="primary" id="sg-confirm-yes">Download signed PDF</button><button type="button" id="sg-confirm-no">Go back and check</button></div>
+  </dialog>
+  <dialog id="sg-reset-confirm" class="sg-dialog" aria-labelledby="sg-rtitle">
+   <h2 id="sg-rtitle">Start over?</h2><p>The signatures and text you've added haven't been downloaded yet and will be lost.</p>
+   <div class="btns"><button type="button" class="primary" id="sg-reset-yes">Start over</button><button type="button" id="sg-reset-no">Keep editing</button></div>
+  </dialog>`,
+ init(el) { /* Behaviour lives in assets/sign-pdf.js, which is loaded only on this page. */ }},
 {id: "split-pdf", cat: "files", name: "Split PDF", desc: "Extract pages or split a PDF into separate files.",
  ui: `${dropUI("sp-in", "application/pdf,.pdf", "Choose a PDF file", false)}<p id="sp-file" class="file-picked" hidden></p>
   <div class="row"><div><label for="sp-mode">How to split</label><select id="sp-mode"><option value="extract">Extract chosen pages into one PDF</option><option value="ranges">Make one PDF for each range</option><option value="every">Make one PDF for every page</option></select></div>
@@ -1651,6 +1696,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 
 // Each tool has its own static, indexable page. Keep in sync with scripts/content.mjs (checked by tests).
 const SLUGS = {
+  "sign-pdf": "sign-pdf.html",
   "merge-word": "merge-word-documents.html",
   "pdf-to-excel": "pdf-to-excel.html", "excel-to-pdf": "excel-to-pdf.html", "csv-to-excel": "csv-to-excel.html", "excel-to-csv": "excel-to-csv.html", "merge-excel": "merge-excel-files.html", "excel-to-json": "excel-to-json.html", "remove-duplicate-rows": "remove-duplicate-rows.html", "excel-viewer": "excel-viewer.html",
   "merge-pdf": "merge-pdf.html", "split-pdf": "split-pdf.html", "rotate-pdf": "rotate-pdf.html", "delete-pdf-pages": "delete-pdf-pages.html", "jpg-to-pdf": "jpg-to-pdf.html", "pdf-to-jpg": "pdf-to-jpg.html", "pdf-to-word": "pdf-to-word.html", "word-to-pdf": "word-to-pdf.html", "compress-pdf": "compress-pdf.html", "image-converter": "image-converter.html", "image-compressor": "image-compressor.html", "image-resizer": "image-resizer.html",
@@ -1674,14 +1720,14 @@ const app = $("#app");
 const DEF_DESC = $('meta[name="description"]').content, DEF_TITLE = document.title;
 
 // Small icon glyph for each tool card.
-const ICONS = {"merge-word": "W+", "pdf-to-excel": "XLS", "excel-to-pdf": "PDF", "csv-to-excel": "CSV", "excel-to-csv": "⇢", "merge-excel": "⊞", "excel-to-json": "{ }", "remove-duplicate-rows": "≠", "excel-viewer": "▤",
+const ICONS = {"sign-pdf": "✍", "merge-word": "W+", "pdf-to-excel": "XLS", "excel-to-pdf": "PDF", "csv-to-excel": "CSV", "excel-to-csv": "⇢", "merge-excel": "⊞", "excel-to-json": "{ }", "remove-duplicate-rows": "≠", "excel-viewer": "▤",
   "merge-pdf": "⧉", "split-pdf": "✂", "rotate-pdf": "↻", "delete-pdf-pages": "⌫", "jpg-to-pdf": "JPG", "pdf-to-jpg": "PDF", "pdf-to-word": "W", "word-to-pdf": "DOC", "compress-pdf": "⇲", "image-converter": "⇆", "image-compressor": "◫", "image-resizer": "⤢",
   "time-duration": "◷", "aspect-ratio": "▭", "text-sorter": "⇅", "date-difference": "▦", "bmi-calculator": "♡", "word-counter": "¶",
   "case-converter": "Aa", "password-generator": "✱", "unit-converter": "⇄", "age-calculator": "✦", "percentage-calculator": "%",
   "json-formatter": "{ }", "base64": "64", "url-encoder": "%20", "hash-generator": "#", "uuid-generator": "ID", "timestamp-converter": "⏱",
   "colour-converter": "◐", "take-home-pay": "£", "loan-calculator": "⌂", "savings-calculator": "↗", "debt-payoff": "↘", "vat-calculator": "VAT", "budget-planner": "◔"};
 const HOME_ORDER = ["files", "office", "finance", "general", "advanced"];
-const POPULAR = [["Merge PDF", "merge-pdf.html"], ["PDF to Word", "pdf-to-word.html"], ["JPG to PDF", "jpg-to-pdf.html"], ["PDF to Excel", "pdf-to-excel.html"], ["UK take-home pay", "uk-take-home-pay-calculator.html"], ["VAT", "vat-calculator.html"],
+const POPULAR = [["Merge PDF", "merge-pdf.html"], ["Sign PDF", "sign-pdf.html"], ["PDF to Word", "pdf-to-word.html"], ["JPG to PDF", "jpg-to-pdf.html"], ["PDF to Excel", "pdf-to-excel.html"], ["UK take-home pay", "uk-take-home-pay-calculator.html"], ["VAT", "vat-calculator.html"],
   ["Loan repayments", "loan-repayment-calculator.html"], ["Word counter", "word-counter.html"], ["Password generator", "password-generator.html"], ["Percentage", "percentage-calculator.html"]];
 // Pages that are not in TOOLS but deserve their own card on the home page.
 const EXTRA_CARDS = {
