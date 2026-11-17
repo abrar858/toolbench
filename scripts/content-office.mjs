@@ -50,7 +50,7 @@ export const OFFICE_CONTENT = [
   steps: ["Choose one or more CSV files.", "Leave the separator on Detect automatically, or pick comma, semicolon, tab or pipe.", "Choose one Excel file per CSV, or one workbook with a sheet for each CSV.", "Press Convert to Excel and download."],
   sections: [
     ["Why CSV files open badly in Excel", "<p>Excel guesses how to read a CSV and often gets it wrong: everything lands in one column when the file uses semicolons, accented letters turn into odd symbols, and codes like <code>00123</code> lose their leading zeros. Converting to .xlsx fixes the structure once, so the file opens correctly everywhere.</p>"],
-    ["Keeping leading zeros", "<p>Tick <em>Keep every value as text</em> for files with product codes, account numbers, phone numbers or postcodes. Leave it off when the file contains amounts and dates you want to calculate with.</p>"],
+    ["Leading zeros, phone numbers and dates", "<p>Values are only turned into numbers when nothing would be lost. Product codes like <code>00123</code>, phone numbers like <code>+447700900123</code> and IDs longer than 15 digits stay exactly as written, while amounts like <code>3.50</code> become real numbers you can add up, keeping their decimal places. Dates written as <code>2026-01-05</code> become real dates. Dates with slashes, like <code>05/01/2026</code>, stay as text, because they could mean 5 January or 1 May depending on where the file came from; convert them in Excel with <em>Data → Text to Columns → Date: DMY</em>. Tick <em>Keep every value as text</em> if you want nothing converted at all.</p>"],
   ],
   faqs: [
     ["How do I convert CSV to Excel?", "Choose the CSV file, press Convert to Excel and open the downloaded .xlsx file."],
