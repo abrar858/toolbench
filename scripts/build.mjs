@@ -72,7 +72,7 @@ ${url ? `<meta property="og:url" content="${url}">\n` : ""}<meta property="og:ti
 <script>try{const t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>`;
 
 const directory = current => Object.entries(CATS).map(([cat, label]) =>
-  `<div><h3>${label} tools</h3><ul>${TOOLS.filter(t => t.cat === cat).map(t =>
+  `<div><h2>${label} tools</h2><ul>${TOOLS.filter(t => t.cat === cat).map(t =>
     `<li><a href="${byId.get(t.id).slug}"${t.id === current ? ' aria-current="page"' : ""}>${esc(t.name)}</a></li>`).join("")}${
     cat === "finance" ? `<li><a href="salary-after-tax.html"${current === "salary" ? ' aria-current="page"' : ""}>Salary after tax table</a></li>` : ""}</ul></div>`).join("");
 
@@ -80,8 +80,9 @@ const header = `<a class="skip-link" href="#app">Skip to content</a>
 <div class="site-head"><div class="wrap">
   <header class="top">
     <a class="logo" href="./" aria-label="ToolsBravo home"><img src="assets/icon.svg" alt="" width="32" height="32"><span id="siteName">${SITE}</span></a>
-    <nav aria-label="Categories"><a href="./#files">PDF &amp; image</a><a href="./#office">Office</a><a href="./#finance">Finance</a><a href="./#general">General</a><a href="./#advanced">Developer</a><a href="automation-builder.html">Automations</a></nav><button class="theme-btn" type="button" aria-label="Switch theme">☾</button>
+    <nav aria-label="Categories"><a href="./#files">PDF &amp; image</a><a href="./#office">Office</a><a href="./#finance">Finance</a><a href="./#general">General</a><a href="./#advanced">Developer</a><a href="automation-builder.html">Automations</a></nav><button class="search-btn" type="button" aria-label="Search tools" aria-expanded="false" aria-controls="site-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button><button class="theme-btn" type="button" aria-label="Switch theme">☾</button>
   </header>
+  <div class="site-search" id="site-search" hidden><label class="sr-only" for="site-q">Search tools</label><input id="site-q" type="search" placeholder="Search all tools, e.g. merge PDF, VAT, JSON" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="site-results" aria-expanded="true"><ul id="site-results" role="listbox" aria-label="Matching tools"></ul></div>
 </div></div>`;
 const hid = s => strip(s).toLowerCase().replace(/&[a-z]+;/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const h2 = text => `<h2 id="${hid(text)}">${esc(text)}</h2>`;
@@ -179,10 +180,10 @@ function salaryPage(g, i) {
   const title = `${k(g)} After Tax UK ${TAX_YEAR}: ${gbp(r.net / 12)} a Month`;
   const description = `On a ${k(g)} salary you take home ${gbp(r.net)} a year, ${gbp(r.net / 12)} a month or ${gbp(r.net / 52)} a week after income tax and National Insurance in ${TAX_YEAR}.`;
   const trail = [[SITE, "./"], ["Finance tools", "./#finance"], ["Salary after tax", "salary-after-tax.html"], [`${k(g)} after tax`, salarySlug(g)]];
-  const row = (label, v, cls = "") => `<tr${cls ? ` class="${cls}"` : ""}><td>${label}</td><td>${gbp(v)}</td><td>${gbp(v / 12)}</td><td>${gbp(v / 52)}</td></tr>`;
+  const row = (label, v, cls = "") => `<tr${cls ? ` class="${cls}"` : ""}><th scope="row">${label}</th><td>${gbp(v)}</td><td>${gbp(v / 12)}</td><td>${gbp(v / 52)}</td></tr>`;
   const taper = g > 100000 ? `<p>Because income is over £100,000, the personal allowance is reduced by £1 for every £2 above that level. At ${k(g)} the allowance is ${gbp(r.pa, 0)}${r.pa === 0 ? ", so it has been removed completely" : ""}. Between £100,000 and £125,140 this creates an effective income tax rate of 60%, plus 2% National Insurance. Pension contributions that bring income back below £100,000 can restore the allowance.</p>` : "";
   const nearby = SALARIES.filter((_, j) => Math.abs(j - i) <= 3).map(s => { const x = ukPay(s, 0);
-    return `<tr${s === g ? ' class="total"' : ""}><td>${s === g ? k(s) : `<a href="${salarySlug(s)}">${k(s)}</a>`}</td><td>${gbp(x.net)}</td><td>${gbp(x.net / 12)}</td></tr>`; }).join("");
+    return `<tr${s === g ? ' class="total"' : ""}><th scope="row">${s === g ? k(s) : `<a href="${salarySlug(s)}">${k(s)}</a>`}</th><td>${gbp(x.net)}</td><td>${gbp(x.net / 12)}</td></tr>`; }).join("");
   const faqs = [
     [`How much is ${k(g)} a month after tax?`, `In the ${TAX_YEAR} tax year, ${k(g)} a year is ${gbp(r.net / 12)} a month after income tax and National Insurance, assuming a standard tax code, no pension contribution and no student loan, in England, Wales or Northern Ireland.`],
     [`What tax band is a ${k(g)} salary in?`, `${k(g)} falls in the ${r.band} band. Each extra £1 earned is taxed at a combined rate of about ${pct(r.marginal)} including National Insurance.`],
@@ -263,7 +264,7 @@ function salaryHub() {
   const description = `Take-home pay after income tax and National Insurance for UK salaries from ${k(SALARIES[0])} to ${k(SALARIES.at(-1))} in ${TAX_YEAR}, per year, month and week.`;
   const trail = [[SITE, "./"], ["Finance tools", "./#finance"], ["Salary after tax", "salary-after-tax.html"]];
   const rows = SALARIES.map(g => { const r = ukPay(g, 0);
-    return `<tr><td><a href="${salarySlug(g)}">${k(g)}</a></td><td>${gbp(r.tax)}</td><td>${gbp(r.ni)}</td><td>${gbp(r.net)}</td><td>${gbp(r.net / 12)}</td><td>${gbp(r.net / 52)}</td></tr>`; }).join("\n");
+    return `<tr><th scope="row"><a href="${salarySlug(g)}">${k(g)}</a></th><td>${gbp(r.tax)}</td><td>${gbp(r.ni)}</td><td>${gbp(r.net)}</td><td>${gbp(r.net / 12)}</td><td>${gbp(r.net / 52)}</td></tr>`; }).join("\n");
   return `${head({title: `${title} | ${SITE}`, description, url, ogTitle: title})}
 ${ld(crumbsLd(trail))}
 </head>

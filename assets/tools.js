@@ -202,6 +202,23 @@ async function makeDocx(paras) {
   for (const k in files) files[k] = strToU8(files[k]);
   return new Blob([zipSync(files)], {type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
 }
+// Finds the highest quality (then, if needed, a smaller width) that keeps an image under opt.targetBytes.
+async function fitImage(file, opt) {
+  let width = opt.maxWidth || 0, smallest = null;
+  for (let round = 0; round < 8; round++) {
+    let lo = 0.3, hi = 0.95, found = null;
+    for (let i = 0; i < 7; i++) {
+      const q = (lo + hi) / 2, r = await convertImage(file, {...opt, quality: q, maxWidth: width || undefined});
+      if (r.blob.size <= opt.targetBytes) { found = r; lo = q; } else hi = q;
+    }
+    if (found) return found;
+    smallest = await convertImage(file, {...opt, quality: 0.3, maxWidth: width || undefined});
+    if (smallest.blob.size <= opt.targetBytes) return smallest;
+    width = Math.round(smallest.w * 0.75);
+    if (width < 160) break;
+  }
+  throw new Error(`${file.name} can't get under ${fsize(opt.targetBytes)} without becoming unusable (smallest: ${fsize(smallest.blob.size)}). Choose a larger size.`);
+}
 // Shared flow for the image converter, compressor and resizer. options(file, {type, q}) returns convertImage options.
 function imageTool(el, p, options, showSaving) {
   let files = []; const go = $(`#${p}-go`, el), msg = $(`#${p}-msg`, el), type = $(`#${p}-type`, el), q = $(`#${p}-q`, el);
@@ -220,7 +237,7 @@ function imageTool(el, p, options, showSaving) {
       for (const [i, f] of files.entries()) {
         say(msg, `Processing ${i + 1} of ${files.length}…`);
         const opt = await options(f, {type: type ? type.value : "image/jpeg", q: q ? +q.value / 100 : .92});
-        const {blob, w, h} = await convertImage(f, opt);
+        const {blob, w, h} = opt.targetBytes ? await fitImage(f, opt) : await convertImage(f, opt);
         before += f.size; after += blob.size;
         const pct = Math.round((1 - blob.size / f.size) * 100);
         items.push({name: `${baseName(f)}.${IMG_EXT[opt.type]}`, blob, thumb: true,
@@ -438,6 +455,35 @@ async function mergeDocx(files, pageBreak) {
   return {blob: new Blob([zipSync(base)], {type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}), dropped};
 }
 
+// MD5 (RFC 1321) for the hash generator. Browsers' Web Crypto has no MD5, and MD5 is still widely used for file checksums.
+function md5(bytes) {
+  const K = new Uint32Array(64), S = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21];
+  for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296);
+  const len = bytes.length, total = ((len + 8) >>> 6) + 1, words = new Uint32Array(total * 16);
+  for (let i = 0; i < len; i++) words[i >> 2] |= bytes[i] << ((i % 4) * 8);
+  words[len >> 2] |= 0x80 << ((len % 4) * 8);
+  words[total * 16 - 2] = (len * 8) >>> 0; words[total * 16 - 1] = Math.floor(len / 536870912);
+  let a0 = 0x67452301, b0 = 0xefcdab89, c0 = 0x98badcfe, d0 = 0x10325476;
+  for (let o = 0; o < words.length; o += 16) {
+    let a = a0, b = b0, c = c0, d = d0;
+    for (let i = 0; i < 64; i++) {
+      let f, g;
+      if (i < 16) { f = (b & c) | (~b & d); g = i; }
+      else if (i < 32) { f = (d & b) | (~d & c); g = (5 * i + 1) % 16; }
+      else if (i < 48) { f = b ^ c ^ d; g = (3 * i + 5) % 16; }
+      else { f = c ^ (b | ~d); g = (7 * i) % 16; }
+      const s = S[(i >> 4) * 4 + (i % 4)], x = (a + f + K[i] + words[o + g]) >>> 0;
+      a = d; d = c; c = b; b = (b + ((x << s) | (x >>> (32 - s)))) >>> 0;
+    }
+    a0 = (a0 + a) >>> 0; b0 = (b0 + b) >>> 0; c0 = (c0 + c) >>> 0; d0 = (d0 + d) >>> 0;
+  }
+  return [a0, b0, c0, d0].map(v => [0, 8, 16, 24].map(sh => ((v >>> sh) & 255).toString(16).padStart(2, "0")).join("")).join("");
+}
+// Text half of the Base64 tool (the file half is added in the tool itself).
+const B64_TEXT = twoWay(s => { let b = ""; new TextEncoder().encode(s).forEach(x => b += String.fromCharCode(x)); return btoa(b); },
+  s => { let t = s.replace(/\s/g, "").replace(/-/g, "+").replace(/_/g, "/"); t += "=".repeat((4 - t.length % 4) % 4); return new TextDecoder("utf-8", {fatal: true}).decode(Uint8Array.from(atob(t), c => c.charCodeAt(0))); },
+  "Encode", "Decode", "That isn’t valid Base64 text. If it is an image or file, use Base64 to file below.");
+
 const TOOLS = [
 /* ---------- WORD ---------- */
 {id: "merge-word", cat: "office", name: "Merge Word documents", desc: "Combine several Word (.docx) files into one document.",
@@ -580,7 +626,7 @@ const TOOLS = [
 {id: "merge-excel", cat: "office", name: "Merge Excel files", desc: "Combine several Excel or CSV files into one workbook or one sheet.",
  ui: `${dropUI("me-in", SHEET_ACCEPT, "Choose Excel or CSV files", true)}<ol class="file-list" id="me-list"></ol>
   <label for="me-mode">How to merge</label><select id="me-mode"><option value="sheets">Keep each sheet as its own tab in one workbook</option><option value="stack">Stack the rows of every file into one sheet</option></select>
-  <div id="me-stack-opts" hidden><label class="check"><input id="me-head" type="checkbox" checked> Files have a header row (keep it once)</label> <label class="check"><input id="me-src" type="checkbox" checked> Add a column showing the source file</label></div>
+  <div id="me-stack-opts" hidden><label class="check"><input id="me-head" type="checkbox" checked> Files have a header row (keep it once and match columns by their names)</label> <label class="check"><input id="me-src" type="checkbox" checked> Add a column showing the source file</label></div>
   <div class="btns"><button class="primary" id="me-go" disabled>Merge files</button><button id="me-clear" disabled>Clear</button></div><p id="me-msg" class="note" aria-live="polite">Add two or more files. Use the arrows to set the order.</p><div id="me-out"></div>`,
  init(el) {
   const files = [], list = $("#me-list", el), go = $("#me-go", el), msg = $("#me-msg", el), mode = $("#me-mode", el);
@@ -597,14 +643,21 @@ const TOOLS = [
         for (const f of files) { const wb = await readBook(f); wb.SheetNames.forEach(n => X.utils.book_append_sheet(out, wb.Sheets[n], safeSheetName(wb.SheetNames.length > 1 ? `${baseName(f)} - ${n}` : baseName(f), used))); }
       } else {
         const head = $("#me-head", el).checked, src = $("#me-src", el).checked, rows = []; let header = null;
+        const key = v => String(v ?? "").trim().toLowerCase(), cols = [], colIndex = new Map(), addCol = name => { const k = key(name); if (!colIndex.has(k)) { colIndex.set(k, cols.length); cols.push(name); } return colIndex.get(k); };
         for (const f of files) {
           const wb = await readBook(f), data = X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1, raw: true, defval: "", blankrows: false});
           if (!data.length) continue;
           let body = data;
-          if (head) { if (!header) header = data[0]; body = data.slice(1); }
+          if (head) {
+            // Match columns by header name, so files whose columns are in a different order still line up.
+            const map = data[0].map((h, i) => key(h) ? addCol(h) : addCol(`Column ${i + 1}`));
+            body = data.slice(1).map(r => { const out = []; r.forEach((v, i) => { out[map[i]] = v; }); return out; });
+            header = cols;
+          }
           rows.push(...body.map(r => src ? [f.name, ...r] : r));
         }
-        X.utils.book_append_sheet(out, X.utils.aoa_to_sheet(header ? [src ? ["Source file", ...header] : header, ...rows] : rows), "Merged");
+        const width = header ? header.length : 0, fill = r => header ? Array.from({length: width + (src ? 1 : 0)}, (_, i) => r[i] ?? "") : r;
+        X.utils.book_append_sheet(out, X.utils.aoa_to_sheet(header ? [src ? ["Source file", ...header] : header, ...rows.map(fill)] : rows), "Merged");
       }
       const blob = new Blob([X.write(out, {bookType: "xlsx", type: "array", compression: true, cellDates: true})], {type: BOOK_MIME.xlsx});
       showResults($("#me-out", el), [{name: "merged.xlsx", blob, note: plural(out.SheetNames.length, "sheet")}]);
@@ -942,9 +995,16 @@ const TOOLS = [
  ui: `${dropUI("ix-in", "image/*", "Choose images", true)}<p id="ix-file" class="file-picked" hidden></p>
   <div class="row"><div><label for="ix-type">Save as</label><select id="ix-type"><option value="image/jpeg">JPG (best for photos)</option><option value="image/webp">WebP (smallest)</option></select></div>
   <div><label for="ix-max">Maximum width</label><select id="ix-max"><option value="0">Keep original size</option><option value="2560">2560 px</option><option value="1920" selected>1920 px (Full HD)</option><option value="1280">1280 px</option><option value="800">800 px</option></select></div>
-  <div id="ix-qwrap"><label for="ix-q">Quality: <span id="ix-qv">70</span>%</label><input id="ix-q" type="range" min="30" max="95" value="70"></div></div>
+  <div><label for="ix-mode">How to compress</label><select id="ix-mode"><option value="quality">Choose the quality</option><option value="size">Aim for a file size</option></select></div>
+  <div id="ix-qwrap"><label for="ix-q">Quality: <span id="ix-qv">70</span>%</label><input id="ix-q" type="range" min="30" max="95" value="70"></div>
+  <div id="ix-twrap" hidden><label for="ix-target">Maximum size per image</label><select id="ix-target"><option value="50">50 KB</option><option value="100" selected>100 KB</option><option value="200">200 KB</option><option value="500">500 KB</option><option value="1000">1 MB</option><option value="2000">2 MB</option></select></div></div>
+  <p id="ix-tnote" class="note" hidden>Each image gets the highest quality that fits. If that isn't enough, it is made smaller in width too. Useful for visa, passport and job application forms.</p>
   <div class="btns"><button class="primary" id="ix-go" disabled>Compress</button></div><p id="ix-msg" class="note" aria-live="polite">Choose one or more images.</p><div id="ix-out"></div>`,
- init(el) { imageTool(el, "ix", (f, o) => ({type: o.type, quality: o.q, maxWidth: +$("#ix-max", el).value || 0}), true); }},
+ init(el) {
+  imageTool(el, "ix", (f, o) => ({type: o.type, quality: o.q, maxWidth: +$("#ix-max", el).value || 0, targetBytes: $("#ix-mode", el).value === "size" ? +$("#ix-target", el).value * 1024 : 0}), true);
+  const sync = () => { const size = $("#ix-mode", el).value === "size"; $("#ix-qwrap", el).hidden = size; $("#ix-twrap", el).hidden = !size; $("#ix-tnote", el).hidden = !size; };
+  $("#ix-mode", el).addEventListener("change", sync); $("#ix-type", el).addEventListener("change", sync); sync();
+ }},
 {id: "image-resizer", cat: "files", name: "Image resizer", desc: "Resize images to exact pixels or a percentage.",
  ui: `${dropUI("ir-in", "image/*", "Choose images", true)}<p id="ir-file" class="file-picked" hidden></p>
   <div class="row"><div><label for="ir-mode">Resize by</label><select id="ir-mode"><option value="px">Width and height</option><option value="pct">Percentage</option></select></div>
@@ -968,8 +1028,12 @@ const TOOLS = [
 
 /* ---------- GENERAL ---------- */
 
-{id: "time-duration",cat:"general",name:"Time duration calculator",desc:"Calculate shift hours with overnight times and unpaid breaks.",
-ui:`<div class="row"><div><label for="dur-start">Start time</label><input id="dur-start" type="time"></div><div><label for="dur-end">End time</label><input id="dur-end" type="time"></div><div><label for="dur-break">Break (minutes)</label><input id="dur-break" type="number" min="0" step="1" value="0"></div></div><label class="check"><input id="dur-next" type="checkbox"> End on next day</label><div id="dur-out" class="out" aria-live="polite"></div><p class="note">Earlier end times automatically count as overnight. For equal times, select next day for 24 hours. Supports shifts up to 24 hours. Uses clock times without daylight-saving adjustments.</p>`,
+{id: "time-duration",cat:"general",name:"Time duration calculator",desc:"Shift hours with overnight times and breaks, plus a weekly timesheet with pay.",
+ui:`<div class="row"><div><label for="dur-start">Start time</label><input id="dur-start" type="time"></div><div><label for="dur-end">End time</label><input id="dur-end" type="time"></div><div><label for="dur-break">Break (minutes)</label><input id="dur-break" type="number" min="0" step="1" value="0"></div></div><label class="check"><input id="dur-next" type="checkbox"> End on next day</label><div id="dur-out" class="out" aria-live="polite"></div><p class="note">Earlier end times automatically count as overnight. For equal times, select next day for 24 hours. Supports shifts up to 24 hours. Uses clock times without daylight-saving adjustments.</p>
+ <h2 class="panel-title">Weekly timesheet and pay</h2>
+ <div class="tablewrap"><table class="ts"><thead><tr><th scope="col">Day</th><th scope="col">Start</th><th scope="col">End</th><th scope="col">Break (min)</th><th scope="col">Hours</th></tr></thead><tbody>${["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((d, i) => `<tr><th scope="row">${d}</th><td><input type="time" id="ts-s${i}" aria-label="${d} start"${i < 5 ? ' value="09:00"' : ""}></td><td><input type="time" id="ts-e${i}" aria-label="${d} end"${i < 5 ? ' value="17:30"' : ""}></td><td><input type="number" id="ts-b${i}" aria-label="${d} break in minutes" min="0" step="1" value="${i < 5 ? 30 : 0}"></td><td class="ts-h" id="ts-h${i}"></td></tr>`).join("")}</tbody></table></div>
+ <div class="row"><div><label for="ts-rate">Hourly rate (£, optional)</label><input id="ts-rate" inputmode="decimal" placeholder="e.g. 12.71"></div><div><label for="ts-ot">Overtime after (hours a week)</label><input id="ts-ot" type="number" min="0" step="0.5" placeholder="e.g. 40"></div><div><label for="ts-otx">Overtime rate</label><select id="ts-otx"><option value="1.5">Time and a half (×1.5)</option><option value="2">Double time (×2)</option><option value="1.25">×1.25</option><option value="1">Same rate</option></select></div></div>
+ <div id="ts-out" class="out" aria-live="polite"></div><div class="btns"><button id="ts-clear">Clear the week</button><button id="ts-copy">Copy summary</button></div>`,
 init(el){
 const parse=s=>{if(!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(s))return NaN;const [h,m]=s.split(":").map(Number);return h*60+m;};
 const run=()=>{const a=parse($("#dur-start",el).value),b=parse($("#dur-end",el).value),raw=$("#dur-break",el).value.trim(),br=Number(raw),o=$("#dur-out",el);
@@ -979,10 +1043,31 @@ const total=b-a+(($("#dur-next",el).checked||b<a)?1440:0);
 if(total>1440){o.textContent="Maximum shift is 24 hours. Check the next-day option.";return;}
 if(br>total){o.textContent="Break cannot exceed shift duration.";return;}
 const n=total-br;o.innerHTML='<p class="big">'+plural(Math.floor(n/60),"hour")+' '+plural(n%60,"minute")+'</p><p class="sub">'+(n/60).toFixed(2)+' decimal hours after breaks · '+plural(n,"minute")+' total</p><p class="sub">Total shift: '+plural(Math.floor(total/60),"hour")+' '+plural(total%60,"minute")+' · Break: '+plural(br,"minute")+'</p>';
-};el.addEventListener("input",run);el.addEventListener("change",run);run();
+};
+// Weekly timesheet: each row is a shift (overnight when the end is earlier than the start).
+const hm=m=>`${Math.floor(m/60)}h ${String(m%60).padStart(2,"0")}m`;
+let summary="";
+const sheet=()=>{
+ let mins=0,days=0,bad=[];
+ for(let i=0;i<7;i++){const s=parse($(`#ts-s${i}`,el).value),e=parse($(`#ts-e${i}`,el).value),b=Number($(`#ts-b${i}`,el).value||0),cell=$(`#ts-h${i}`,el);
+  if(!Number.isFinite(s)||!Number.isFinite(e)){cell.textContent="–";continue;}
+  const len=e-s+(e<=s?1440:0);
+  if(!Number.isFinite(b)||b<0||b>=len){cell.textContent="Check break";bad.push(i);continue;}
+  cell.textContent=hm(len-b);mins+=len-b;days++;}
+ const rate=num($("#ts-rate",el).value),otAfter=Number($("#ts-ot",el).value),otx=Number($("#ts-otx",el).value),o=$("#ts-out",el);
+ const hours=mins/60,otHours=Number.isFinite(otAfter)&&$("#ts-ot",el).value!==""&&hours>otAfter?hours-otAfter:0,basic=hours-otHours;
+ const pay=rate>0?basic*rate+otHours*rate*otx:null;
+ const items=[[hm(mins),"Total hours"],[hours.toFixed(2),"Decimal hours"],[plural(days,"day"),"Days worked"]];
+ if(otHours)items.push([otHours.toFixed(2),"Overtime hours"]);
+ if(pay!=null)items.push([gbp(pay),"Gross pay before tax"]);
+ o.innerHTML=`<div class="stats">${stats(items)}</div>`+(bad.length?`<p class="err">Check the break on ${bad.map(i=>["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"][i]).join(", ")}: it must be shorter than the shift.</p>`:"")+(pay!=null?`<p class="note">Pay is before tax and National Insurance. See take-home pay with the <a href="uk-take-home-pay-calculator.html">UK take-home pay calculator</a>.</p>`:"");
+ summary=`Total ${hm(mins)} (${hours.toFixed(2)} hours) over ${plural(days,"day")}`+(otHours?`, including ${otHours.toFixed(2)} overtime hours`:"")+(pay!=null?`. Gross pay ${gbp(pay)}.`:".");
+};
+$("#ts-clear",el).onclick=()=>{for(let i=0;i<7;i++){$(`#ts-s${i}`,el).value="";$(`#ts-e${i}`,el).value="";$(`#ts-b${i}`,el).value=0;}sheet();};
+$("#ts-copy",el).onclick=e=>copy(summary,e.target);
+const both=()=>{run();sheet();};
+el.addEventListener("input",both);el.addEventListener("change",both);both();
 }},
-
-
 {id: "aspect-ratio", cat: "general", name: "Aspect ratio calculator", desc: "Find image and video ratios and resize without stretching.",
 ui: `<label for="ar-preset">Original size preset</label><select id="ar-preset"><option value="">Custom dimensions</option><option value="1920,1080">Full HD landscape (1920 × 1080)</option><option value="1080,1920">Full HD portrait (1080 × 1920)</option><option value="1080,1080">Square (1080 × 1080)</option><option value="3840,2160">4K landscape (3840 × 2160)</option></select><div class="row"><div><label for="ar-w">Original width (pixels)</label><input id="ar-w" type="number" min="1" step="1" inputmode="numeric" value="1920"></div><div><label for="ar-h">Original height (pixels)</label><input id="ar-h" type="number" min="1" step="1" inputmode="numeric" value="1080"></div></div><div class="row"><div><label for="ar-side">Resize by</label><select id="ar-side"><option value="width">New width</option><option value="height">New height</option></select></div><div><label for="ar-target">New size (pixels)</label><input id="ar-target" type="number" min="1" step="1" inputmode="numeric" value="1280"></div></div><div class="btns"><button id="ar-swap">Swap width and height</button></div><div class="out" id="ar-out" aria-live="polite"></div><p class="note">Enter positive whole pixels up to 1,000,000. The other dimension is rounded to the nearest pixel. This calculates dimensions; it does not upload or resize an image file.</p>`,
 init(el) {
@@ -1023,30 +1108,53 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 }},
 
 
-{id: "date-difference", cat: "general", name: "Date difference calculator", desc: "Count calendar days and weeks between two dates.",
- ui: `<div class="row"><div><label for="dd-start">Start date</label><input id="dd-start" type="date"></div><div><label for="dd-end">End date</label><input id="dd-end" type="date"></div></div><label class="check"><input id="dd-inclusive" type="checkbox"> Include both start and end dates</label><div class="btns"><button id="dd-swap">Swap dates</button></div><div class="out" id="dd-result" aria-live="polite"></div><p class="note">Calendar totals include weekends. Weekdays exclude Saturdays and Sundays but include bank holidays; they are not business-day totals. The end date is excluded unless inclusive counting is selected. Time zones and daylight saving do not change the result.</p>`,
+{id: "date-difference", cat: "general", name: "Date difference calculator", desc: "Count days, weeks and UK working days between dates, or add days to a date.",
+ ui: `<div class="row"><div><label for="dd-start">Start date</label><input id="dd-start" type="date"></div><div><label for="dd-end">End date</label><input id="dd-end" type="date"></div></div>
+  <div class="row"><div><label for="dd-region">Leave out UK bank holidays</label><select id="dd-region"><option value="">No, weekends only</option><option value="england-and-wales">England and Wales</option><option value="scotland">Scotland</option><option value="northern-ireland">Northern Ireland</option></select></div></div>
+  <label class="check"><input id="dd-inclusive" type="checkbox"> Include both start and end dates</label><div class="btns"><button id="dd-swap">Swap dates</button></div><div class="out" id="dd-result" aria-live="polite"></div>
+  <h2 class="panel-title">Add or subtract days</h2>
+  <div class="row"><div><label for="da-from">From date</label><input id="da-from" type="date"></div><div><label for="da-n">Days to add (use a minus sign to go back)</label><input id="da-n" type="number" value="30" step="1"></div>
+  <div><label for="da-kind">Count</label><select id="da-kind"><option value="calendar">Calendar days</option><option value="working">Working days (uses the bank holiday choice above)</option></select></div></div>
+  <div class="out" id="da-result" aria-live="polite"></div>
+  <p class="note">Calendar totals include weekends. The end date is excluded unless inclusive counting is selected. Bank holidays come from GOV.UK and cover 2019 to 2028. Time zones and daylight saving do not change the result.</p>`,
  init(el) {
+  const DAY = 86400000;
   const parse = s => {
    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return NaN;
-   const [y,m,d] = s.split("-").map(Number);
-   const t = new Date(0); t.setUTCFullYear(y,m-1,d); t.setUTCHours(0,0,0,0);
-   return t.getUTCFullYear() === y && t.getUTCMonth() === m-1 && t.getUTCDate() === d ? t.getTime() : NaN;
+   const [y, m, d] = s.split("-").map(Number);
+   const t = new Date(0); t.setUTCFullYear(y, m - 1, d); t.setUTCHours(0, 0, 0, 0);
+   return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d ? t.getTime() : NaN;
   };
-  const run = () => {
-   const a = parse($("#dd-start",el).value), b = parse($("#dd-end",el).value), o = $("#dd-result",el);
-   if (!Number.isFinite(a) || !Number.isFinite(b)) { o.innerHTML = '<p class="sub">Choose two valid dates.</p>'; return; }
-   if (b < a) { o.innerHTML = '<p class="err">End date must be on or after start date.</p>'; return; }
-   const days = Math.round((b-a)/86400000) + ($("#dd-inclusive",el).checked ? 1 : 0);
-   const wholeWeeks = Math.floor(days / 7), remainder = days % 7;
-   let weekdays = wholeWeeks * 5;
-   for (let i = 0; i < remainder; i++) { const day = new Date(a + i * 86400000).getUTCDay(); if (day !== 0 && day !== 6) weekdays++; }
-   o.innerHTML = '<p class="sub">' + plural(weekdays,"weekday") + ' (Monday–Friday) · ' + plural(days-weekdays,"weekend day") + '</p>' + '<p class="big">' + plural(days,"day") + '</p><p class="sub">' + plural(Math.floor(days/7),"week") + ' and ' + plural(days%7,"day") + '</p>';
+  const iso = t => new Date(t).toISOString().slice(0, 10);
+  const long = t => new Date(t).toLocaleDateString("en-GB", {weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC"});
+  let holidays = null;
+  const loadHolidays = async () => holidays ||= await (await fetch(vendorUrl("uk-bank-holidays.json"))).json();
+  const regionSet = () => { const r = $("#dd-region", el).value; return r && holidays ? new Set(holidays[r]) : null; };
+  const inRange = t => { const y = new Date(t).getUTCFullYear(); return y >= 2019 && y <= 2028; };
+  const isWorking = (t, hol) => { const d = new Date(t).getUTCDay(); return d !== 0 && d !== 6 && !(hol && hol.has(iso(t))); };
+  const run = async () => {
+   if ($("#dd-region", el).value && !holidays) { try { await loadHolidays(); } catch { $("#dd-result", el).innerHTML = '<p class="err">Bank holidays couldn\'t be loaded. Check your connection.</p>'; return; } }
+   const hol = regionSet(), a = parse($("#dd-start", el).value), b = parse($("#dd-end", el).value), o = $("#dd-result", el);
+   if (!Number.isFinite(a) || !Number.isFinite(b)) o.innerHTML = '<p class="sub">Choose two valid dates.</p>';
+   else if (b < a) o.innerHTML = '<p class="err">End date must be on or after start date.</p>';
+   else {
+    const days = Math.round((b - a) / DAY) + ($("#dd-inclusive", el).checked ? 1 : 0);
+    let weekdays = 0, bank = 0;
+    for (let i = 0; i < days; i++) { const t = a + i * DAY, d = new Date(t).getUTCDay(); if (d !== 0 && d !== 6) { weekdays++; if (hol && hol.has(iso(t))) bank++; } }
+    const warn = hol && !(inRange(a) && inRange(b + DAY * ($("#dd-inclusive", el).checked ? 0 : -1))) ? '<p class="err">Bank holiday data covers 2019 to 2028, so dates outside those years only skip weekends.</p>' : "";
+    o.innerHTML = '<p class="big">' + plural(days, "day") + '</p><p class="sub">' + plural(Math.floor(days / 7), "week") + ' and ' + plural(days % 7, "day") + '</p>'
+      + '<div class="stats" style="margin-top:14px">' + stats(hol ? [[weekdays - bank, "Working days"], [bank, "Bank holidays skipped"], [days - weekdays, "Weekend days"]] : [[weekdays, "Weekdays (Mon–Fri)"], [days - weekdays, "Weekend days"]]) + '</div>' + warn;
+   }
+   const f = parse($("#da-from", el).value), n = Number($("#da-n", el).value), r = $("#da-result", el);
+   if (!Number.isFinite(f) || !Number.isInteger(n) || Math.abs(n) > 36500) { r.innerHTML = '<p class="sub">Choose a date and a whole number of days.</p>'; return; }
+   let t = f;
+   if ($("#da-kind", el).value === "calendar") t = f + n * DAY;
+   else { const step = Math.sign(n); for (let left = Math.abs(n); left > 0;) { t += step * DAY; if (isWorking(t, hol)) left--; } }
+   r.innerHTML = '<p class="big">' + long(t) + '</p><p class="sub">' + (n >= 0 ? plural(n, $("#da-kind", el).value === "working" ? "working day" : "day") + " after " : plural(-n, $("#da-kind", el).value === "working" ? "working day" : "day") + " before ") + long(f) + ($("#da-kind", el).value === "working" ? (hol ? ", skipping weekends and bank holidays" : ", skipping weekends") : "") + '</p>';
   };
-  $("#dd-swap",el).onclick = () => { const a = $("#dd-start",el), b = $("#dd-end",el); [a.value,b.value] = [b.value,a.value]; run(); };
-  el.addEventListener("input",run); el.addEventListener("change",run); run();
+  $("#dd-swap", el).onclick = () => { const a = $("#dd-start", el), b = $("#dd-end", el); [a.value, b.value] = [b.value, a.value]; run(); };
+  el.addEventListener("input", run); el.addEventListener("change", run); run();
  }},
-
-
 {id: "bmi-calculator", cat: "general", name: "BMI calculator", desc: "Calculate adult body mass index using metric or imperial measurements.",
  ui: `<p class="note" style="margin-top:0">For adults aged 18 and over. Not suitable during pregnancy.</p>
  <div class="row"><div><label for="bmi-units">Units</label><select id="bmi-units"><option value="metric">Metric (cm and kg)</option><option value="imperial">Imperial (feet, inches, stone and pounds)</option></select></div></div>
@@ -1123,27 +1231,56 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     if (result !== t.value) { previous = t.value; t.value = result; undo.disabled = false; }
   });
  }},
-{id: "password-generator", cat: "general", name: "Password generator", desc: "Strong random passwords, made on your device.",
- ui: `<label for="pl">Length: <span id="plv">16</span></label><input type="range" id="pl" min="8" max="64" value="16">
+{id: "password-generator", cat: "general", name: "Password generator", desc: "Strong random passwords and passphrases, made on your device.",
+ ui: `<div class="seg" role="radiogroup" aria-label="Type"><label class="check"><input type="radio" name="pmode" value="chars" checked> Random characters</label><label class="check"><input type="radio" name="pmode" value="words"> Passphrase (random words)</label></div>
+  <div id="p-chars"><label for="pl">Length: <span id="plv">16</span></label><input type="range" id="pl" min="8" max="64" value="16">
   <div class="row" style="margin-top:16px"><label class="check"><input type="checkbox" id="pu" checked> Capital letters</label><label class="check"><input type="checkbox" id="pw" checked> Small letters</label><label class="check"><input type="checkbox" id="pd" checked> Numbers</label><label class="check"><input type="checkbox" id="ps" checked> Symbols</label></div>
-  <label class="check"><input type="checkbox" id="pa"> Exclude look-alike characters (I, l, 1, O, 0)</label><div class="out"><p class="big mono" id="po" style="font-family:var(--mono);font-size:1.3rem;word-break:break-all"></p><p class="sub" id="pst"></p></div>
-  <div class="btns"><button class="primary" id="pg">Generate new password</button><button id="pc">Copy password</button></div>`,
+  <label class="check"><input type="checkbox" id="pa"> Exclude look-alike characters (I, l, 1, O, 0)</label></div>
+  <div id="p-words" hidden><div class="row"><div><label for="pwn">Number of words</label><select id="pwn"><option>3</option><option selected>4</option><option>5</option><option>6</option><option>7</option></select></div>
+  <div><label for="pwsep">Between words</label><select id="pwsep"><option value="-">Hyphen -</option><option value=".">Full stop .</option><option value=" ">Space</option><option value="">Nothing</option></select></div></div>
+  <label class="check"><input type="checkbox" id="pwcap" checked> Capitalise each word</label> <label class="check"><input type="checkbox" id="pwnum" checked> Add a number</label>
+  <p class="note">Words come from the EFF long word list (7,776 words, CC BY 3.0).</p></div>
+  <div class="row"><div><label for="pcount">How many</label><select id="pcount"><option>1</option><option>5</option><option>10</option></select></div></div>
+  <div class="out"><div id="po" class="pw-list" aria-live="polite"></div><div class="meter" aria-hidden="true"><i id="pmeter"></i></div><p class="sub" id="pst"></p></div>
+  <div class="btns"><button class="primary" id="pg">Generate new</button><button id="pc">Copy</button></div>`,
  init(el) {
   const sets = {pu: "ABCDEFGHIJKLMNOPQRSTUVWXYZ", pw: "abcdefghijklmnopqrstuvwxyz", pd: "0123456789", ps: "!@#$%^&*()-_=+[]{};:,.?/"};
   const rnd = n => { const limit = Math.floor(4294967296 / n) * n; let v; do { v = crypto.getRandomValues(new Uint32Array(1))[0]; } while (v >= limit); return v % n; };
-  const gen = () => {
+  let words = null, last = [];
+  const strength = bits => bits < 40 ? ["Weak", 25, "err"] : bits < 60 ? ["Fair", 50, "mid"] : bits < 80 ? ["Strong", 75, "good"] : ["Very strong", 100, "good"];
+  const showAll = (list, bits, note) => {
+    last = list;
+    $("#po", el).innerHTML = list.map(p => `<p class="big mono pw">${esc(p)}</p>`).join("");
+    const [label, pct, cls] = strength(bits), m = $("#pmeter", el);
+    m.style.width = pct + "%"; m.className = cls;
+    $("#pst", el).textContent = `${label} · about ${Math.round(bits)} bits of randomness · ${note} · Generated on your device`;
+    $("#pc", el).textContent = list.length > 1 ? "Copy all" : "Copy";
+  };
+  const genChars = n => {
     const len = +$("#pl", el).value; $("#plv", el).textContent = len;
     const on = Object.keys(sets).filter(k => $("#" + k, el).checked);
-    if (!on.length) { $("#po", el).textContent = ""; $("#pst", el).innerHTML = `<span class="err">Tick at least one type of character.</span>`; return; }
+    if (!on.length) { $("#po", el).innerHTML = ""; $("#pst", el).innerHTML = `<span class="err">Tick at least one type of character.</span>`; return; }
     const active = Object.fromEntries(on.map(k => [k, $("#pa", el).checked ? sets[k].replace(/[Il1O0]/g, "") : sets[k]]));
-    const pool = on.map(k => active[k]).join("");
-    let p;
-    do { p = Array.from({length: len}, () => pool[rnd(pool.length)]).join(""); } while (!on.every(k => [...p].some(c => active[k].includes(c))));
-    $("#po", el).textContent = p;
-    $("#pst", el).textContent = `${len} characters · Every selected character type included · Generated on your device`;
+    const pool = on.map(k => active[k]).join(""), one = () => { let p; do { p = Array.from({length: len}, () => pool[rnd(pool.length)]).join(""); } while (!on.every(k => [...p].some(c => active[k].includes(c)))); return p; };
+    showAll(Array.from({length: n}, one), len * Math.log2(pool.length), `${len} characters`);
   };
-  el.addEventListener("input", gen); $("#pg", el).onclick = gen;
-  $("#pc", el).onclick = e => copy($("#po", el).textContent, e.target); gen();
+  const genWords = async n => {
+    if (!words) {
+      $("#pst", el).textContent = "Loading word list…";
+      try { words = (await (await fetch(vendorUrl("eff-wordlist.txt"))).text()).split("\n").map(w => w.trim()).filter(Boolean); }
+      catch { $("#pst", el).innerHTML = `<span class="err">The word list couldn't be loaded. Check your connection and try again.</span>`; return; }
+    }
+    const count = +$("#pwn", el).value, sep = $("#pwsep", el).value, cap = $("#pwcap", el).checked, num = $("#pwnum", el).checked;
+    const one = () => { const w = Array.from({length: count}, () => { const x = words[rnd(words.length)]; return cap ? x[0].toUpperCase() + x.slice(1) : x; }); if (num) w.splice(rnd(count + 1), 0, String(rnd(100))); return w.join(sep); };
+    showAll(Array.from({length: n}, one), count * Math.log2(words.length) + (num ? Math.log2(100) + Math.log2(count + 1) : 0), `${count} random words`);
+  };
+  const gen = () => {
+    const words = $("[name=pmode]:checked", el).value === "words", n = +$("#pcount", el).value;
+    $("#p-chars", el).hidden = words; $("#p-words", el).hidden = !words;
+    words ? genWords(n) : genChars(n);
+  };
+  el.addEventListener("input", gen); el.addEventListener("change", gen); $("#pg", el).onclick = gen;
+  $("#pc", el).onclick = e => copy(last.join("\n"), e.target); gen();
  }},
 {id: "unit-converter", cat: "general", name: "Unit converter", desc: "Power, energy, data size, angles, pressure, time, area, length, weight, volume, temperature and speed.",
  ui: `<div class="row"><div><label for="ucat">Measure</label><select id="ucat"></select></div><div><label for="uv">Value</label><input id="uv" inputmode="decimal" value="1"></div></div>
@@ -1233,32 +1370,90 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     catch (err) { m.className = "err"; m.textContent = "Invalid JSON: " + err.message; }
   });
  }},
-{id: "base64", cat: "advanced", name: "Base64 encoder and decoder", desc: "Encode or decode Base64, with full Unicode support.",
- ...twoWay(s => { let b = ""; new TextEncoder().encode(s).forEach(x => b += String.fromCharCode(x)); return btoa(b); },
-   s => new TextDecoder("utf-8", {fatal: true}).decode(Uint8Array.from(atob(s.replace(/\s/g, "")), c => c.charCodeAt(0))),
-   "Encode", "Decode", "That isn’t valid Base64. Check for missing or extra characters.")},
+{id: "base64", cat: "advanced", name: "Base64 encoder and decoder", desc: "Encode or decode Base64 text, images and files, with full Unicode support.",
+ ui: `${B64_TEXT.ui}
+  <h2 class="panel-title">Image or file to Base64</h2>
+  ${dropUI("b64-in", "*/*", "Choose an image or file", false)}<p id="b64-file" class="file-picked" hidden></p>
+  <div id="b64-file-out" hidden><img id="b64-preview" class="b64-preview" alt="Preview of the chosen image" hidden>
+   <div class="row"><div><label for="b64-format">Output</label><select id="b64-format"><option value="uri">Data URI (for HTML and CSS)</option><option value="raw">Base64 only</option><option value="css">CSS background-image</option><option value="img">HTML &lt;img&gt; tag</option></select></div></div>
+   <label for="b64-text">Base64</label><textarea id="b64-text" class="mono" readonly></textarea><div class="btns"><button class="primary" id="b64-copy">Copy</button></div></div>
+  <h2 class="panel-title">Base64 to file</h2>
+  <label for="b64-back">Paste Base64 or a data URI</label><textarea id="b64-back" class="mono" placeholder="data:image/png;base64,iVBORw0KGgo… or plain Base64"></textarea>
+  <div class="btns"><button id="b64-save">Download as file</button></div><img id="b64-back-preview" class="b64-preview" alt="Preview of the decoded image" hidden><p id="b64-back-msg" class="note" aria-live="polite"></p>`,
+ init(el) {
+  B64_TEXT.init(el);
+  let uri = "", name = "";
+  const fmt = () => { const raw = uri.slice(uri.indexOf(",") + 1), v = $("#b64-format", el).value; $("#b64-text", el).value = v === "raw" ? raw : v === "css" ? `background-image: url("${uri}");` : v === "img" ? `<img src="${uri}" alt="">` : uri; };
+  pickOneFile(el, "b64", f => {
+    const p = $("#b64-file", el); p.hidden = false;
+    if (f.size > 20 * 1048576) { p.textContent = `${f.name} is ${fsize(f.size)}. Choose a file under 20 MB; Base64 makes files a third bigger.`; return; }
+    const r = new FileReader();
+    r.onload = () => {
+      uri = r.result; name = f.name; const img = $("#b64-preview", el);
+      img.hidden = !/^data:image\//.test(uri); if (!img.hidden) img.src = uri;
+      p.textContent = `${f.name} · ${fsize(f.size)} → ${fsize(uri.length - uri.indexOf(",") - 1)} of Base64`;
+      $("#b64-file-out", el).hidden = false; fmt();
+    };
+    r.readAsDataURL(f);
+  });
+  $("#b64-format", el).onchange = fmt;
+  $("#b64-copy", el).onclick = e => copy($("#b64-text", el).value, e.target);
+  $("#b64-save", el).onclick = () => {
+    const m = $("#b64-back-msg", el), src = $("#b64-back", el).value.trim(), img = $("#b64-back-preview", el);
+    const head = /^data:([^;,]+)?(;base64)?,/i.exec(src), type = head?.[1] || "application/octet-stream";
+    let b64 = (head ? src.slice(head[0].length) : src).replace(/\s/g, "").replace(/-/g, "+").replace(/_/g, "/");
+    b64 += "=".repeat((4 - b64.length % 4) % 4);
+    try {
+      const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0)), ext = ({"image/png": "png", "image/jpeg": "jpg", "image/gif": "gif", "image/webp": "webp", "image/svg+xml": "svg", "application/pdf": "pdf", "text/plain": "txt", "application/json": "json"})[type] || "bin";
+      const blob = new Blob([bytes], {type}); saveBlob(blob, `decoded.${ext}`);
+      img.hidden = !type.startsWith("image/"); if (!img.hidden) img.src = URL.createObjectURL(blob);
+      say(m, `Decoded ${fsize(bytes.length)} as decoded.${ext}.`);
+    } catch { img.hidden = true; say(m, "That isn't valid Base64. Check for missing or extra characters.", true); }
+  };
+ }},
 {id: "url-encoder", cat: "advanced", name: "URL encoder and decoder", desc: "Make text safe for links, or read encoded URLs.",
  ...twoWay(encodeURIComponent, s => decodeURIComponent(s.replace(/\+/g, " ")), "Encode", "Decode", "That text has a broken % sequence, so it can’t be decoded.")},
-{id: "hash-generator", cat: "advanced", name: "Hash generator", desc: "SHA-1, SHA-256, SHA-384 and SHA-512 hashes.",
- ui: `<label for="ht">Text to hash</label><textarea id="ht" class="mono" placeholder="Type or paste text here"></textarea><label class="check"><input id="hash-upper" type="checkbox"> Uppercase hexadecimal</label><div class="out hashes" id="ho"></div>`,
+{id: "hash-generator", cat: "advanced", name: "Hash generator", desc: "MD5, SHA-1, SHA-256, SHA-384 and SHA-512 hashes of text or files.",
+ ui: `<label for="ht">Text to hash</label><textarea id="ht" class="mono" placeholder="Type or paste text here"></textarea>
+  ${dropUI("hf-in", "*/*", "Or choose a file to get its checksum", false)}<p id="hf-file" class="file-picked" hidden></p>
+  <label class="check"><input id="hash-upper" type="checkbox"> Uppercase hexadecimal</label>
+  <label for="hash-expect">Compare with an expected hash (optional)</label><input id="hash-expect" class="mono" placeholder="Paste the checksum from the download page" autocomplete="off" spellcheck="false">
+  <p id="hash-match" class="note" aria-live="polite"></p><div class="out hashes" id="ho"></div>`,
  init(el) {
-  const algs = ["SHA-1", "SHA-256", "SHA-384", "SHA-512"], o = $("#ho", el);
+  const algs = ["MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"], o = $("#ho", el);
   if (!window.crypto || !crypto.subtle) { o.innerHTML = `<p class="err">Hashing needs the site to be opened over https.</p>`; return; }
   o.innerHTML = algs.map(a => `<div><label>${a}</label><code data-h="${a}"></code><button data-copy="${a}">Copy ${a}</button></div>`).join("");
-  $("#hash-upper", el).addEventListener("change", () => { algs.forEach(a => { const code = $(`[data-h="${a}"]`, el); code.textContent = $("#hash-upper", el).checked ? code.textContent.toUpperCase() : code.textContent.toLowerCase(); }); });
-  let revision = 0;
-  const run = async () => {
-    const current = ++revision, d = new TextEncoder().encode($("#ht", el).value);
-    algs.forEach(a => $(`[data-h="${a}"]`, el).textContent = "");
-    for (const a of algs) {
-      const h = await crypto.subtle.digest(a, d);
-      if (current !== revision) return;
-      const hex = [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, "0")).join("");
-      $(`[data-h="${a}"]`, el).textContent = $("#hash-upper", el).checked ? hex.toUpperCase() : hex;
-    }
+  let revision = 0, source = null;
+  const show = () => {
+    const up = $("#hash-upper", el).checked, want = $("#hash-expect", el).value.trim().toLowerCase(), m = $("#hash-match", el);
+    let hit = null;
+    for (const a of algs) { const c = $(`[data-h="${a}"]`, el), v = c.dataset.v || ""; c.textContent = up ? v.toUpperCase() : v; c.parentElement.classList.toggle("match", !!want && v === want); if (want && v === want) hit = a; }
+    if (!want) { m.textContent = ""; m.className = "note"; }
+    else if (hit) { m.textContent = `✓ Match: the ${hit} hash is identical, so the ${source ? "file" : "text"} is unchanged.`; m.className = "note ok-msg"; }
+    else { m.textContent = "✗ No match. The file or text is different from the original, or the expected hash uses another algorithm."; m.className = "err"; }
   };
+  const run = async bytes => {
+    const current = ++revision;
+    algs.forEach(a => { const c = $(`[data-h="${a}"]`, el); c.dataset.v = ""; c.textContent = ""; });
+    for (const a of algs) {
+      const hex = a === "MD5" ? md5(bytes) : [...new Uint8Array(await crypto.subtle.digest(a, bytes))].map(b => b.toString(16).padStart(2, "0")).join("");
+      if (current !== revision) return;
+      $(`[data-h="${a}"]`, el).dataset.v = hex;
+    }
+    show();
+  };
+  const fromText = () => { source = null; $("#hf-file", el).hidden = true; run(new TextEncoder().encode($("#ht", el).value)); };
+  pickOneFile(el, "hf", async f => {
+    const p = $("#hf-file", el); p.hidden = false;
+    if (f.size > 1024 * 1048576) { p.textContent = `${f.name} is ${fsize(f.size)}. Files up to 1 GB can be hashed in the browser.`; return; }
+    p.textContent = `Hashing ${f.name} (${fsize(f.size)})…`; source = f;
+    await run(new Uint8Array(await f.arrayBuffer()));
+    p.textContent = `Hashes of ${f.name} · ${fsize(f.size)}. Type in the text box to hash text instead.`;
+  });
   o.addEventListener("click", e => { const a = e.target.dataset.copy; if (a) copy($(`[data-h="${a}"]`, el).textContent, e.target); });
-  $("#ht", el).addEventListener("input", run); run();
+  $("#hash-upper", el).addEventListener("change", show);
+  $("#hash-expect", el).addEventListener("input", show);
+  $("#ht", el).addEventListener("input", fromText); fromText();
  }},
 {id: "uuid-generator", cat: "advanced", name: "UUID generator", desc: "Random version 4 UUIDs, up to 100 at once.",
  ui: `<div class="row"><div><label for="un">How many</label><input id="un" type="number" min="1" max="100" value="5"></div></div>
@@ -1344,23 +1539,34 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   const run = () => {
     const g = num($("#sg", el).value), pc = num($("#sp", el).value), o = $("#so", el);
     if (!Number.isFinite(g) || g < 0 || !Number.isFinite(pc) || pc < 0 || pc > 100) return o.innerHTML = `<p class="err">Enter a valid salary and pension percentage from 0 to 100.</p>`;
-    const r = ukPay(g, pc), row = (l, v, c = "") => `<tr class="${c}"><td>${l}</td><td>${gbp(v)}</td><td>${gbp(v / 12)}</td><td>${gbp(v / 52)}</td></tr>`;
+    const r = ukPay(g, pc), row = (l, v, c = "") => `<tr class="${c}"><th scope="row">${l}</th><td>${gbp(v)}</td><td>${gbp(v / 12)}</td><td>${gbp(v / 52)}</td></tr>`;
     o.innerHTML = `<p class="big">${gbp(r.net / 12)} a month</p><p class="sub">Your take-home pay after tax, NI and pension</p>
       <div class="tablewrap" style="margin-top:14px"><table><tr><th></th><th>Year</th><th>Month</th><th>Week</th></tr>
       ${row("Gross pay", r.gross)}${row("Pension", -r.pen)}${row("Income tax", -r.tax)}${row("National Insurance", -r.ni)}${row("Take-home pay", r.net, "total")}</table></div>`;
   };
   el.addEventListener("input", run); run();
  }},
-{id: "loan-calculator", cat: "finance", name: "Loan repayment calculator", desc: "Monthly payment and total interest on a loan or mortgage.",
+{id: "loan-calculator", cat: "finance", name: "Loan repayment calculator", desc: "Monthly payment, total interest, repayment schedule and overpayments.",
  ui: `<div class="row"><div><label for="la">Amount borrowed (£)</label><input id="la" inputmode="decimal" value="10000"></div><div><label for="lr">Interest rate (APR %)</label><input id="lr" inputmode="decimal" value="6.9"></div></div>
-  <div class="row"><div><label for="ly">Years</label><input id="ly" type="number" min="0" value="5"></div><div><label for="lm">Extra months</label><input id="lm" type="number" min="0" max="11" value="0"></div></div><div class="out" id="lo"></div>`,
+  <div class="row"><div><label for="ly">Years</label><input id="ly" type="number" min="0" value="5"></div><div><label for="lm">Extra months</label><input id="lm" type="number" min="0" max="11" value="0"></div><div><label for="lx">Overpay each month (£, optional)</label><input id="lx" inputmode="decimal" value="0"></div></div><div class="out" id="lo"></div>`,
  init(el) {
+  let sched = [];
   const run = () => {
-    const P = num($("#la", el).value), apr = num($("#lr", el).value), r = apr / 1200, years = Number($("#ly", el).value), months = Number($("#lm", el).value), n = years * 12 + months, o = $("#lo", el);
+    const P = num($("#la", el).value), apr = num($("#lr", el).value), r = apr / 1200, years = Number($("#ly", el).value), months = Number($("#lm", el).value), n = years * 12 + months, o = $("#lo", el), extra = num($("#lx", el).value) || 0;
     if (!(P > 0) || !Number.isFinite(apr) || apr < 0 || !Number.isInteger(years) || years < 0 || !Number.isInteger(months) || months < 0 || months > 11 || !(n > 0) || n > 1200) return o.innerHTML = `<p class="err">Enter a positive amount, non-negative APR, and a term of 1–1,200 months (extra months 0–11).</p>`;
+    if (extra < 0) return o.innerHTML = `<p class="err">Overpayments can't be negative.</p>`;
     const pay = r ? P * r / (1 - Math.pow(1 + r, -n)) : P / n;
-    o.innerHTML = `<p class="big">${gbp(pay)} a month</p><p class="sub">for ${dur(n)}</p>
-      <div class="stats" style="margin-top:14px">${stats([[gbp(pay * n), "Total repaid"], [gbp(pay * n - P), "Total interest"]])}</div>`;
+    // Month-by-month schedule, including any overpayment.
+    sched = []; let bal = P, paidInt = 0;
+    for (let m = 1; bal > 0.005 && m <= n; m++) { const i = bal * r, due = Math.min(bal + i, pay + extra); bal = bal + i - due; paidInt += i; sched.push({m, pay: due, interest: i, principal: due - i, bal: Math.max(0, bal)}); }
+    const months_ = sched.length, totalPaid = sched.reduce((t, x) => t + x.pay, 0), years_ = [];
+    for (let y = 0; y * 12 < months_; y++) { const rows = sched.slice(y * 12, y * 12 + 12); years_.push({y: y + 1, pay: rows.reduce((t, x) => t + x.pay, 0), interest: rows.reduce((t, x) => t + x.interest, 0), principal: rows.reduce((t, x) => t + x.principal, 0), bal: rows[rows.length - 1].bal}); }
+    const saving = extra > 0 ? `<p class="note ok-msg">Overpaying ${gbp(extra)} a month clears it ${dur(n - months_)} sooner and saves ${gbp(pay * n - P - paidInt)} in interest.</p>` : "";
+    o.innerHTML = `<p class="big">${gbp(pay)} a month</p><p class="sub">for ${dur(n)}${extra > 0 ? `, or ${gbp(pay + extra)} with your overpayment, cleared in ${dur(months_)}` : ""}</p>
+      <div class="stats" style="margin-top:14px">${stats([[gbp(extra > 0 ? totalPaid : pay * n), "Total repaid"], [gbp(extra > 0 ? paidInt : pay * n - P), "Total interest"]])}</div>${saving}
+      <details class="schedule"><summary>Repayment schedule by year</summary><div class="tablewrap"><table><tr><th>Year</th><th>Paid</th><th>Interest</th><th>Capital</th><th>Balance left</th></tr>${years_.map(x => `<tr><th scope="row">${x.y}</th><td>${gbp(x.pay)}</td><td>${gbp(x.interest)}</td><td>${gbp(x.principal)}</td><td>${gbp(x.bal)}</td></tr>`).join("")}</table></div>
+      <div class="btns"><button type="button" id="l-csv">Download monthly schedule (CSV)</button></div></details>`;
+    $("#l-csv", o).onclick = () => saveBlob(new Blob(["﻿Month,Payment,Interest,Capital,Balance\n" + sched.map(x => [x.m, x.pay, x.interest, x.principal, x.bal].map(v => typeof v === "number" && !Number.isInteger(v) ? v.toFixed(2) : v).join(",")).join("\n")], {type: "text/csv"}), "loan-schedule.csv");
   };
   el.addEventListener("input", run); run();
  }},
@@ -1373,7 +1579,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     if (![s, d, y, aer].every(Number.isFinite) || s < 0 || d < 0 || aer <= -100 || !Number.isInteger(y) || y < 1 || y > 50) return o.innerHTML = `<p class="err">Enter non-negative amounts, an AER above -100%, and 1–50 whole years.</p>`;
     const r = Math.pow(1 + aer / 100, 1 / 12) - 1;
     let bal = s, rows = "";
-    for (let i = 1; i <= y; i++) { for (let m = 0; m < 12; m++) bal = bal * (1 + r) + d; const dep = s + d * 12 * i; rows += `<tr><td>Year ${i}</td><td>${gbp(dep)}</td><td>${gbp(bal - dep)}</td><td>${gbp(bal)}</td></tr>`; }
+    for (let i = 1; i <= y; i++) { for (let m = 0; m < 12; m++) bal = bal * (1 + r) + d; const dep = s + d * 12 * i; rows += `<tr><th scope="row">Year ${i}</th><td>${gbp(dep)}</td><td>${gbp(bal - dep)}</td><td>${gbp(bal)}</td></tr>`; }
     const dep = s + d * 12 * y;
     o.innerHTML = `<p class="big">${gbp(bal)}</p><p class="sub">after ${plural(y, "year")}: ${gbp(dep)} paid in and ${gbp(bal - dep)} interest</p>
       <div class="tablewrap" style="margin-top:14px"><table><tr><th></th><th>Paid in</th><th>Interest</th><th>Balance</th></tr>${rows}</table></div>`;
@@ -1551,4 +1757,40 @@ if (tocLinks.length && "IntersectionObserver" in window) {
     if (en.isIntersecting) { tocLinks.forEach(a => a.classList.remove("active")); byId.get(en.target.id)?.classList.add("active"); }
   }), {rootMargin: "-20% 0px -70% 0px"});
   byId.forEach((_, id) => { const el = document.getElementById(id); if (el) io.observe(el); });
+}
+
+// Header search on every page: type to find any tool, arrow keys to choose, Enter to open.
+const searchBtn = $(".search-btn"), searchBox = $("#site-search");
+if (searchBtn && searchBox) {
+  const input = $("#site-q", searchBox), list = $("#site-results", searchBox);
+  const index = [...TOOLS.map(t => ({name: t.name, desc: t.desc, href: SLUGS[t.id], cat: (CATS.find(c => c.id === t.cat) || {}).name || ""})),
+    ...Object.entries(EXTRA_CARDS).flatMap(([cat, xs]) => xs.map(x => ({...x, cat: (CATS.find(c => c.id === cat) || {}).name || ""})))];
+  let active = -1, shown = [];
+  const render = () => {
+    const terms = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    shown = terms.length ? index.filter(t => terms.every(w => (t.name + " " + t.desc + " " + t.cat).toLowerCase().includes(w))).slice(0, 8) : [];
+    active = shown.length ? 0 : -1;
+    list.innerHTML = shown.map((t, i) => `<li role="option" id="site-opt-${i}" aria-selected="${i === active}"><a href="${t.href}"><strong>${esc(t.name)}</strong><span>${esc(t.cat)}</span></a></li>`).join("")
+      + (terms.length && !shown.length ? `<li class="none">No tools match. Try a shorter word.</li>` : "");
+    input.setAttribute("aria-activedescendant", active >= 0 ? `site-opt-${active}` : "");
+  };
+  const move = d => { if (!shown.length) return; active = (active + d + shown.length) % shown.length; $$("li[role=option]", list).forEach((li, i) => li.setAttribute("aria-selected", String(i === active))); input.setAttribute("aria-activedescendant", `site-opt-${active}`); };
+  const open = () => { searchBox.hidden = false; searchBtn.setAttribute("aria-expanded", "true"); input.focus(); };
+  const close = () => { searchBox.hidden = true; searchBtn.setAttribute("aria-expanded", "false"); };
+  searchBtn.addEventListener("click", () => {
+    const homeQ = $("#q");
+    if (homeQ) { homeQ.focus(); homeQ.scrollIntoView({block: "center"}); return; }
+    searchBox.hidden ? open() : close();
+  });
+  input.addEventListener("input", render);
+  input.addEventListener("keydown", e => {
+    if (e.key === "ArrowDown") { e.preventDefault(); move(1); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); move(-1); }
+    else if (e.key === "Enter" && active >= 0) { e.preventDefault(); location.href = shown[active].href; }
+    else if (e.key === "Escape") { close(); searchBtn.focus(); }
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key === "/" && !$("#q") && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && !document.activeElement.isContentEditable) { e.preventDefault(); open(); }
+  });
+  document.addEventListener("click", e => { if (!searchBox.hidden && !searchBox.contains(e.target) && !searchBtn.contains(e.target)) close(); });
 }

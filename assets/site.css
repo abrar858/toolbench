@@ -447,7 +447,7 @@ html{scroll-padding-top:84px}
 .kpi span{display:block;font-size:.8rem;color:var(--muted);font-weight:500}
 .kpi b{display:block;margin-top:4px;font:800 1.45rem/1.15 var(--head);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .kpi-main{background:var(--teal);border-color:var(--teal);color:#fff}
-.kpi-main span{color:rgba(255,255,255,.85)}
+.kpi-main span{color:#fff}
 .guide-wide,.prose{max-width:760px}
 .tool .prose{margin:28px 0 56px}
 @media(prefers-reduced-motion:reduce){.tcard,.faq summary::after{transition:none}.tcard:hover{transform:none}}
@@ -525,3 +525,42 @@ html{scroll-padding-top:84px}
 .col-pick{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:12px 0}
 .col-pick legend{font-weight:600;font-size:.9rem;padding:0 6px}
 .col-pick > div{display:flex;flex-wrap:wrap;gap:6px 16px;max-height:180px;overflow:auto}
+
+/* ---------- Accessibility fixes (Lighthouse target-size, heading order, table headers) ---------- */
+input[type=checkbox],input[type=radio]{width:24px;height:24px;margin:0;flex:none}
+.tool-directory h2{font:700 .95rem var(--head);margin:14px 0 6px}
+.tool th[scope=row]{font:inherit;font-weight:500;color:var(--ink);text-transform:none;letter-spacing:0;background:none;text-align:left}
+.tool tr.total th[scope=row]{font-weight:700}
+
+/* ---------- Header search on every page ---------- */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.search-btn{flex:none;width:40px;min-height:40px;height:40px;padding:0;margin-left:6px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;box-shadow:none;cursor:pointer}
+.search-btn:hover,.search-btn[aria-expanded="true"]{border-color:var(--teal);color:var(--teal);background:var(--surface)}
+.site-search{position:relative;padding:0 0 12px}
+.site-search input{width:100%;font:500 1rem var(--body);padding:12px 16px;border-radius:12px;border:1px solid var(--teal);background:var(--surface);color:var(--ink);box-shadow:0 0 0 4px var(--ring);-webkit-appearance:none;appearance:none}
+.site-search input:focus{outline:none}
+#site-results{list-style:none;margin:8px 0 0;padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow-md);max-height:60vh;overflow:auto}
+#site-results:empty{display:none}
+#site-results a{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 12px;border-radius:8px;text-decoration:none;color:var(--ink)}
+#site-results a span{font-size:.8rem;color:var(--muted);white-space:nowrap}
+#site-results li[aria-selected="true"] a,#site-results a:hover{background:var(--tint)}
+#site-results .none{padding:10px 12px;color:var(--muted)}
+
+/* ---------- P1 tool upgrades ---------- */
+.panel-title{font:700 1.02rem var(--head);margin:26px 0 10px;padding-top:18px;border-top:1px solid var(--line)}
+.b64-preview{display:block;max-width:220px;max-height:160px;margin:12px 0;border:1px solid var(--line);border-radius:8px;background:#fff}
+.hashes .match code{background:var(--tint);color:var(--tint-ink);border-radius:4px}
+.ok-msg{color:var(--teal);font-weight:600}
+.seg{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:14px}
+.pw-list .pw{font-family:var(--mono);font-size:1.15rem;word-break:break-all;margin:0 0 6px}
+.meter{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin:10px 0 4px}
+.meter i{display:block;height:100%;width:0;background:var(--teal);transition:width .2s}
+.meter i.err{background:var(--err)}.meter i.mid{background:#d39b14}.meter i.good{background:var(--teal)}
+.schedule{margin-top:14px}
+.schedule summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+.schedule .tablewrap{max-height:340px;overflow:auto}
+.tool .panel table.ts{min-width:520px}
+.tool .panel table.ts td,.tool .panel table.ts th{padding:6px 8px;vertical-align:middle}
+.tool .panel table.ts input{padding:8px 10px;min-width:0}
+.tool .panel table.ts input[type=number]{width:90px}
+.ts-h{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}

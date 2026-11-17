@@ -200,17 +200,19 @@ export const FILE_CONTENT = [
 },
 {
   id: "image-compressor", howTo: "How to compress an image", slug: "image-compressor.html",
-  title: "Image Compressor – Reduce JPG & PNG Size Free",
-  description: "Compress JPG, PNG and WebP images to a fraction of their size for email, websites and upload limits. Bulk, free and private.",
+  title: "Image Compressor – Reduce Photo Size to 100 KB Free",
+  description: "Compress JPG, PNG and WebP images, or shrink them to a target size such as under 100 KB for forms and email. Bulk, free and private.",
   h1: "Image compressor",
-  lede: "Make photos and images much smaller for email, websites and upload limits, while keeping them looking good.",
+  lede: "Make photos much smaller for email, websites and upload limits, or set a target such as ‘under 100 KB’ and let the tool find the best quality that fits.",
   steps: ["Choose one or more images.", "Pick JPG or WebP, a maximum width and a quality. 70% quality at 1920 px suits most uses.", "Press Compress and see the size saving for each image.", "Download each image or all of them as a ZIP."],
   sections: [
     ["How to get the smallest files", "<p>Two settings matter most. Reducing the <strong>width</strong> has the biggest effect: a 12-megapixel phone photo resized to 1920 px wide is around a quarter of the pixels. Lowering the <strong>quality</strong> to 60–75% removes detail you are unlikely to notice. WebP files are usually 25–35% smaller than JPG at the same quality.</p>"],
     ["Typical results", "<p>A 4 MB phone photo usually compresses to between 250 KB and 600 KB at 1920 px and 70% quality. Screenshots and graphics saved as PNG can shrink even more when converted, but use PNG-friendly settings if you need sharp text.</p>"],
     ["Use cases", "<p>Fit photos under email attachment limits, meet upload size limits on job and government forms, and speed up websites and online shops, where smaller images load faster and help search rankings.</p>"],
+    ["Compress to a target size","<p>Many visa, passport, job and university application forms reject photos over a limit such as 100 KB or 200 KB. Choose <em>Aim for a file size</em>, pick the limit, and each image is saved at the highest quality that fits. If even low quality isn't enough, the tool also reduces the width step by step. In testing, a 3.3 MB photo came out at 99 KB.</p>"],
   ],
   faqs: [
+    ["How do I reduce a photo to under 100 KB?","Choose the photo, set ‘How to compress’ to ‘Aim for a file size’, pick 100 KB and press Compress."],
     ["How do I reduce the size of a photo?", "Choose the photo, keep the default settings and press Compress. Download the smaller copy."],
     ["How do I compress an image to under 100 KB?", "Choose a maximum width of 800 px and a quality of around 60%. Check the size shown and lower the quality if needed."],
     ["Will compression reduce quality?", "Slightly, but at 70% or higher most people can't see the difference on screen."],

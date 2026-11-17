@@ -82,15 +82,17 @@ export const OFFICE_CONTENT = [
 {
   id: "merge-excel", howTo: "How to merge Excel files", slug: "merge-excel-files.html",
   title: "Merge Excel Files – Combine XLSX & CSV Free",
-  description: "Combine several Excel or CSV files into one workbook with a tab for each, or stack all rows into one sheet. Free, private, no upload.",
+  description: "Combine several Excel or CSV files into one workbook, or stack all rows into one sheet with columns matched by name. Free, private, no upload.",
   h1: "Merge Excel files",
-  lede: "Combine several Excel or CSV files into one: either keep each sheet as its own tab, or stack all the rows into a single sheet.",
+  lede: "Combine several Excel or CSV files into one: keep each sheet as its own tab, or stack all the rows into one sheet with columns matched by their names.",
   steps: ["Choose two or more .xlsx, .xls, .ods or .csv files.", "Put them in order with the arrows.", "Choose to keep each sheet as a tab, or stack the rows of every file into one sheet.", "Press Merge files and download merged.xlsx."],
   sections: [
     ["Two ways to merge", "<p><strong>Keep each sheet as its own tab</strong> copies every sheet from every file into one workbook, renaming tabs if two have the same name. <strong>Stack the rows</strong> takes the first sheet of each file and puts the rows one after another, which is ideal for monthly reports, survey exports or sales data with the same columns.</p>"],
     ["Header rows and source column", "<p>When stacking, keep <em>Files have a header row</em> ticked so the column titles appear once at the top instead of being repeated for every file. The optional source column records which file each row came from, so you can filter by it later.</p>"],
+    ["Columns matched by name","<p>When stacking rows with <em>Files have a header row</em> ticked, columns are matched by their heading, not their position, so a file with Email before Name still lines up correctly. Upper and lower case and extra spaces are ignored. Columns that appear in only some files are added at the end and left blank for the others.</p>"],
   ],
   faqs: [
+    ["What if my files have columns in a different order?","Keep ‘Files have a header row’ ticked. Columns are matched by heading name, so the order in each file doesn't matter."],
     ["How do I combine multiple Excel files into one?", "Choose the files, pick how to merge and press Merge files."],
     ["Do the files need the same columns?", "Only when stacking rows. Columns are matched by position, so put them in the same order in every file."],
     ["Can I merge CSV and Excel files together?", "Yes. You can mix .csv, .xlsx, .xls and .ods files."],
