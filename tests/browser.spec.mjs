@@ -802,3 +802,61 @@ test('footer is compact: category links that open the right section', async ({pa
  await expect(page).toHaveURL(/#finance$/);
  await expect(page.locator('#finance')).toBeInViewport();
 });
+
+/* ---------- Size limits (search intent: "compress pdf to 200kb", "compress image to 20kb") ---------- */
+// A hard-to-compress 4-page "scan" built in the page (noisy grey background with text) handed straight to the input.
+const loadNoisyScanPdf = (page, pages) => page.evaluate(async n => {
+ const L = await pdfLib(), d = await L.PDFDocument.create();
+ for (let p = 0; p < n; p++) {
+  const c = document.createElement('canvas'); c.width = 1240; c.height = 1754; const x = c.getContext('2d'), im = x.createImageData(1240, 1754);
+  for (let i = 0; i < im.data.length; i += 4) { const v = 200 + Math.random() * 55; im.data[i] = v; im.data[i + 1] = v; im.data[i + 2] = v - 10; im.data[i + 3] = 255; }
+  x.putImageData(im, 0, 0); x.fillStyle = '#111'; x.font = '28px serif';
+  for (let l = 0; l < 40; l++) x.fillText('Scanned line ' + l + ' of a tenancy agreement', 90, 120 + l * 40);
+  const j = await new Promise(r => c.toBlob(r, 'image/jpeg', .9));
+  d.addPage([595, 842]).drawImage(await d.embedJpg(new Uint8Array(await j.arrayBuffer())), {x: 0, y: 0, width: 595, height: 842});
+ }
+ const b = new Blob([await d.save()], {type: 'application/pdf'}), dt = new DataTransfer(); dt.items.add(new File([b], 'scan.pdf', {type: 'application/pdf'}));
+ const inp = document.querySelector('#cp-in'); inp.files = dt.files; inp.dispatchEvent(new Event('change')); return b.size;
+}, pages);
+
+test('compress PDF fits under a chosen size limit, or says honestly that it cannot', async ({page}) => {
+ test.setTimeout(240000);
+ await page.goto('/compress-pdf.html');
+ await expect(page.locator('#cp-level-wrap')).toBeVisible();
+ expect(await loadNoisyScanPdf(page, 4)).toBeGreaterThan(2 * 1024 * 1024);
+ await page.locator('#cp-goal').selectOption('200');
+ await expect(page.locator('#cp-level-wrap')).toBeHidden();
+ await expect(page.locator('#cp-goal-note')).toBeVisible();
+ await page.locator('#cp-go').click();
+ await expect(page.locator('#cp-msg')).toContainText('under your 200 KB limit', {timeout: 90000});
+ const d = await download(page, () => page.locator('#cp-out [data-dl="0"]').click());
+ const buf = await readDownload(d);
+ expect(buf.length).toBeLessThanOrEqual(200 * 1024);
+ expect(await inspectPdf(page, buf)).toHaveLength(4);
+ // 100 KB is out of reach for a 12-page scan (each page needs tens of KB): the tool must say so, not pretend.
+ await loadNoisyScanPdf(page, 12);
+ await page.locator('#cp-goal').selectOption('100');
+ await page.locator('#cp-go').click();
+ await expect(page.locator('#cp-msg')).toContainText("Couldn't get under 100 KB", {timeout: 150000});
+ // A file already under the limit is left alone.
+ await page.locator('#cp-in').setInputFiles(fixture('sample.pdf'));
+ await page.locator('#cp-go').click();
+ await expect(page.locator('#cp-msg')).toContainText('under the 100 KB limit');
+ await expect(page.locator('#cp-out [data-dl]')).toHaveCount(0);
+});
+
+test('image compressor reaches 20 KB for form photos', async ({page}) => {
+ await page.goto('/image-compressor.html');
+ await page.evaluate(async () => {
+  const c = document.createElement('canvas'); c.width = 2400; c.height = 1600; const x = c.getContext('2d'), d = x.createImageData(2400, 1600);
+  for (let i = 0; i < d.data.length; i += 4) { d.data[i] = (i / 4) % 251; d.data[i + 1] = (i / 7) % 241; d.data[i + 2] = Math.random() * 255; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0); const b = await new Promise(r => c.toBlob(r, 'image/jpeg', .95));
+  const dt = new DataTransfer(); dt.items.add(new File([b], 'photo.jpg', {type: 'image/jpeg'}));
+  const input = document.querySelector('#ix-in'); input.files = dt.files; input.dispatchEvent(new Event('change'));
+ });
+ await page.locator('#ix-mode').selectOption('size');
+ await page.locator('#ix-target').selectOption('20');
+ await page.locator('#ix-go').click();
+ const d = await download(page, () => page.locator('#ix-out [data-dl="0"]').click());
+ expect((await readDownload(d)).length).toBeLessThanOrEqual(20 * 1024);
+});

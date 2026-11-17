@@ -18,7 +18,11 @@ Newest first. Record what changed, how it was tested, and what Search Console sh
 - Added `scripts/seo-audit.mjs` and a static test that crawls the generated site (sitemap ↔ files, broken links, one H1, title length).
 - Added the four SEO documents.
 
-**Changed (PR: search intent):** see that PR — Compress PDF target size, 20 KB image target, Excel duplicate-removal guidance.
+**Changed (PR: search intent):**
+- Compress PDF: new *Size limit* option (100 KB to 5 MB) that searches settings from sharpest to smallest and keeps the best quality that fits, or says plainly when the limit can't be reached. Measured: a deliberately hard 4-page noisy scan (4.2 MB) → 156 KB under the 200 KB limit; a 10-page one (10.4 MB) → 389 KB under 500 KB; a 12-page one can't reach 100 KB and the tool says so. Title, description, guidance and FAQs updated; older advice ("choose Strong to get under 1 MB") replaced.
+- Image compressor: 20 KB target added (for passport-style photos and signatures); outdated manual "under 100 KB" FAQ replaced.
+- Image resizer: FAQ pointing "resize to 20 KB / 50 KB" searches to the compressor.
+- Remove duplicate rows: how to do it in Excel itself (Data › Remove Duplicates, Alt-A-M, two columns, Duplicate Values highlighting, `UNIQUE`), plus matching FAQs.
 
 **Tests:** build `--check` up to date; static and browser suites — results recorded in each PR.
 
