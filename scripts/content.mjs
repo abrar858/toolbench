@@ -4,6 +4,7 @@
 
 import {FILE_CONTENT} from "./content-files.mjs";
 import {OFFICE_CONTENT} from "./content-office.mjs";
+import {DEPTH} from "./content-depth.mjs";
 
 const BASE_CONTENT = [
 /* ---------------- GENERAL ---------------- */
@@ -475,4 +476,7 @@ const BASE_CONTENT = [
 },
 ];
 
-export const TOOL_CONTENT = [...BASE_CONTENT, ...FILE_CONTENT, ...OFFICE_CONTENT];
+// Extra depth (worked examples, comparisons, troubleshooting) for the highest-value pages.
+export const TOOL_CONTENT = [...BASE_CONTENT, ...FILE_CONTENT, ...OFFICE_CONTENT].map(c => DEPTH[c.id]
+  ? {...c, sections: [...c.sections, ...DEPTH[c.id].sections], faqs: [...c.faqs, ...DEPTH[c.id].faqs]} : c);
+for (const id of Object.keys(DEPTH)) if (!BASE_CONTENT.concat(FILE_CONTENT, OFFICE_CONTENT).some(c => c.id === id)) throw new Error(`content-depth.mjs: unknown tool ${id}`);

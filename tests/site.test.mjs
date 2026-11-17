@@ -212,3 +212,26 @@ test('every url() in site.css points to a file that exists', ()=>{
  assert.ok(urls.length>=4);
  for(const u of urls) assert.ok(statSync(new URL('../assets/'+u,import.meta.url)).size>0,'Missing file for url('+u+') in site.css');
 });
+
+test('the highest-value pages keep in-depth guides (500+ words)', async ()=>{
+ const {DEPTH}=await import('../scripts/content-depth.mjs');
+ const strip=s=>s.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<[^>]+>/g,' ').replace(/&[a-z#0-9]+;/g,' ').replace(/\s+/g,' ').trim();
+ assert.ok(Object.keys(DEPTH).length>=15);
+ for(const c of TOOL_CONTENT.filter(c=>DEPTH[c.id])){
+  const page=readPage(c.slug), words=strip([...page.matchAll(/<article class="guide[^"]*">([\s\S]*?)<\/article>/g)].map(m=>m[1]).join(' ')).split(' ').length;
+  assert.ok(words>=500,c.slug+' guide has only '+words+' words');
+ }
+});
+
+test('finance figures in the in-depth guides match the calculators', ()=>{
+ const ukPay=vm.runInNewContext(script.match(/function ukPay\(gross, pct\) \{[\s\S]*?\n\}/)[0]+';ukPay');
+ const money=n=>'£'+n.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const pay=readPage('uk-take-home-pay-calculator.html');
+ for(const [a,b] of [[45000,50000],[50000,55000],[100000,110000]]) assert.ok(pay.includes(money(ukPay(b,0).net-ukPay(a,0).net)),'pay rise '+a+'→'+b);
+ const cost=ukPay(35000,0).net-ukPay(35000,5).net;
+ const whole='£'+Math.round(cost).toLocaleString('en-GB');
+ assert.ok(Math.abs(cost-Math.round(cost))<0.005&&new RegExp(whole.replace(/[.£]/g,'\\$&')+'(?![\\d.])').test(pay)||pay.includes(money(cost)),'pension cost on £35,000 ('+money(cost)+')');
+ const loan=readPage('loan-repayment-calculator.html'), m=(P,apr,n)=>{const r=apr/1200;return P*r/(1-Math.pow(1+r,-n));};
+ for(const y of [3,5,7]){const p=m(10000,6.9,y*12);assert.ok(loan.includes(money(p))&&loan.includes(money(p*y*12-10000)),'loan '+y+' years');}
+ assert.ok(loan.includes(money(m(200000,4.5,360))),'30-year mortgage');
+});
