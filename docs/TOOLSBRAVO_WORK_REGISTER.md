@@ -1,6 +1,6 @@
 # ToolsBravo development work register
 
-Updated: 17 November 2026 (UK)
+Updated: 17 November 2026, 02:52 UK
 
 ## Current state
 - Main baseline inspected: e7bfd0f85e4f472af4a3a45902624aa4f142105e (merged content-depth PR #7).
@@ -19,9 +19,9 @@ The build script embeds a 10-character SHA-256 digest of assets/tools.js into ev
 1. On this branch, run `node scripts/build.mjs`, then `node scripts/build.mjs --check` and `node --test tests/site.test.mjs`. Commit all regenerated files.
 2. Run the Playwright browser workflow and verify both GitHub Actions checks on the pull request.
 3. Confirm deployment revision, sitemap, robots.txt, and browser-only privacy using a working live browser/network environment.
-4. Add regression coverage for unique Popular links, and for 45 core tools versus two supplementary homepage cards.
+4. Regression coverage for unique Popular links and 45 core tools versus two supplementary homepage cards added in commit 1735f908; execution pending full build regeneration.
 5. Recheck accessibility on salary pages, UUID generator, duplicate-row remover and automation builder.
 6. Review Google Search Console indexing evidence before building more tools.
 
-## Change log
-- 2026-11-17: Inspected current source, workflows, generated homepage and sitemap. Removed duplicate Popular PDF-to-Excel link in source and pre-rendered index on isolated branch; pending full regeneration and CI. No changes made to main.
+## Verification at 02:52 UK\n- Confirmed draft PR #8 branch `fix/home-popular-link-and-work-register` exists and contains `index.html`, `assets/tools.js`, and this register.\n- Added a source-level Node regression test for unique Popular links and explicit 45 core tools plus two supplementary cards. Not executed: the branch still has stale asset-version tags.\n- Live website and GitHub PR browser fetch were unavailable in this runtime; this is not evidence of a website outage.\n- Latest main commit observed remains `e7bfd0f`; CI conclusions are still unverified.\n- PR #8 must remain draft until generated HTML and tests are verified.\n\n## Change log
+- 2026-11-17 02:52: Added `tests/site.test.mjs` regression coverage (commit `1735f908`).\n- 2026-11-17: Inspected current source, workflows, generated homepage and sitemap. Removed duplicate Popular PDF-to-Excel link in source and pre-rendered index on isolated branch; pending full regeneration and CI. No changes made to main.
