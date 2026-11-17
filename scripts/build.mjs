@@ -388,7 +388,7 @@ for (const c of TOOL_CONTENT) {
 
 // Enhance every generated page with category dropdowns, retaining fallback links.
 for (const [path, body] of Object.entries(outputs)) {
-  if (!path.endsWith(".html")) continue;
+  if (!path.endsWith(".html") || body.includes("assets/category-dropdowns.js")) continue;
   outputs[path] = body.replace(/<script src="assets[^"]*tools[.]js[^"]*"><[/]script>/,
     match => match + String.fromCharCode(10) +
     '<script defer src="assets/category-dropdowns.js"></script>');
