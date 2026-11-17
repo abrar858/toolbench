@@ -13,5 +13,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify generated pages and asset cache versions
+        run: node scripts/build.mjs --check
       - name: Run static and calculator checks
         run: node --test tests/site.test.mjs
