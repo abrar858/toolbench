@@ -31,3 +31,11 @@ The build script embeds a 10-character SHA-256 digest of assets/tools.js into ev
 - Main remains at e7bfd0f. PR #8 contains the duplicate Popular-link fix and regression coverage; generated pages still need rebuilding.
 - Live-site fetch is unavailable in this environment. PR-triggered run lookup did not return a verified CI outcome.
 - Release blocker: regenerate and commit HTML on the PR branch, then verify static and Playwright workflows. Do not merge PR #8 before both pass.
+
+## 2026-11-17 04:53 UTC — independent verification attempt
+- Re-read main and PR branch from the connected GitHub repository. Main remains `e7bfd0f`; the duplicate PDF-to-Excel Popular link remains on main and is removed on PR #8.
+- Confirmed the PR branch has the `node scripts/build.mjs --check` CI guard and the duplicate-link regression test. Source review does not substitute for executed tests.
+- Confirmed `scripts/build.mjs` calculates a 10-character SHA-256 version for `assets/tools.js` and rewrites generated HTML. The pending JS change makes a full rebuild mandatory.
+- Attempted public web access to the homepage and GitHub Actions; both were unavailable (`DisabledError`). Attempted direct GitHub checkout in the execution container; DNS resolution of github.com failed. No CI success or live deployment verification is claimed.
+- Required release sequence in a network-enabled checkout: `git checkout fix/home-popular-link-and-work-register`; `node scripts/build.mjs`; `node scripts/build.mjs --check`; `node --test tests/site.test.mjs`; `npm install --no-save @playwright/test`; `npx playwright install --with-deps chromium`; run the configured Playwright tests with the local server. Commit regenerated HTML and inspect both GitHub Actions workflows. Do not merge before verified green checks.
+- No production changes or unverified generated HTML edits in this run.
