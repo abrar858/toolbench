@@ -554,7 +554,13 @@ test('sign PDF: typed signature, name and date land where they were placed', asy
  expect(boxes).toHaveLength(3);
  const d = await downloadSigned(page);
  expect(d.suggestedFilename()).toBe('sign-a4-signed.pdf');
- const r = await inspectSigned(page, await readDownload(d), boxes);
+ const raw = await readDownload(d), latin = raw.toString('latin1');
+ // Classic layout for the widest reader support: a plain xref table, no object streams.
+ expect(latin.startsWith('%PDF-')).toBe(true);
+ expect(latin).toMatch(/\nxref\r?\n/);
+ expect(latin).not.toContain('/ObjStm');
+ expect(latin.trimEnd().endsWith('%%EOF')).toBe(true);
+ const r = await inspectSigned(page, raw, boxes);
  expect(r.pages).toBe(1);
  expect(r.text[0]).toContain('Original document text that must stay selectable.');
  expect(r.text[0]).toContain('Sam Patel');
