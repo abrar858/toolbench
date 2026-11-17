@@ -495,3 +495,188 @@ test('merging, viewing and converting a CSV never alters its values', async ({pa
  const c = await download(page, () => page.locator('#xc-out [data-dl="0"]').click());
  expect((await readDownload(c)).toString('utf8').trimEnd()).toBe(readFileSync(fixture('tricky.csv'), 'utf8').trimEnd().replace(/\r\n/g, '\n'));
 });
+
+/* ---------- Sign PDF ---------- */
+// Helpers: open a PDF, add a typed signature or text, and inspect the downloaded result with pdf.js
+// (rendering each page and counting ink inside each placed item's box).
+const openToSign = async (page, name) => {
+ await page.goto('/sign-pdf.html');
+ await page.locator('#sg-in').setInputFiles(fixture(name));
+ await expect(page.locator('#sg-work')).toBeVisible();
+};
+const goToPage = async (page, n) => { await page.locator('#sg-pageno').fill(String(n)); await page.locator('#sg-pageno').press('Enter'); await page.locator('#sg-pageno').dispatchEvent('change'); };
+const addTypedSignature = async (page, text = 'Sam Patel', kind = 'signature') => {
+ await page.locator(`[data-add=${kind}]`).click();
+ await page.locator('[data-tab=type]').click();
+ await page.locator('#sg-type-in').fill(text);
+ await page.locator('#sg-use').click();
+ await expect(page.locator('#sg-dialog')).not.toBeVisible();
+};
+const addText = async (page, kind, text) => {
+ await page.locator(`[data-add=${kind}]`).click();
+ if (text !== undefined) await page.locator('#sg-t-in').fill(text);
+ await page.locator('#sg-t-ok').click();
+};
+const placed = page => page.locator('.sg-el').evaluateAll(els => els.map(e => ({page: +e.dataset.page, x: +e.dataset.x, y: +e.dataset.y, w: +e.dataset.w, h: +e.dataset.h})));
+const downloadSigned = async page => {
+ const [d] = await Promise.all([page.waitForEvent('download'), (async () => {
+  await page.locator('#sg-download').click();
+  if (await page.locator('#sg-confirm').isVisible()) await page.locator('#sg-confirm-yes').click();
+ })()]);
+ return d;
+};
+// Renders every page of a PDF at scale 1 and measures dark ink inside each box (and in a mirrored control box).
+const inspectSigned = (page, buf, boxes) => page.evaluate(async ({b64, boxes}) => {
+ const pdfjs = await pdfJs(), doc = await pdfjs.getDocument({data: Uint8Array.from(atob(b64), c => c.charCodeAt(0)), isEvalSupported: false}).promise;
+ const result = {pages: doc.numPages, sizes: [], text: [], boxes: []};
+ for (let i = 1; i <= doc.numPages; i++) {
+  const p = await doc.getPage(i), vp = p.getViewport({scale: 1}), c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); await p.render({canvasContext: x, viewport: vp}).promise;
+  result.sizes.push([Math.round(vp.width), Math.round(vp.height), vp.rotation]);
+  result.text.push((await p.getTextContent()).items.map(t => t.str).join(' '));
+  const ink = (bx, by, bw, bh) => { const d = x.getImageData(Math.max(0, Math.round(bx)), Math.max(0, Math.round(by)), Math.max(1, Math.round(bw)), Math.max(1, Math.round(bh))).data; let n = 0; for (let k = 0; k < d.length; k += 4) if (d[k] + d[k + 1] + d[k + 2] < 300) n++; return n; };
+  for (const b of boxes.filter(b => b.page === i - 1)) result.boxes.push({page: i - 1, inside: ink(b.x, b.y, b.w, b.h), control: ink(vp.width - b.x - b.w, vp.height - b.y - b.h, b.w, b.h)});
+ }
+ doc.destroy();
+ return result;
+}, {b64: buf.toString('base64'), boxes});
+
+test('sign PDF: typed signature, name and date land where they were placed', async ({page}) => {
+ await openToSign(page, 'sign-a4.pdf');
+ await addTypedSignature(page);
+ const el = page.locator('.sg-el').first();
+ const box = await el.boundingBox();
+ await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+ await page.mouse.down(); await page.mouse.move(box.x + box.width / 2 - 120, box.y + box.height / 2 + 60, {steps: 8}); await page.mouse.up();
+ await addText(page, 'name', 'Sam Patel');
+ await addText(page, 'date');
+ const boxes = await placed(page);
+ expect(boxes).toHaveLength(3);
+ const d = await downloadSigned(page);
+ expect(d.suggestedFilename()).toBe('sign-a4-signed.pdf');
+ const r = await inspectSigned(page, await readDownload(d), boxes);
+ expect(r.pages).toBe(1);
+ expect(r.text[0]).toContain('Original document text that must stay selectable.');
+ expect(r.text[0]).toContain('Sam Patel');
+ for (const b of r.boxes) { expect(b.inside).toBeGreaterThan(40); expect(b.control).toBe(0); }
+});
+
+test('sign PDF: every page size and rotation keeps its position after zoom', async ({page}) => {
+ await openToSign(page, 'sign-mixed.pdf');
+ await page.locator('#sg-zoom-in').click();
+ for (let n = 1; n <= 6; n++) {
+  await goToPage(page, n);
+  await addTypedSignature(page, 'Ana Lima');
+  await addText(page, 'text', 'Page ' + n + ' approved');
+ }
+ const boxes = await placed(page);
+ expect(boxes.map(b => b.page)).toEqual([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
+ const r = await inspectSigned(page, await readDownload(await downloadSigned(page)), boxes);
+ expect(r.pages).toBe(6);
+ expect(r.sizes.map(s => s[2])).toEqual([0, 0, 0, 90, 180, 270]);
+ expect(r.text[1]).toContain('US Letter');
+ for (const b of r.boxes) { expect(b.inside, `page ${b.page + 1}`).toBeGreaterThan(30); expect(b.control, `page ${b.page + 1}`).toBe(0); }
+});
+
+test('sign PDF: keyboard moving, resizing, removing, undo and redo', async ({page}) => {
+ await openToSign(page, 'sign-a4.pdf');
+ await addTypedSignature(page, 'SP', 'initials');
+ const el = page.locator('.sg-el').first();
+ await expect(el).toBeFocused();
+ const start = (await placed(page))[0];
+ await el.press('Shift+ArrowRight'); await el.press('Shift+ArrowRight'); await el.press('Shift+ArrowDown');
+ let now = (await placed(page))[0];
+ expect(now.x - start.x).toBeCloseTo(20, 1); expect(now.y - start.y).toBeCloseTo(10, 1);
+ await page.locator('.sg-el').first().press('+');
+ expect((await placed(page))[0].w).toBeGreaterThan(now.w);
+ await page.locator('#sg-undo').click();
+ expect((await placed(page))[0].w).toBeCloseTo(now.w, 1);
+ await page.locator('.sg-el').first().focus(); await page.locator('.sg-el').first().press('Delete');
+ await expect(page.locator('.sg-el')).toHaveCount(0);
+ await page.locator('#sg-undo').click();
+ await expect(page.locator('.sg-el')).toHaveCount(1);
+ await page.locator('#sg-redo').click();
+ await expect(page.locator('.sg-el')).toHaveCount(0);
+});
+
+test('sign PDF: drawn and uploaded signatures, reusing a saved one', async ({page}) => {
+ await openToSign(page, 'sign-a4.pdf');
+ await page.locator('[data-add=signature]').click();
+ const pad = await page.locator('#sg-pad').boundingBox();
+ await page.mouse.move(pad.x + 30, pad.y + 120); await page.mouse.down();
+ for (let i = 1; i <= 20; i++) await page.mouse.move(pad.x + 30 + i * 12, pad.y + 120 - Math.sin(i / 2) * 40);
+ await page.mouse.up();
+ await page.locator('#sg-use').click();
+ await page.locator('[data-add=signature]').click();
+ await expect(page.locator('.sg-saved')).toHaveCount(1);
+ await page.locator('[data-tab=upload]').click();
+ await page.locator('#sg-up-in').setInputFiles(fixture('sample.png'));
+ await expect(page.locator('#sg-up-preview')).toBeVisible();
+ await page.locator('#sg-use').click();
+ await page.locator('[data-add=signature]').click();
+ await page.locator('.sg-saved').first().click();
+ await expect(page.locator('.sg-el')).toHaveCount(3);
+ const r = await inspectSigned(page, await readDownload(await downloadSigned(page)), []);
+ expect(r.pages).toBe(1);
+});
+
+test('sign PDF: drag a signature onto another page', async ({page}) => {
+ await openToSign(page, 'sign-mixed.pdf');
+ await addTypedSignature(page);
+ // Zoom out until pages 1 and 2 are both in view, then drag across the gap.
+ for (let i = 0; i < 4; i++) await page.locator('#sg-zoom-out').click();
+ await page.locator('#sg-viewer').evaluate(v => { v.scrollTop = 0; });
+ await expect(page.locator('.sg-page[data-page="1"]')).toBeInViewport();
+ const el = page.locator('.sg-el').first(), from = await el.boundingBox();
+ const target = await page.locator('.sg-page[data-page="1"]').boundingBox();
+ await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2); await page.mouse.down();
+ await page.mouse.move(target.x + target.width / 2, target.y + 80, {steps: 15}); await page.mouse.up();
+ expect((await placed(page))[0].page).toBe(1);
+});
+
+test('sign PDF: clear errors for damaged, locked and non-PDF files', async ({page}) => {
+ await page.goto('/sign-pdf.html');
+ await page.locator('#sg-in').setInputFiles(fixture('sign-damaged.pdf'));
+ await expect(page.locator('#sg-msg')).toContainText('could not be read as a PDF');
+ await page.locator('#sg-in').setInputFiles(fixture('sign-locked.pdf'));
+ await expect(page.locator('#sg-msg')).toContainText('password-protected');
+ await page.locator('#sg-in').setInputFiles(fixture('sample.png'));
+ await expect(page.locator('#sg-msg')).toContainText("isn't a PDF");
+ await expect(page.locator('#sg-work')).toBeHidden();
+});
+
+test('sign PDF: long documents render lazily and page navigation works', async ({page}) => {
+ await openToSign(page, 'sign-long.pdf');
+ await expect(page.locator('.sg-page')).toHaveCount(60);
+ await expect(page.locator('.sg-page.rendered').first()).toBeVisible();
+ const rendered = await page.locator('.sg-page.rendered').count();
+ expect(rendered).toBeLessThan(20);
+ await goToPage(page, 50);
+ await expect(page.locator('#sg-pageno')).toHaveValue('50');
+ await addText(page, 'text', 'Signed on page fifty');
+ expect((await placed(page))[0].page).toBe(49);
+ await page.locator('#sg-confirm-skip').isVisible().catch(() => {});
+ const r = await inspectSigned(page, await readDownload(await downloadSigned(page)), await placed(page));
+ expect(r.pages).toBe(60);
+ expect(r.text[49]).toContain('Signed on page fifty');
+});
+
+test('sign PDF: phone layout with touch drawing', async ({browser}) => {
+ const context = await browser.newContext({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true, acceptDownloads: true, baseURL: test.info().project.use.baseURL});
+ const page = await context.newPage();
+ await openToSign(page, 'sign-a4.pdf');
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+ const pageBox = await page.locator('.sg-page').first().boundingBox();
+ expect(pageBox.width).toBeLessThanOrEqual(390);
+ await page.locator('[data-add=signature]').tap();
+ const pad = await page.locator('#sg-pad').boundingBox();
+ await page.locator('#sg-pad').evaluate((c, p) => {
+  const fire = (type, x, y) => c.dispatchEvent(new PointerEvent(type, {pointerId: 7, pointerType: 'touch', isPrimary: true, clientX: x, clientY: y, bubbles: true}));
+  fire('pointerdown', p.x + 20, p.y + 100); for (let i = 1; i < 15; i++) fire('pointermove', p.x + 20 + i * 15, p.y + 100 - i * 4); fire('pointerup', p.x + 230, p.y + 44);
+ }, pad);
+ await page.locator('#sg-use').tap();
+ await expect(page.locator('.sg-el')).toHaveCount(1);
+ const d = await downloadSigned(page);
+ expect(d.suggestedFilename()).toBe('sign-a4-signed.pdf');
+ await context.close();
+});

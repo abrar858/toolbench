@@ -155,7 +155,7 @@ ${header}
 </div>
 </main>
 ${footer(t.id)}
-<script src="assets/tools.js"></script>
+<script src="assets/tools.js"></script>${c.script ? `\n<script src="${c.script}"></script>` : ""}
 </body>
 </html>
 `;
@@ -388,10 +388,11 @@ for (const c of TOOL_CONTENT) {
 
 // Cache busting: tag the shared CSS and JS with a hash of their content, so after every
 // deploy browsers fetch the new files instead of pairing new pages with cached old code.
-const assetVersion = Object.fromEntries(["assets/tools.js", "assets/site.css"].map(p =>
-  [p, createHash("sha256").update(read(p)).digest("hex").slice(0, 10)]));
+const VERSIONED = ["assets/tools.js", "assets/site.css", ...new Set(TOOL_CONTENT.map(c => c.script).filter(Boolean))];
+const assetVersion = Object.fromEntries(VERSIONED.map(p => [p, createHash("sha256").update(read(p)).digest("hex").slice(0, 10)]));
+const versionedRe = new RegExp(`(${VERSIONED.map(p => p.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")).join("|")})(?:\\?v=[0-9a-f]+)?"`, "g");
 for (const [path, body] of Object.entries(outputs)) {
-  if (path.endsWith(".html")) outputs[path] = body.replace(/(assets\/(?:tools\.js|site\.css))(?:\?v=[0-9a-f]+)?"/g, (m, p) => `${p}?v=${assetVersion[p]}"`);
+  if (path.endsWith(".html")) outputs[path] = body.replace(versionedRe, (m, p) => `${p}?v=${assetVersion[p]}"`);
 }
 
 const check = process.argv.includes("--check");
