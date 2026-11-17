@@ -786,3 +786,25 @@ test('header menus do not shift the layout on tool pages', async ({page}) => {
  }));
  expect(cls).toBeLessThan(0.05);
 });
+
+/* ---------- Footer ---------- */
+test('footer stays compact: one screen on desktop, folded categories on phones', async ({page}) => {
+ await page.setViewportSize({width: 1280, height: 800});
+ await page.goto('/merge-pdf.html');
+ const foot = page.locator('footer.site-foot');
+ expect((await foot.boundingBox()).height).toBeLessThan(700);
+ await expect(foot.locator('.tool-directory a[aria-current=page]')).toHaveText('Merge PDF');
+ await expect(foot.locator('.fd-toggle')).toHaveCount(0);
+ await page.setViewportSize({width: 375, height: 812});
+ await page.goto('/merge-pdf.html');
+ const toggles = foot.locator('.fd-toggle');
+ await expect(toggles).toHaveCount(5);
+ expect((await foot.boundingBox()).height).toBeLessThan(650);
+ await expect(foot.locator('a[href="split-pdf.html"]')).toBeHidden();
+ await toggles.first().click();
+ await expect(toggles.first()).toHaveAttribute('aria-expanded', 'true');
+ await expect(foot.locator('a[href="split-pdf.html"]')).toBeVisible();
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+ await foot.locator('a[href="split-pdf.html"]').click();
+ await expect(page).toHaveURL(/split-pdf\.html$/);
+});

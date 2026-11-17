@@ -275,7 +275,7 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 30% at 10
 .tool .panel .out{border:1px solid var(--line);border-radius:14px;padding:22px}
 .related{padding:30px 0 65px}.related h2{font:800 1.6rem var(--head);margin-bottom:18px}.related ul{margin-bottom:0}
 .related a{padding:12px 17px}
-footer{background:var(--surface);padding:50px 0 65px}
+footer{background:var(--surface)}
 @media(prefers-reduced-motion:no-preference){.tool-art-card{animation:art-float 7s ease-in-out infinite}.cat,.popular-links a{transition:transform .3s,border-color .3s,box-shadow .3s}.cat:hover,.popular-links a:hover{transform:translateY(-4px);border-color:var(--teal);box-shadow:0 15px 40px #00000016}}
 @media(max-width:900px){.cats{grid-template-columns:repeat(2,minmax(0,1fr))}.popular-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.top{padding-top:12px}.top nav a{padding:9px 2px}.popular-links{gap:9px}.popular-links a{min-height:78px;padding:13px;font-size:.84rem}.library-intro{padding-top:45px}.cats{grid-template-columns:1fr;margin-bottom:50px}.cat{padding:20px}.tool-hero{grid-template-columns:1fr;gap:0;min-height:0;margin-bottom:38px}.tool-hero h1{font-size:clamp(2.4rem,9vw,3.5rem)}.tool-hero-art{min-height:220px}.tool-art-card{height:190px;padding:18px;width:60%}.tool-art-card strong{font-size:4rem}.tool-benefits{gap:6px}.tool-benefits span{font-size:.7rem}.tool .panel{margin-bottom:30px}.search{margin:24px 0}.search input{font-size:1rem;padding:17px 12px 17px 50px}}
@@ -319,12 +319,6 @@ footer{background:var(--surface);padding:50px 0 65px}
 .faq details{border:1px solid var(--line);border-radius:10px;background:var(--surface);margin:10px 0;padding:0 16px}
 .faq summary{cursor:pointer;font-weight:600;padding:14px 0;min-height:44px}
 .faq details p{margin:0 0 14px;color:var(--muted)}
-.tool-directory{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 28px;margin:8px 0 24px;padding-bottom:20px;border-bottom:1px solid var(--line)}
-.tool-directory h3{font:700 .95rem var(--head);margin:14px 0 6px}
-.tool-directory ul{list-style:none;padding:0;margin:0}
-.tool-directory li{margin:4px 0;font-size:.9rem}
-.tool-directory a{color:var(--muted);text-decoration:none}
-.tool-directory a:hover,.tool-directory a[aria-current]{color:var(--ink);text-decoration:underline}
 
 /* The hero glow bleeds 30vw past the content; clip it at the page edge so phones get no sideways scroll. */
 main{overflow-x:clip}
@@ -523,7 +517,6 @@ html{scroll-padding-top:84px}
 
 /* ---------- Accessibility fixes (Lighthouse target-size, heading order, table headers) ---------- */
 input[type=checkbox],input[type=radio]{width:24px;height:24px;margin:0;flex:none}
-.tool-directory h2{font:700 .95rem var(--head);margin:14px 0 6px}
 .tool th[scope=row]{font:inherit;font-weight:500;color:var(--ink);text-transform:none;letter-spacing:0;background:none;text-align:left}
 .tool tr.total th[scope=row]{font-weight:700}
 
@@ -667,3 +660,46 @@ input[type=checkbox],input[type=radio]{width:24px;height:24px;margin:0;flex:none
   .site-head .mega .mm-list a{padding:9px 8px}
 }
 @media(prefers-reduced-motion:reduce){.mm-panel{animation:none}.site-head .mega .chev,.menu-btn path{transition:none}}
+
+/* ---------- Footer: compact site map ---------- */
+.site-foot{padding:36px 0 20px;font-size:.88rem;color:var(--muted)}
+.site-foot p{margin:0}
+.foot-brand{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-bottom:22px}
+.foot-brand .logo{font-size:1.15rem;color:var(--ink)}
+.foot-brand .logo img{border-radius:8px}
+.foot-brand p{flex:1;min-width:260px;max-width:620px;line-height:1.5}
+.tool-directory{display:grid;gap:0;margin:0;padding:0;border-top:1px solid var(--line)}
+.tool-directory>div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--line)}
+.tool-directory h2{margin:0;font:700 .78rem/1.6 var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.tool-directory ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:0 20px}
+.tool-directory li{margin:0}
+.tool-directory a{display:inline-block;padding:3px 0;line-height:1.55;color:var(--muted);text-decoration:none;transition:color var(--motion-fast) ease}
+.tool-directory a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.tool-directory a[aria-current]{color:var(--tint-ink);font-weight:600}
+.foot-bar{display:flex;justify-content:space-between;align-items:center;gap:8px 24px;flex-wrap:wrap;padding-top:16px;font-size:.82rem}
+.foot-links{display:flex;gap:4px 18px;flex-wrap:wrap}
+.foot-links a{display:inline-block;padding:3px 0;color:var(--ink);font-weight:600;text-decoration:none}
+.foot-links a:hover{text-decoration:underline;text-underline-offset:3px}
+.site-foot a:focus-visible{outline:3px solid var(--ring);outline-offset:2px;border-radius:4px}
+@media(max-width:700px){
+  .site-foot{padding:28px 0 18px}
+  .foot-brand{gap:10px;padding-bottom:16px}
+  .foot-brand p{min-width:0;font-size:.85rem}
+  .tool-directory>div{grid-template-columns:minmax(0,1fr);gap:4px;padding:12px 0}
+  .tool-directory ul{gap:0 16px}
+  .tool-directory a{padding:4px 0;font-size:.86rem}
+  .foot-bar{flex-direction:column;align-items:flex-start}
+}
+.fd-toggle{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;min-height:44px;cursor:pointer;font:700 .8rem/1.4 var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.fd-toggle small{font-size:.72rem;font-weight:600;letter-spacing:0;color:var(--muted);background:var(--field);border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.fd-toggle svg{margin-left:auto;transition:transform var(--motion-normal) var(--motion-ease)}
+.fd-toggle[aria-expanded=true] svg{transform:rotate(180deg)}
+.fd-toggle:focus-visible{outline:3px solid var(--ring);outline-offset:2px;border-radius:6px}
+.tool-directory.folding>div{padding:0}
+.tool-directory.folding>div>ul{display:none;padding:0 0 12px}
+.tool-directory.folding>div.open>ul{display:flex}
+@media(prefers-reduced-motion:reduce){.fd-toggle svg{transition:none}}
+@media(max-width:700px){
+  .foot-brand{flex-direction:column;align-items:flex-start}
+  .site-foot .foot-brand .logo span{display:inline}
+}

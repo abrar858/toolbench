@@ -74,7 +74,8 @@ ${url ? `<meta property="og:url" content="${url}">\n` : ""}<meta property="og:ti
 const directory = current => Object.entries(CATS).map(([cat, label]) =>
   `<div><h2>${label} tools</h2><ul>${TOOLS.filter(t => t.cat === cat).map(t =>
     `<li><a href="${byId.get(t.id).slug}"${t.id === current ? ' aria-current="page"' : ""}>${esc(t.name)}</a></li>`).join("")}${
-    cat === "finance" ? `<li><a href="salary-after-tax.html"${current === "salary" ? ' aria-current="page"' : ""}>Salary after tax table</a></li>` : ""}</ul></div>`).join("");
+    // Same extras as the homepage cards and header menu (salary table, automation builder).
+    (EXTRA_CARDS[cat] || []).map(x => `<li><a href="${x.href}"${x.href === "salary-after-tax.html" && current === "salary" ? ' aria-current="page"' : ""}>${esc(x.name)}</a></li>`).join("")}</ul></div>`).join("");
 
 // Tool icons and the category menu shown in every page header.
 const ICONS = vm.runInNewContext("(" + js.match(/const ICONS = (\{[\s\S]*?\});/)[1] + ")");
@@ -122,12 +123,16 @@ const toolHead = ({eyebrow, h1, lede, meta}) => `<header class="tool-head">
     ${meta ? `<ul class="tool-meta">${meta.map(m => `<li>${m}</li>`).join("")}</ul>` : ""}
   </header>`;
 
-const footer = current => `<footer><div class="wrap">
+const footer = current => `<footer class="site-foot"><div class="wrap">
+  <div class="foot-brand">
+    <a class="logo" href="./" aria-label="${SITE} home"><img src="assets/icon.svg" alt="" width="28" height="28" loading="lazy"><span>${SITE}</span></a>
+    <p>Free tools for PDFs, Office files, money and code. Everything runs in your browser and nothing you add is uploaded. Only your theme choice and saved automation workflows may be stored locally on your device.</p>
+  </div>
   <nav class="tool-directory" aria-label="All tools">${directory(current)}</nav>
-  <p>Every tool runs in your browser. Nothing you type is uploaded or stored.</p>
-  <p>Finance results are estimates for guidance only, not financial advice.</p>
-  <p><a href="privacy.html">Privacy</a> · <a href="about.html">About ${SITE}</a></p>
-  <p>© <span id="yr">2026</span> <span class="sn">${SITE}</span></p>
+  <div class="foot-bar">
+    <p>© <span id="yr">2026</span> <span class="sn">${SITE}</span> · Finance results are estimates for guidance only, not financial advice.</p>
+    <p class="foot-links"><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="automation-builder.html">Automations</a></p>
+  </div>
 </div></footer>`;
 
 const crumbs = items => `<nav class="crumbs" aria-label="Breadcrumb">${items.map(([name, href], i) =>
@@ -394,8 +399,7 @@ vm.runInContext(js.slice(0, js.indexOf("function showHome(")) + ";globalThis.HOM
 const home = read("index.html")
   .replace(/<header class="top">[\s\S]*?<\/header>/, () => headerBar(null))
   .replace(/<main id="app" tabindex="-1">[\s\S]*?<\/main>/, () => `<main id="app" tabindex="-1">${homeCtx.HOME}</main>`)
-  .replace(/<!-- tool-directory:start -->[\s\S]*?<!-- tool-directory:end -->/,
-    () => `<!-- tool-directory:start --><nav class="tool-directory" aria-label="All tools">${directory(null)}</nav><!-- tool-directory:end -->`);
+  .replace(/<footer[\s\S]*?<\/footer>/, () => footer(null));
 
 const outputs = {"sitemap.xml": sitemap, "index.html": home, "404.html": notFound, "salary-after-tax.html": salaryHub()};
 for (const c of TOOL_CONTENT) outputs[c.slug] = toolPage(c);

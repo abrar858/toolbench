@@ -268,3 +268,13 @@ test('every page header carries the full category menu, built into the HTML',()=
   assert.equal((nav.match(/class="mm is-current"/g)||[]).length,1,`${c.slug}: one current category`);
  }
 });
+
+test('footer is one compact site map with every tool linked',()=>{
+ for(const p of ['index.html','about.html','404.html','salary-after-tax.html',...TOOL_CONTENT.map(c=>c.slug)]){
+  const page=readPage(p).replace(/href="\//g,'href="'), foot=page.match(/<footer class="site-foot">([\s\S]*?)<\/footer>/)?.[1];
+  assert.ok(foot,`${p}: compact footer missing`);
+  for(const c of TOOL_CONTENT)assert.ok(foot.includes(`href="${c.slug}"`),`${p}: footer link to ${c.slug}`);
+  for(const h of ['salary-after-tax.html','automation-builder.html','about.html','privacy.html'])assert.ok(foot.includes(`href="${h}"`),`${p}: footer link to ${h}`);
+  assert.equal((page.match(/<footer/g)||[]).length,1,`${p}: one footer`);
+ }
+});
