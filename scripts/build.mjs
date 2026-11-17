@@ -154,7 +154,7 @@ function toolPage(c) {
   const related = c.related.map(tool).filter(Boolean);
   const howTo = c.howTo || `How to use the ${/^[A-Z][a-z]/.test(t.name) ? t.name.charAt(0).toLowerCase() + t.name.slice(1) : t.name}`, salaryHeading = "Take-home pay for common salaries";
   return `${head({title: `${c.title} | ${SITE}`, description: c.description, url, ogTitle: c.title})}
-${ld({"@context": "https://schema.org", "@type": "WebApplication", name: c.h1, url, description: c.description,
+${ld({"@context": "https://schema.org", "@type": "WebApplication", name: tool(c.id).name, url, description: c.description,
     applicationCategory: t.cat === "finance" ? "FinanceApplication" : t.cat === "advanced" ? "DeveloperApplication" : "UtilitiesApplication",
     operatingSystem: "Any modern web browser", isAccessibleForFree: true, inLanguage: "en-GB",
     offers: {"@type": "Offer", price: "0", priceCurrency: "GBP"}, publisher: {"@type": "Organization", name: SITE, url: ORIGIN}})}
