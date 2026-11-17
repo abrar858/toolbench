@@ -434,3 +434,15 @@ test('merge Excel matches columns by header name', async ({page}) => {
  const {rows} = await inspectBook(page, await readDownload(d));
  expect(rows).toEqual([['Source file', 'Name', 'Email', 'Town', 'Phone'], ['a.csv', 'Sam', 'sam@x.com', 'Leeds', ''], ['b.csv', 'Ana', 'ana@x.com', '', 555]]);
 });
+
+test('guide tables stay inside the screen on phones', async ({page}) => {
+ const {DEPTH} = await import('../scripts/content-depth.mjs');
+ await page.setViewportSize({width: 375, height: 812});
+ for (const c of TOOL_CONTENT.filter(c => DEPTH[c.id])) {
+  await page.goto('/' + c.slug);
+  const overflow = await page.evaluate(() => [...document.querySelectorAll('.guide table')].filter(t => {
+   const box = (t.closest('.tablewrap') || t).getBoundingClientRect(); return box.right > innerWidth + 1;
+  }).length);
+  expect(overflow, c.slug).toBe(0);
+ }
+});

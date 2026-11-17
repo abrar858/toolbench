@@ -139,7 +139,7 @@ ${header}
   <article class="guide">
     ${h2(howTo)}
     <ol>${c.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
-    ${c.sections.map(([h, body]) => `${h2(h)}\n    ${body}`).join("\n    ")}
+    ${c.sections.map(([h, body]) => `${h2(h)}\n    ${body.replace(/<table>([\s\S]*?)<\/table>/g, '<div class="tablewrap"><table>$1</table></div>')}`).join("\n    ")}
     ${c.id === "take-home-pay" ? `${h2(salaryHeading)}\n    <p>See the full breakdown for a specific salary, from ${k(SALARIES[0])} to ${k(SALARIES.at(-1))}, in the <a href="salary-after-tax.html">UK salary after tax table</a>.</p>` : ""}
     ${h2("Frequently asked questions")}
     ${faqHtml(c.faqs.map(([q, a]) => [q, esc(a)]))}
