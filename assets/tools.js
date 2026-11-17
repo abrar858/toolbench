@@ -1828,6 +1828,61 @@ if (tocLinks.length && "IntersectionObserver" in window) {
   byId.forEach((_, id) => { const el = document.getElementById(id); if (el) io.observe(el); });
 }
 
+// Header category menus: one open at a time, hover on desktop, Escape and outside clicks close,
+// arrow keys move through a menu, and on narrow screens a menu button shows them as an accordion.
+const siteMenu = $("#site-menu"), siteHead = $(".site-head"), menuBtn = $(".menu-btn");
+if (siteMenu && siteHead) {
+  const menus = $$("details.mm", siteMenu);
+  const wide = matchMedia("(min-width: 1001px)"), hover = matchMedia("(hover: hover) and (pointer: fine)");
+  const closeAll = except => menus.forEach(m => { if (m !== except) m.open = false; });
+  const setDrawer = on => {
+    siteHead.classList.toggle("menu-open", on);
+    menuBtn?.setAttribute("aria-expanded", String(on));
+    menuBtn?.setAttribute("aria-label", on ? "Close menu" : "Menu");
+    if (!on) closeAll();
+  };
+  menus.forEach(m => {
+    m.addEventListener("toggle", () => { if (m.open) closeAll(m); });
+    // Desktop: open on hover, with a short grace period so the pointer can travel to the panel.
+    let timer = 0, hoverOpened = 0;
+    m.addEventListener("mouseenter", () => {
+      if (!wide.matches || !hover.matches) return;
+      clearTimeout(timer); timer = setTimeout(() => { if (!m.open) { m.open = true; hoverOpened = Date.now(); } }, 90);
+    });
+    m.addEventListener("mouseleave", () => {
+      if (!wide.matches || !hover.matches) return;
+      clearTimeout(timer); timer = setTimeout(() => { m.open = false; }, 220);
+    });
+    // A click right after hover opened the menu keeps it open instead of toggling it shut.
+    $("summary", m).addEventListener("click", e => { if (m.open && Date.now() - hoverOpened < 600) { e.preventDefault(); hoverOpened = 0; } });
+  });
+  siteMenu.addEventListener("keydown", e => {
+    const m = e.target.closest("details.mm");
+    if (e.key === "Escape") {
+      if (m?.open) { m.open = false; $("summary", m).focus(); e.preventDefault(); }
+      else if (siteHead.classList.contains("menu-open")) { setDrawer(false); menuBtn?.focus(); e.preventDefault(); }
+      return;
+    }
+    if (!m || !m.open || (e.key !== "ArrowDown" && e.key !== "ArrowUp")) return;
+    const items = [$("summary", m), ...$$(".mm-panel a", m)], i = items.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault();
+    items[(i + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length].focus();
+  });
+  siteMenu.addEventListener("click", e => { if (e.target.closest(".mm-panel a, .mm-link")) { closeAll(); setDrawer(false); } });
+  document.addEventListener("click", e => {
+    if (siteMenu.contains(e.target) || menuBtn?.contains(e.target)) return;
+    closeAll(); if (siteHead.classList.contains("menu-open")) setDrawer(false);
+  });
+  menuBtn?.addEventListener("click", () => {
+    const on = !siteHead.classList.contains("menu-open");
+    setDrawer(on);
+    // Open the section for the page you are on, so its tools are one tap away.
+    if (on) { const cur = $(".mm.is-current", siteMenu); if (cur) cur.open = true; }
+  });
+  wide.addEventListener("change", () => setDrawer(false));
+}
+
 // Header search on every page: type to find any tool, arrow keys to choose, Enter to open.
 const searchBtn = $(".search-btn"), searchBox = $("#site-search");
 if (searchBtn && searchBox) {

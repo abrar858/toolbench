@@ -248,3 +248,23 @@ test('finance figures in the in-depth guides match the calculators', ()=>{
  for(const y of [3,5,7]){const p=m(10000,6.9,y*12);assert.ok(loan.includes(money(p))&&loan.includes(money(p*y*12-10000)),'loan '+y+' years');}
  assert.ok(loan.includes(money(m(200000,4.5,360))),'30-year mortgage');
 });
+
+test('every page header carries the full category menu, built into the HTML',()=>{
+ const pages=['index.html','about.html','privacy.html','404.html','salary-after-tax.html','30000-after-tax.html',...TOOL_CONTENT.map(c=>c.slug)];
+ for(const p of pages){
+  // 404.html is served at any depth, so its links are root-relative.
+  const page=readPage(p).replace(/href="\//g,'href="'), nav=page.match(/<nav class="mega" id="site-menu"[^>]*>([\s\S]*?)<\/nav>/)?.[1];
+  assert.ok(nav,`${p}: header menu missing`);
+  assert.equal([...nav.matchAll(/<details class="mm/g)].length,5,`${p}: five category menus`);
+  for(const c of TOOL_CONTENT)assert.ok(nav.includes(`href="${c.slug}"`),`${p}: menu link to ${c.slug}`);
+  assert.ok(nav.includes('href="salary-after-tax.html"')&&nav.includes('href="automation-builder.html"'),`${p}: salary table and automations`);
+  assert.ok(page.includes('class="menu-btn"')&&page.includes('aria-controls="site-menu"'),`${p}: menu button`);
+  assert.ok(!page.includes('category-dropdowns.js'),`${p}: old runtime dropdown script`);
+ }
+ for(const c of TOOL_CONTENT){
+  const nav=readPage(c.slug).match(/<nav class="mega"[\s\S]*?<\/nav>/)[0];
+  assert.ok(nav.includes(`href="${c.slug}" aria-current="page"`),`${c.slug}: marks itself in the menu`);
+  assert.equal((nav.match(/aria-current="page"/g)||[]).length,1,`${c.slug}: one current item`);
+  assert.equal((nav.match(/class="mm is-current"/g)||[]).length,1,`${c.slug}: one current category`);
+ }
+});
