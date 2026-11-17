@@ -386,9 +386,17 @@ for (const c of TOOL_CONTENT) {
   if (words < 180) console.warn(`warn: thin content (${c.slug}, ${words} words)`);
 }
 
+// Enhance every generated page with category dropdowns, retaining fallback links.
+for (const [path, body] of Object.entries(outputs)) {
+  if (!path.endsWith(".html") || body.includes("assets/category-dropdowns.js")) continue;
+  outputs[path] = body.replace(/<script src="assets[^"]*tools[.]js[^"]*"><[/]script>/,
+    match => match + String.fromCharCode(10) +
+    '<script defer src="assets/category-dropdowns.js"></script>');
+}
+
 // Cache busting: tag the shared CSS and JS with a hash of their content, so after every
 // deploy browsers fetch the new files instead of pairing new pages with cached old code.
-const VERSIONED = ["assets/tools.js", "assets/site.css", ...new Set(TOOL_CONTENT.map(c => c.script).filter(Boolean))];
+const VERSIONED = ["assets/tools.js", "assets/site.css", "assets/category-dropdowns.js", ...new Set(TOOL_CONTENT.map(c => c.script).filter(Boolean))];
 const assetVersion = Object.fromEntries(VERSIONED.map(p => [p, createHash("sha256").update(read(p)).digest("hex").slice(0, 10)]));
 const versionedRe = new RegExp(`(${VERSIONED.map(p => p.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")).join("|")})(?:\\?v=[0-9a-f]+)?"`, "g");
 for (const [path, body] of Object.entries(outputs)) {
