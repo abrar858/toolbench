@@ -18,3 +18,5 @@ test('every generated tool page and homepage includes discreet admin login',()=>
   assert.match(html,/<a href="admin\/feedback\.html">Admin login<\/a>/,path);
  }
 });
+
+// All admin data queries remain protected by Supabase row-level security.
