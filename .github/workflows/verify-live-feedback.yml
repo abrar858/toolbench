@@ -2,10 +2,9 @@ name: Verify ToolsBravo feedback production
 on:
   push:
     branches: [main]
-    paths-ignore: ['docs/production-verification.txt']
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
   smoke:
     runs-on: ubuntu-latest
@@ -28,13 +27,3 @@ jobs:
           curl --max-time 20 -fsSL 'https://toolsbravo.com/privacy.html' -o /tmp/privacy-page
           grep -q 'Optional feedback' /tmp/privacy-page
           echo "Production feedback pages verified."
-      - name: Record verified deployment
-        shell: bash
-        run: |
-          mkdir -p docs
-          printf 'ToolsBravo feedback production verification passed at %s UTC\nVerified: word-counter feedback widget, admin dashboard, privacy notice\n' "$(date -u +'%Y-%m-%d %H:%M:%S')" > docs/production-verification.txt
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/production-verification.txt
-          git commit -m "ci: record successful feedback production verification"
-          git push
