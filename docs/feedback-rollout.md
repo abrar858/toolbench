@@ -31,3 +31,5 @@ Project: `egypshduxktdyubwiaoo` (London, Supabase Free). Branch: `feature/tool-f
 Release gate: the generated site must be committed and all static checks must pass before merging.
 
 Verification: generated pages have been rebuilt on the feature branch and the dedicated Node test suite passed in GitHub Actions.
+
+Live API verification is required before publication: valid feedback, invalid payload and disallowed Origin.
