@@ -132,7 +132,7 @@ const toolHead = ({eyebrow, h1, lede, meta}) => `<header class="tool-head">
 const footer = current => `<footer class="site-foot"><div class="wrap">
   <div class="foot-brand">
     <a class="logo" href="./" aria-label="${SITE} home"><img src="assets/icon.svg" alt="" width="28" height="28" loading="lazy"><span>${SITE}</span></a>
-    <p>Free browser tools for PDFs, Office files, money and code. Nothing you add is uploaded; only your theme and saved automation workflows may be stored locally on your device.</p>
+    <p>Free browser tools for PDFs, Office files, money and code. Tool inputs stay in your browser. Optional feedback is sent securely for review; see our privacy notice.</p>
   </div>
   <nav class="foot-cats" aria-label="Tool categories">${footCats(current)}</nav>
   <div class="foot-bar">
@@ -375,7 +375,7 @@ const PROSE = [
   {slug: "about.html", title: `About ${SITE} | Free, Private Online Tools`, h1: `About ${SITE}`,
     description: `Who makes ${SITE}, how its free calculators and tools work, how results are checked, and how to report a problem.`,
     lede: "Free everyday calculators, text tools, converters and developer utilities that work on phones and computers, with no account, subscription or app to install.",
-    html: `<h2>Private by design</h2><p>The tools run in your browser. What you type into a calculator, text box or converter is processed on your own device and is not uploaded to a ${SITE} server. The site has no accounts, no adverts and no tracking cookies. Fonts and libraries are hosted on ToolsBravo itself, so your browser doesn't contact other companies to use the tools. Read the <a href="privacy.html">privacy notice</a> for details.</p>
+    html: `<h2>Private by design</h2><p>The tools run in your browser. What you type into a calculator, text box or converter is processed on your own device and is not uploaded to a ${SITE} server. Visitors do not need accounts to use the tools; there are no adverts or tracking cookies. Fonts and libraries are hosted on ToolsBravo itself, so your browser doesn't contact other companies to use the tools. Read the <a href="privacy.html">privacy notice</a> for details.</p>
     <h2>How results are checked</h2><p>The source code is public on <a href="https://github.com/abrar858/toolbench">GitHub</a>. Automated tests run on every change. They check the UK income tax and National Insurance figures against worked examples, test that every tool loads without errors, and confirm that worked examples quoted on each page match what the tool calculates.</p>
     <p>UK finance tools use the published rates for the stated tax year. Each finance page shows the date its rates were last checked against GOV.UK guidance. Rates are reviewed each spring before the new tax year starts on 6 April.</p>
     <h2>Limits of the calculators</h2><p>Finance results are estimates for guidance, not financial, tax or legal advice. UK pay estimates use stated assumptions and may not reflect your tax code, region, benefits, pension scheme, student loan or other deductions. Confirm important figures with official guidance, your payslip or a qualified professional. Health tools such as the BMI calculator are screening estimates, not a diagnosis.</p>
