@@ -1834,7 +1834,7 @@ function homeHTML() {
     <section class="home-hero">
       <span class="eyebrow">FREE · PRIVATE · NO SIGN-UP</span>
       <h1>Free PDF tools, converters and <em>UK calculators</em></h1>
-      <p class="lede">${TOOLS.length} fast, simple tools for PDFs, Excel, images, money, writing and code. Everything runs in your browser, so nothing you type leaves your device.</p>
+      <p class="lede">${CATS.reduce((t, c) => t + cards(c.id).length, 0)} fast, simple tools for PDFs, Excel, images, money, writing and code. Everything runs in your browser, so nothing you type leaves your device.</p>
       <div class="hero-search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="q" type="search" placeholder="Search tools, e.g. VAT, salary, JSON" aria-label="Search tools" autocomplete="off" enterkeyhint="go"><kbd aria-hidden="true">/</kbd></div>
       <p id="search-status" class="search-status" role="status" aria-live="polite"></p>

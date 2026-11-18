@@ -26,8 +26,12 @@ test('popular homepage links are unique and supplemental pages do not inflate co
  const core=[...script.matchAll(/\{id:\s*"([^"]+)"\s*,\s*cat:\s*"([^"]+)"/g)];
  const cards=[...html.matchAll(/class="tcard tcard-/g)];
  assert.equal(core.length,46,'Update the published core tool count deliberately if the catalog changes');
- assert.equal(cards.length,core.length+2,'Homepage should show 46 tools plus salary hub and automation builder');
- assert.match(html,/46 fast, simple tools/);
+ assert.equal(cards.length,core.length+2,'Homepage should show the core tools plus the salary table and automation builder');
+ // The counts people read must match the cards they can see.
+ assert.match(html,new RegExp(`<p class="lede">${cards.length} fast, simple tools`),'hero count matches the cards');
+ assert.match(html,new RegExp(`<meta name="description" content="${cards.length} free online tools`),'meta description count matches the cards');
+ const chips=[...html.matchAll(/href="#\w+"[^>]*>[^<]*<small>(\d+)/g)].reduce((t,m)=>t+ +m[1],0);
+ assert.equal(chips,cards.length,'category counts add up to the cards');
 });
 test('shared JavaScript parses',()=>{assert.ok(script);new vm.Script(script)});
 test('all tool IDs are unique',()=>{
@@ -165,7 +169,8 @@ test('every tool is present and mapped to a unique dedicated page',()=>{
  const tools=[...script.matchAll(/\{id:\s*"([^"]+)"\s*,\s*cat:\s*"([^"]+)"/g)];
  assert.ok(tools.length>=44,'Expected at least 44 tools');
  const count=tools.length;
- assert.ok(html.includes(count+' free online tools'),'Home page description should state the tool count ('+count+')');
+ // The published count is every tool card: core tools plus the salary table and automation builder.
+ assert.ok(html.includes((count+2)+' free online tools'),'Home page description should state the tool count ('+(count+2)+')');
  const ids=tools.map(m=>m[1]);
  assert.equal(new Set(ids).size,count,'Tool IDs must be unique');
  const contentIds=TOOL_CONTENT.map(t=>t.id);
