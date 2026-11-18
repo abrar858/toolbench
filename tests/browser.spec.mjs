@@ -1136,8 +1136,10 @@ test('edit PDF: clear errors, and fits a phone screen', async ({page}) => {
 test('feedback widget validates review and submits correct tool slug',async ({page})=>{
  let payload;
  await page.route('**/functions/v1/submit-feedback',async route=>{
+   const headers={'access-control-allow-origin':route.request().headers()['origin']||'*','access-control-allow-headers':'content-type','access-control-allow-methods':'POST, OPTIONS'};
+   if(route.request().method()==='OPTIONS')return route.fulfill({status:204,headers});
    payload=route.request().postDataJSON();
-   await route.fulfill({status:201,contentType:'application/json',body:JSON.stringify({ok:true})});
+   await route.fulfill({status:201,headers,contentType:'application/json',body:JSON.stringify({ok:true})});
  });
  await page.goto('/word-counter.html');
  await expect(page.locator('#feedback-heading')).toBeVisible();
