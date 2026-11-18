@@ -27,3 +27,5 @@ Project: `egypshduxktdyubwiaoo` (London, Supabase Free). Branch: `feature/tool-f
 - The static site must be rebuilt to include the widget on each tool page.
 - A pending review is private; public display of approved reviews is not implemented.
 - No claim is made that email alerts, screenshots, or automated backup are implemented.
+
+Release gate: the generated site must be committed and all static checks must pass before merging.
