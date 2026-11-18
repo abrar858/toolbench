@@ -840,6 +840,61 @@ const TOOLS = [
    <div class="btns"><button type="button" class="primary" id="sg-reset-yes">Start over</button><button type="button" id="sg-reset-no">Keep editing</button></div>
   </dialog>`,
  init(el) { /* Behaviour lives in assets/sign-pdf.js, which is loaded only on this page. */ }},
+{id: "edit-pdf", cat: "files", name: "Edit PDF", desc: "Change or remove text, white out, redact, draw, highlight and fill forms.",
+ ui: `<div id="ep-start">${dropUI("ep-in", "application/pdf,.pdf", "Choose a PDF to edit", false)}<p id="ep-msg" class="note" aria-live="polite">Your document stays on your device. Nothing is uploaded.</p></div>
+  <div id="ep-work" hidden>
+   <p id="ep-file" class="file-picked"></p>
+   <div class="sg-bar ep-bar" role="toolbar" aria-label="Editing tools">
+    <div class="sg-group ep-tools" role="group" aria-label="Tool">
+     <button type="button" data-tool="select" aria-pressed="true" title="Select, move and resize">↖ Select</button>
+     <button type="button" data-tool="edit" aria-pressed="false" title="Click a line of text to change it">✎ Edit text</button>
+     <button type="button" data-tool="text" aria-pressed="false" title="Click on a page to add text">T Add text</button>
+     <button type="button" data-tool="whiteout" aria-pressed="false" title="Drag to cover something">▭ Whiteout</button>
+     <button type="button" data-tool="redact" aria-pressed="false" title="Drag to black out and permanently remove">■ Redact</button>
+     <button type="button" data-tool="highlight" aria-pressed="false" title="Drag to highlight">▮ Highlight</button>
+     <button type="button" data-tool="rect" aria-pressed="false" title="Drag to draw a box">□ Box</button>
+     <button type="button" data-tool="draw" aria-pressed="false" title="Draw freehand">✏ Draw</button>
+     <button type="button" id="ep-image-btn" title="Add a picture">🖼 Image</button><input id="ep-image-in" type="file" accept="image/png,image/jpeg,image/webp" hidden aria-label="Choose an image to add">
+    </div>
+    <div class="sg-group ep-props" aria-label="Style">
+     <label class="ep-prop">Colour <input id="ep-color" type="color" value="#111827"></label>
+     <label class="ep-prop ep-for-text">Font <select id="ep-font"><option value="helv">Sans (Helvetica)</option><option value="times">Serif (Times)</option><option value="cour">Mono (Courier)</option></select></label>
+     <label class="ep-prop ep-for-text">Size <select id="ep-size"><option>8</option><option>9</option><option>10</option><option>11</option><option selected>12</option><option>14</option><option>16</option><option>18</option><option>24</option><option>32</option><option>48</option></select></label>
+     <label class="ep-prop ep-for-text check"><input id="ep-bold" type="checkbox"> Bold</label>
+     <label class="ep-prop ep-for-line">Line <select id="ep-width"><option value="1">Thin</option><option value="2" selected>Medium</option><option value="4">Thick</option></select></label>
+    </div>
+    <div class="sg-group"><button type="button" id="ep-undo" aria-label="Undo" title="Undo (Ctrl+Z)" disabled>↶</button><button type="button" id="ep-redo" aria-label="Redo" title="Redo (Ctrl+Y)" disabled>↷</button>
+     <button type="button" id="ep-zoom-out" aria-label="Zoom out">−</button><span id="ep-zoom" class="sg-zoom" aria-live="polite">100%</span><button type="button" id="ep-zoom-in" aria-label="Zoom in">+</button><button type="button" id="ep-fit">Fit</button>
+     <label class="sg-page-nav">Page <input id="ep-pageno" type="number" min="1" value="1" inputmode="numeric" aria-label="Go to page"> of <span id="ep-pages">1</span></label></div>
+    <div class="sg-group sg-end"><button type="button" id="ep-reset">Start over</button><button type="button" class="primary" id="ep-download">Download edited PDF</button></div>
+   </div>
+   <p id="ep-hint" class="note ep-hint"></p>
+   <div id="ep-forms-bar" class="ep-forms-bar" hidden><span id="ep-forms-count"></span><label class="check"><input id="ep-flatten" type="checkbox"> Make answers permanent (flatten the form)</label></div>
+   <p id="ep-status" class="note" role="status" aria-live="polite"></p>
+   <div id="ep-viewer" class="sg-viewer" tabindex="-1" aria-label="Document pages"></div>
+  </div>
+  <dialog id="ep-tdialog" class="sg-dialog" aria-labelledby="ep-ttitle">
+   <h2 id="ep-ttitle">Add text</h2>
+   <label for="ep-t-in">Text</label><textarea id="ep-t-in" rows="3" maxlength="2000"></textarea>
+   <div class="row"><div><label for="ep-t-font">Font</label><select id="ep-t-font"><option value="helv">Sans (Helvetica)</option><option value="times">Serif (Times)</option><option value="cour">Mono (Courier)</option></select></div>
+    <div><label for="ep-t-size">Size (pt)</label><input id="ep-t-size" type="number" min="4" max="96" step="0.5" value="12"></div>
+    <div><label for="ep-t-color">Colour</label><input id="ep-t-color" type="color" value="#111827"></div></div>
+   <label class="check"><input id="ep-t-bold" type="checkbox"> Bold</label>
+   <div id="ep-cover-row" hidden><label for="ep-cover-color">Background to cover the old text with</label><input id="ep-cover-color" type="color" value="#ffffff"><p class="note">The original line is covered and your text is written on top. Matched from the page; change it if the background isn't plain.</p></div>
+   <p id="ep-terr" class="err" aria-live="polite"></p>
+   <div class="btns"><button type="button" class="primary" id="ep-t-ok">Add to page</button><button type="button" id="ep-t-remove" hidden>Remove the line instead</button><button type="button" id="ep-t-cancel">Cancel</button></div>
+  </dialog>
+  <dialog id="ep-confirm" class="sg-dialog" aria-labelledby="ep-ctitle">
+   <h2 id="ep-ctitle">Ready to download?</h2>
+   <p id="ep-summary"></p>
+   <p id="ep-redact-note" class="note" hidden>Pages with redactions are flattened into images, so the blacked-out content is permanently removed. Text on those pages can no longer be selected or searched, and bookmarks and document properties are removed from the file.</p>
+   <div class="btns"><button type="button" class="primary" id="ep-confirm-yes">Download edited PDF</button><button type="button" id="ep-confirm-no">Go back</button></div>
+  </dialog>
+  <dialog id="ep-reset-confirm" class="sg-dialog" aria-labelledby="ep-rtitle">
+   <h2 id="ep-rtitle">Start over?</h2><p>Your changes haven't been downloaded yet and will be lost.</p>
+   <div class="btns"><button type="button" class="primary" id="ep-reset-yes">Start over</button><button type="button" id="ep-reset-no">Keep editing</button></div>
+  </dialog>`,
+ init(el) { /* Behaviour lives in assets/edit-pdf.js, which is loaded only on this page. */ }},
 {id: "split-pdf", cat: "files", name: "Split PDF", desc: "Extract pages or split a PDF into separate files.",
  ui: `${dropUI("sp-in", "application/pdf,.pdf", "Choose a PDF file", false)}<p id="sp-file" class="file-picked" hidden></p>
   <div class="row"><div><label for="sp-mode">How to split</label><select id="sp-mode"><option value="extract">Extract chosen pages into one PDF</option><option value="ranges">Make one PDF for each range</option><option value="every">Make one PDF for every page</option></select></div>
@@ -1787,6 +1842,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 // Each tool has its own static, indexable page. Keep in sync with scripts/content.mjs (checked by tests).
 const SLUGS = {
   "sign-pdf": "sign-pdf.html",
+  "edit-pdf": "edit-pdf.html",
   "merge-word": "merge-word-documents.html",
   "pdf-to-excel": "pdf-to-excel.html", "excel-to-pdf": "excel-to-pdf.html", "csv-to-excel": "csv-to-excel.html", "excel-to-csv": "excel-to-csv.html", "merge-excel": "merge-excel-files.html", "excel-to-json": "excel-to-json.html", "remove-duplicate-rows": "remove-duplicate-rows.html", "excel-viewer": "excel-viewer.html",
   "merge-pdf": "merge-pdf.html", "split-pdf": "split-pdf.html", "rotate-pdf": "rotate-pdf.html", "delete-pdf-pages": "delete-pdf-pages.html", "jpg-to-pdf": "jpg-to-pdf.html", "pdf-to-jpg": "pdf-to-jpg.html", "pdf-to-word": "pdf-to-word.html", "word-to-pdf": "word-to-pdf.html", "compress-pdf": "compress-pdf.html", "image-converter": "image-converter.html", "image-compressor": "image-compressor.html", "image-resizer": "image-resizer.html",
@@ -1810,14 +1866,14 @@ const app = $("#app");
 const DEF_DESC = $('meta[name="description"]').content, DEF_TITLE = document.title;
 
 // Small icon glyph for each tool card.
-const ICONS = {"sign-pdf": "✍", "merge-word": "W+", "pdf-to-excel": "XLS", "excel-to-pdf": "PDF", "csv-to-excel": "CSV", "excel-to-csv": "⇢", "merge-excel": "⊞", "excel-to-json": "{ }", "remove-duplicate-rows": "≠", "excel-viewer": "▤",
+const ICONS = {"sign-pdf": "✍", "edit-pdf": "✎", "merge-word": "W+", "pdf-to-excel": "XLS", "excel-to-pdf": "PDF", "csv-to-excel": "CSV", "excel-to-csv": "⇢", "merge-excel": "⊞", "excel-to-json": "{ }", "remove-duplicate-rows": "≠", "excel-viewer": "▤",
   "merge-pdf": "⧉", "split-pdf": "✂", "rotate-pdf": "↻", "delete-pdf-pages": "⌫", "jpg-to-pdf": "JPG", "pdf-to-jpg": "PDF", "pdf-to-word": "W", "word-to-pdf": "DOC", "compress-pdf": "⇲", "image-converter": "⇆", "image-compressor": "◫", "image-resizer": "⤢",
   "time-duration": "◷", "aspect-ratio": "▭", "text-sorter": "⇅", "date-difference": "▦", "bmi-calculator": "♡", "word-counter": "¶",
   "case-converter": "Aa", "password-generator": "✱", "unit-converter": "⇄", "age-calculator": "✦", "percentage-calculator": "%",
   "json-formatter": "{ }", "base64": "64", "url-encoder": "%20", "hash-generator": "#", "uuid-generator": "ID", "timestamp-converter": "⏱",
   "colour-converter": "◐", "take-home-pay": "£", "loan-calculator": "⌂", "savings-calculator": "↗", "debt-payoff": "↘", "vat-calculator": "VAT", "budget-planner": "◔"};
 const HOME_ORDER = ["files", "office", "finance", "general", "advanced"];
-const POPULAR = [["Merge PDF", "merge-pdf.html"], ["Sign PDF", "sign-pdf.html"], ["PDF to Word", "pdf-to-word.html"], ["JPG to PDF", "jpg-to-pdf.html"], ["PDF to Excel", "pdf-to-excel.html"], ["UK take-home pay", "uk-take-home-pay-calculator.html"], ["VAT", "vat-calculator.html"],
+const POPULAR = [["Merge PDF", "merge-pdf.html"], ["Sign PDF", "sign-pdf.html"], ["Edit PDF", "edit-pdf.html"], ["PDF to Word", "pdf-to-word.html"], ["JPG to PDF", "jpg-to-pdf.html"], ["PDF to Excel", "pdf-to-excel.html"], ["UK take-home pay", "uk-take-home-pay-calculator.html"], ["VAT", "vat-calculator.html"],
   ["Loan repayments", "loan-repayment-calculator.html"], ["Word counter", "word-counter.html"], ["Password generator", "password-generator.html"], ["Percentage", "percentage-calculator.html"]];
 // Pages that are not in TOOLS but deserve their own card on the home page.
 const EXTRA_CARDS = {

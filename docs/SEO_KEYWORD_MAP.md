@@ -11,6 +11,8 @@ Competition note: brand names of large incumbents (for example "i love pdf", "ad
 
 | Primary query | Secondary phrasings seen | Intent | Page | Coverage / action |
 |---|---|---|---|---|
+| edit pdf | edit pdf online free (no sign up), edit pdf text (with the same font), remove / delete / replace / change text in pdf, white out pdf, redact pdf, black out text, add text to pdf, write on pdf, highlight, annotate, draw on pdf, add image to pdf, fill pdf form, edit scanned pdf (autocomplete, 19 Nov) | Do | `/edit-pdf.html` | New tool: edit text in a matching standard font, whiteout, true redaction, text, images, drawing, highlight, forms. Competitors upload files (deleted after 1–2 h) and limit free use |
+| redact pdf meaning, whiteout vs redaction | — | Learn | `/edit-pdf.html` (section) | Covered in "Whiteout or redaction?" |
 | sign pdf online free | sign pdf online free no account, no sign up, add signature to pdf, sign pdf on iphone | Do | `/sign-pdf.html` | Covered (no account, phone, privacy). Keep. |
 | electronic vs digital signature | is an electronic signature legal uk, digital signature pdf | Learn | `/electronic-vs-digital-signature.html` | Guide; links to Sign PDF |
 | merge pdf | merge pdf files, merge pdf online free, merge pdf and jpg | Do | `/merge-pdf.html` | Covered; images-into-PDF via JPG to PDF is linked. |

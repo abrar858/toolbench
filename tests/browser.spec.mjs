@@ -721,7 +721,7 @@ test('header menus: click, hover, keyboard, Escape and outside click on desktop'
  await files.locator('summary').click();
  await expect(files.locator('.mm-panel')).toBeVisible();
  await expect(files.locator('a[aria-current=page]')).toContainText('Sign PDF');
- await expect(files.locator('.mm-list a')).toHaveCount(13);
+ await expect(files.locator('.mm-list a')).toHaveCount(14);
  // Only one menu open at a time.
  await office.locator('summary').click();
  await expect(office.locator('.mm-panel')).toBeVisible();
@@ -954,4 +954,181 @@ test('savings calculator converts gross rates and AER', async ({page}) => {
  await page.locator('#af').selectOption('1');
  await expect(page.locator('#ao .big')).toHaveText('4.00% gross');
  await expect(page.locator('#vo .big')).toHaveText('£16,149.84');
+});
+
+/* ---------- Edit PDF ---------- */
+// Scrolls so a spot on a page (fractions of its size) is in the middle of the viewer, like a person would.
+const showSpot = (page, n, fy = 0.1) => page.evaluate(({n, fy}) => {
+ const v = document.querySelector('#ep-viewer'), p = v.querySelector(`.sg-page[data-page="${n}"]`);
+ v.scrollIntoView({block: 'end', behavior: 'instant'});
+ v.scrollTop += p.getBoundingClientRect().top + p.getBoundingClientRect().height * fy - v.getBoundingClientRect().top - v.clientHeight / 2;
+}, {n, fy});
+const openToEdit = async (page, name) => {
+ await page.goto('/edit-pdf.html');
+ await page.locator('#ep-in').setInputFiles(fixture(name));
+ await expect(page.locator('#ep-work')).toBeVisible();
+ await showSpot(page, 0, 0.1);
+ await expect(page.locator('.sg-page.rendered').first()).toBeVisible();
+};
+const editDownload = async page => {
+ const [d] = await Promise.all([page.waitForEvent('download'), (async () => { await page.locator('#ep-download').click(); await page.locator('#ep-confirm-yes').click(); })()]);
+ expect(d.suggestedFilename()).toMatch(/-edited\.pdf$/);
+ return readDownload(d);
+};
+// Drag across a page from one point to another (fractions of the page box).
+const dragOnPage = async (page, n, [x1, y1], [x2, y2]) => {
+ await showSpot(page, n, (y1 + y2) / 2);
+ const b = await page.locator(`.sg-page[data-page="${n}"]`).boundingBox();
+ await page.mouse.move(b.x + b.width * x1, b.y + b.height * y1); await page.mouse.down();
+ await page.mouse.move(b.x + b.width * x2, b.y + b.height * y2, {steps: 8}); await page.mouse.up();
+};
+// Text on each page (pdf.js), and every decoded stream in the file searched for the secret (pdf-lib writes text as hex).
+const pdfFacts = (page, buf, secret) => page.evaluate(async ({b64, secret}) => {
+ const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+ const pdfjs = await pdfJs(), doc = await pdfjs.getDocument({data: bytes.slice(), isEvalSupported: false}).promise, text = [];
+ for (let i = 1; i <= doc.numPages; i++) text.push((await (await doc.getPage(i)).getTextContent()).items.map(t => t.str).join(' ').trim());
+ doc.destroy();
+ let inStreams = false;
+ if (secret) {
+  const L = await pdfLib(), pdf = await L.PDFDocument.load(bytes), hex = [...secret].map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('').toUpperCase();
+  for (const [, obj] of pdf.context.enumerateIndirectObjects()) {
+   if (!(obj instanceof L.PDFRawStream)) continue;
+   let s; try { s = new TextDecoder('latin1').decode(L.decodePDFRawStream(obj).decode()); } catch { continue; }
+   if (s.toUpperCase().includes(hex) || s.includes(secret)) inStreams = true;
+  }
+ }
+ return {pages: text.length, text, inStreams};
+}, {b64: buf.toString('base64'), secret});
+
+test('edit PDF: click a line of text and replace it in a matching style', async ({page}) => {
+ await openToEdit(page, 'sign-a4.pdf');
+ await page.locator('[data-tool=edit]').click();
+ await page.getByRole('button', {name: 'Edit text: Tenancy agreement'}).click();
+ await expect(page.locator('#ep-tdialog')).toBeVisible();
+ await expect(page.locator('#ep-t-in')).toHaveValue('Tenancy agreement');
+ await expect(page.locator('#ep-t-size')).toHaveValue('20');
+ await expect(page.locator('#ep-t-font')).toHaveValue('helv');
+ await page.locator('#ep-t-in').fill('Lease');
+ await page.locator('#ep-t-ok').click();
+ await expect(page.locator('.sg-el.ep-text')).toHaveCount(1);
+ const box = (await placed(page))[0];
+ const buf = await editDownload(page);
+ const facts = await pdfFacts(page, buf);
+ expect(facts.pages).toBe(1);
+ expect(facts.text[0]).toContain('Lease');
+ expect(facts.text[0]).toContain('Original document text that must stay selectable.');
+ // The new word is drawn where the old line was, and the rest of the old line is covered.
+ const ink = await inspectSigned(page, buf, [box, {page: 0, x: box.x + box.w + 6, y: box.y + 2, w: 100, h: box.h - 4}]);
+ expect(ink.boxes[0].inside).toBeGreaterThan(40);
+ expect(ink.boxes[1].inside).toBe(0);
+});
+
+test('edit PDF: redaction removes the text from the file, not just from view', async ({page}) => {
+ await openToEdit(page, 'sign-revised.pdf');
+ const before = await pdfFacts(page, readFileSync(fixture('sign-revised.pdf')), 'Revised form page 1');
+ expect(before.inStreams).toBe(true);
+ await page.locator('[data-tool=redact]').click();
+ await dragOnPage(page, 0, [0.05, 0.05], [0.95, 0.2]);
+ await expect(page.locator('.sg-el.ep-redact')).toHaveCount(1);
+ await page.locator('#ep-download').click();
+ await expect(page.locator('#ep-redact-note')).toBeVisible();
+ const [d] = await Promise.all([page.waitForEvent('download'), page.locator('#ep-confirm-yes').click()]);
+ const buf = await readDownload(d);
+ const facts = await pdfFacts(page, buf, 'Revised form page 1');
+ expect(facts.pages).toBe(2);
+ expect(facts.text[0]).toBe('');
+ expect(facts.inStreams).toBe(false);
+ expect(facts.text[1]).toContain('Revised form page 2');
+ await expect(page.locator('#ep-status')).toContainText('permanently removed from 1 page');
+});
+
+test('edit PDF: whiteout, added text, highlight, box, drawing and image on every page orientation', async ({page}) => {
+ await openToEdit(page, 'sign-mixed.pdf');
+ for (const n of [0, 3, 4, 5]) { // A4, then pages rotated 90, 180 and 270 (with a crop box)
+  await page.locator('#ep-pageno').fill(String(n + 1)); await page.locator('#ep-pageno').press('Enter');
+  await expect(page.locator(`.sg-page[data-page="${n}"]`)).toBeInViewport();
+  await page.locator('[data-tool=text]').click();
+  await showSpot(page, n, 0.5);
+  const b = await page.locator(`.sg-page[data-page="${n}"]`).boundingBox();
+  await page.mouse.click(b.x + b.width * 0.2, b.y + b.height * 0.5);
+  await page.locator('#ep-t-in').fill('Approved ' + (n + 1));
+  await page.locator('#ep-t-ok').click();
+  await page.locator('[data-tool=draw]').click();
+  await dragOnPage(page, n, [0.2, 0.7], [0.6, 0.8]);
+ }
+ const marks = await placed(page);
+ expect(marks.length).toBe(8);
+ for (const [n, area] of [[1, [[0.05, 0.05], [0.9, 0.2]]]]) { await page.locator('#ep-pageno').fill(String(n + 1)); await page.locator('#ep-pageno').press('Enter'); await page.locator('[data-tool=whiteout]').click(); await dragOnPage(page, n, ...area); }
+ await page.locator('#ep-pageno').fill('3'); await page.locator('#ep-pageno').press('Enter');
+ await page.locator('[data-tool=highlight]').click(); await dragOnPage(page, 2, [0.05, 0.05], [0.6, 0.2]);
+ await page.locator('[data-tool=rect]').click(); await dragOnPage(page, 2, [0.3, 0.4], [0.7, 0.7]);
+ await page.locator('#ep-image-in').setInputFiles(fixture('sample.png'));
+ await expect(page.locator('.sg-el')).toHaveCount(12);
+ const buf = await editDownload(page);
+ const facts = await pdfFacts(page, buf);
+ expect(facts.pages).toBe(6);
+ for (const n of [0, 3, 4, 5]) expect(facts.text[n]).toContain('Approved ' + (n + 1));
+ expect(facts.text[1]).toContain('US Letter'); // whiteout covers but doesn't remove (that's what Redact is for)
+ const ink = await inspectSigned(page, buf, marks);
+ for (const b of ink.boxes) { expect(b.inside, `page ${b.page + 1}`).toBeGreaterThan(20); expect(b.control, `page ${b.page + 1}`).toBe(0); }
+});
+
+test('edit PDF: fill in form fields, keep them editable or flatten them', async ({page}) => {
+ await page.goto('/edit-pdf.html');
+ await page.evaluate(async () => {
+  const L = await pdfLib(), d = await L.PDFDocument.create(), p = d.addPage([595, 842]), form = d.getForm(), font = await d.embedFont(L.StandardFonts.Helvetica);
+  p.drawText('Application form', {x: 50, y: 790, size: 18, font});
+  form.createTextField('applicant.name').addToPage(p, {x: 50, y: 700, width: 250, height: 24});
+  form.createCheckBox('agree').addToPage(p, {x: 50, y: 650, width: 16, height: 16});
+  const dd = form.createDropdown('country'); dd.addOptions(['England', 'Scotland', 'Wales']); dd.addToPage(p, {x: 50, y: 600, width: 150, height: 22});
+  const b = new Blob([await d.save()], {type: 'application/pdf'}), dt = new DataTransfer(); dt.items.add(new File([b], 'form.pdf', {type: 'application/pdf'}));
+  const inp = document.querySelector('#ep-in'); inp.files = dt.files; inp.dispatchEvent(new Event('change'));
+ });
+ const readForm = buf => page.evaluate(async b64 => {
+  const L = await pdfLib(), pdf = await L.PDFDocument.load(Uint8Array.from(atob(b64), c => c.charCodeAt(0))), form = pdf.getForm(), fields = form.getFields();
+  if (!fields.length) return {count: 0};
+  return {count: fields.length, name: form.getTextField('applicant.name').getText(), agree: form.getCheckBox('agree').isChecked(), country: form.getDropdown('country').getSelected()[0]};
+ }, buf.toString('base64'));
+ await expect(page.locator('#ep-forms-bar')).toBeVisible();
+ await expect(page.locator('#ep-forms-count')).toContainText('3 form fields');
+ await page.getByLabel('Form field name on page 1').fill('Sam Patel');
+ await page.getByLabel('Form field name on page 1').blur();
+ await page.getByLabel('Form field agree on page 1').check();
+ await page.getByLabel('Form field country on page 1').selectOption('Wales');
+ let buf = await editDownload(page);
+ expect(await readForm(buf)).toEqual({count: 3, name: 'Sam Patel', agree: true, country: 'Wales'});
+ await page.locator('#ep-flatten').check();
+ buf = await editDownload(page);
+ expect((await readForm(buf)).count).toBe(0);
+ expect((await pdfFacts(page, buf)).text[0]).toContain('Sam Patel');
+});
+
+test('edit PDF: undo, redo, keyboard moving and removing', async ({page}) => {
+ await openToEdit(page, 'sign-a4.pdf');
+ await page.locator('[data-tool=whiteout]').click();
+ await dragOnPage(page, 0, [0.1, 0.5], [0.4, 0.6]);
+ await expect(page.locator('.sg-el.ep-whiteout')).toHaveCount(1);
+ const start = (await placed(page))[0];
+ await page.locator('.sg-el').first().focus(); await page.locator('.sg-el').first().press('Shift+ArrowRight');
+ expect((await placed(page))[0].x - start.x).toBeCloseTo(10, 1);
+ await page.locator('.sg-el').first().press('Delete');
+ await expect(page.locator('.sg-el')).toHaveCount(0);
+ await page.locator('#ep-undo').click();
+ await expect(page.locator('.sg-el')).toHaveCount(1);
+ await page.locator('#ep-redo').click();
+ await expect(page.locator('.sg-el')).toHaveCount(0);
+});
+
+test('edit PDF: clear errors, and fits a phone screen', async ({page}) => {
+ await page.goto('/edit-pdf.html');
+ await page.locator('#ep-in').setInputFiles(fixture('sign-locked.pdf'));
+ await expect(page.locator('#ep-msg')).toContainText('password-protected');
+ await page.locator('#ep-in').setInputFiles(fixture('sample.png'));
+ await expect(page.locator('#ep-msg')).toContainText("isn't a PDF");
+ await page.setViewportSize({width: 375, height: 812});
+ await openToEdit(page, 'sign-a4.pdf');
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+ await page.locator('[data-tool=edit]').click();
+ await page.getByRole('button', {name: 'Edit text: Tenancy agreement'}).click();
+ await expect(page.locator('#ep-tdialog')).toBeVisible();
 });

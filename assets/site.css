@@ -717,3 +717,48 @@ input[type=checkbox],input[type=radio]{width:24px;height:24px;margin:0;flex:none
 .loan-early>summary,.aer-conv>summary{cursor:pointer;font-weight:600;padding:12px 0;min-height:44px;display:flex;align-items:center}
 .loan-early[open],.aer-conv[open]{padding-bottom:12px}
 .aer-conv .out{margin-top:12px}
+
+/* ---------- Edit PDF (reuses the Sign PDF viewer: .sg-bar, .sg-page, .sg-layer, .sg-el) ---------- */
+@media(min-width:1000px){body[data-tool="edit-pdf"] .tool-cols{grid-template-columns:minmax(0,1fr)}body[data-tool="edit-pdf"] .tool-aside{display:none}body[data-tool="edit-pdf"] .related-bottom{display:block}}
+.ep-bar .ep-tools{flex-wrap:wrap}
+.ep-bar .ep-tools button[aria-pressed=true]{background:var(--tint);border-color:var(--teal);color:var(--tint-ink)}
+.ep-props{flex-wrap:wrap;gap:8px 12px;align-items:center}
+.ep-prop{display:inline-flex;align-items:center;gap:6px;margin:0;font-size:.85rem;font-weight:600}
+.ep-prop select{width:auto;min-height:36px;padding:4px 8px}
+.ep-prop input[type=color]{width:40px;height:32px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+.ep-for-text,.ep-for-line{display:none}
+.ep-text-props .ep-for-text,.ep-line-props .ep-for-line{display:inline-flex}
+.ep-hint{margin:6px 0 0}
+.ep-forms-bar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;margin:8px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--tint);color:var(--tint-ink);font-size:.9rem}
+.ep-forms-bar .check{margin:0}
+.ep-page .ep-lines,.ep-page .ep-forms{position:absolute;inset:0}
+.ep-page .ep-lines{z-index:1;pointer-events:none}
+.ep-page .sg-layer{z-index:2;pointer-events:none}
+.ep-page .sg-layer .sg-el{pointer-events:auto}
+.ep-page .ep-forms{z-index:3;pointer-events:none}
+.tool .panel .ep-line{position:absolute;pointer-events:auto;background:color-mix(in srgb,var(--teal) 10%,transparent);border:1px dashed color-mix(in srgb,var(--teal) 55%,transparent);border-radius:3px;padding:0;margin:0;min-height:0;cursor:text;box-shadow:none}
+.tool .panel .ep-line:hover,.tool .panel .ep-line:focus-visible{background:color-mix(in srgb,var(--teal) 22%,transparent);border-style:solid;outline:none}
+.tool .panel .ep-field{position:absolute;pointer-events:auto;box-sizing:border-box;margin:0;padding:1px 3px;min-height:0;border:1px solid #6b8ef2;border-radius:2px;background:rgba(214,226,255,.6);color:#111;font:inherit;line-height:1.1;resize:none}
+.tool .panel .ep-field:focus{outline:2px solid var(--teal);background:#fff}
+input.ep-field[type=checkbox],input.ep-field[type=radio]{accent-color:var(--teal)}
+.ep-cover{position:absolute;pointer-events:none}
+.sg-el.ep-redact{background:repeating-linear-gradient(135deg,#000 0 8px,#222 8px 16px)}
+.sg-el.ep-draw svg{display:block;width:100%;height:100%;overflow:visible;pointer-events:none}
+.sg-el.ep-text span{display:block;white-space:pre;pointer-events:none;padding-left:1px}
+.ep-preview{position:absolute;pointer-events:none;border:1.5px dashed var(--teal)}
+.ep-preview.ep-whiteout{background:rgba(255,255,255,.85)}
+.ep-preview.ep-redact{background:rgba(0,0,0,.75)}
+.ep-preview.ep-highlight{background:rgba(255,214,10,.4)}
+.ep-preview.ep-draw{border:0}
+.ep-preview svg{overflow:visible}
+.sg-viewer[data-tool=text],.sg-viewer[data-tool=whiteout],.sg-viewer[data-tool=redact],.sg-viewer[data-tool=highlight],.sg-viewer[data-tool=rect],.sg-viewer[data-tool=draw]{cursor:crosshair}
+.sg-viewer[data-tool=draw] .sg-page{touch-action:none}
+#ep-t-in{width:100%;min-height:72px;font:inherit}
+/* Phones: one scrollable row of tools and a compact style row, so the page stays in view. */
+@media(max-width:700px){
+  .ep-bar .ep-tools{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;width:100%;padding-bottom:4px}
+  .tool .panel .ep-bar .ep-tools button{flex:none;padding:8px 10px;font-size:.82rem;min-height:36px}
+  .ep-props{gap:6px 10px}
+  .ep-prop{font-size:.8rem}
+  .ep-prop select{min-height:32px;padding:2px 6px}
+}
