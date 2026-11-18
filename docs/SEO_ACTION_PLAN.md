@@ -14,16 +14,16 @@ Evidence: `SEO_AUDIT.md`. Query research: `SEO_KEYWORD_MAP.md`. Results: `SEO_PR
 | 1.5 | **Fix `https://www.toolsbravo.com` certificate**: `www` CNAME → `abrar858.github.io` | Owner (DNS) | ⏳ |
 | 1.6 | Resubmit sitemap once (79 URLs vs 69 last read) | Owner (Search Console) | ⏳ |
 | 1.7 | Request indexing for home and Sign PDF | Owner (Search Console) | ⏳ |
-| 1.8 | Bring Automation builder into the shared template (header menu, footer, breadcrumbs) | Claude | Proposed |
+| 1.8 | Bring Automation builder into the shared template (header menu, footer, breadcrumbs) | Claude | ✅ PR (guide, automation, Discord) |
 
 ## Phase 2 — Search opportunities (from autocomplete; refine with Search Console)
 
 | # | Action | Status |
 |---|---|---|
-| 2.1 | Compress PDF: "fit under a size" option (100 KB, 200 KB, 500 KB, 1 MB, 2 MB) and guidance on size limits | PR (search intent) |
-| 2.2 | Image compressor: add 20 KB target | PR (search intent) |
-| 2.3 | Remove duplicate rows: how to do it in Excel itself (Remove Duplicates, shortcut, UNIQUE, Mac) | PR (search intent) |
-| 2.4 | Unix timestamp: Discord timestamp codes | Proposed (small feature) |
+| 2.1 | Compress PDF: "fit under a size" option (100 KB, 200 KB, 500 KB, 1 MB, 2 MB) and guidance on size limits | ✅ Live (#19) |
+| 2.2 | Image compressor: add 20 KB target | ✅ Live (#19) |
+| 2.3 | Remove duplicate rows: how to do it in Excel itself (Remove Duplicates, shortcut, UNIQUE, Mac) | ✅ Live (#19) |
+| 2.4 | Unix timestamp: Discord timestamp codes | ✅ PR (guide, automation, Discord) |
 | 2.5 | Scottish income tax in take-home pay and salary pages | Blocked until 2026/27 Scottish rates are verified from gov.scot / HMRC |
 | 2.6 | Category landing pages (e.g. PDF tools) to replace `/#category` breadcrumb targets — only if each gives real guidance on choosing a tool | Proposed, decide after Search Console data |
 
@@ -32,7 +32,7 @@ Evidence: `SEO_AUDIT.md`. Query research: `SEO_KEYWORD_MAP.md`. Results: `SEO_PR
 Editorial ideas, each must teach something and link to the tool that does it. One at a time, reviewed for accuracy:
 
 1. How to get a PDF under 200 KB (or any upload limit) — after 2.1 ships.
-2. Electronic vs digital signatures: what an e-signature does and doesn't prove (no legal claims beyond general guidance).
+2. ✅ Electronic vs digital signatures — `/electronic-vs-digital-signature.html` (legal points checked against the Law Commission 2019 report, GOV.UK wills guidance, HM Land Registry PG82 and UK eIDAS; marked as general information, not legal advice). Review each spring.
 3. Converting PDF tables to Excel: what works, what doesn't (scans, merged cells).
 4. CSV vs Excel: keeping leading zeros, dates and long numbers intact.
 5. How UK take-home pay is calculated in 2026/27 (already partly on the calculator page — extend there rather than a separate thin page).

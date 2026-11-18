@@ -1575,7 +1575,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
  }},
 {id: "timestamp-converter", cat: "advanced", name: "Unix timestamp converter", desc: "Convert Unix time to dates and back.",
  ui: `<div class="out" style="margin:0 0 20px"><p class="sub">Current Unix time</p><p class="big mono" id="tn" style="font-family:var(--mono)"></p></div>
-  <label for="tu">Unix timestamp (seconds or milliseconds)</label><input id="tu" class="mono" inputmode="numeric"><label for="tu-unit" style="margin-top:12px">Timestamp unit</label><select id="tu-unit"><option value="auto">Auto-detect</option><option value="seconds">Seconds</option><option value="milliseconds">Milliseconds</option></select><div class="btns"><button id="tu-now">Use current time</button></div><p id="tuo" class="note" aria-live="polite"></p>
+  <label for="tu">Unix timestamp (seconds or milliseconds)</label><input id="tu" class="mono" inputmode="numeric"><label for="tu-unit" style="margin-top:12px">Timestamp unit</label><select id="tu-unit"><option value="auto">Auto-detect</option><option value="seconds">Seconds</option><option value="milliseconds">Milliseconds</option></select><div class="btns"><button id="tu-now">Use current time</button></div><p id="tuo" class="note" aria-live="polite"></p><div id="tdc" class="discord-codes" hidden><p class="dc-title">Discord timestamp codes</p><p class="note">Paste a code into a Discord message and everyone sees the time in their own time zone. Previews here are in UK English.</p><div class="table-wrap"><table><thead><tr><th scope="col">Code</th><th scope="col">Style</th><th scope="col">Preview</th><th scope="col"><span class="sr-only">Copy</span></th></tr></thead><tbody></tbody></table></div></div>
   <label for="td" style="margin-top:20px">Date and time</label><input id="td" type="datetime-local" step="1"><label for="td-zone" style="margin-top:12px">Interpret date in</label><select id="td-zone"><option value="local">Your local time zone</option><option value="utc">UTC</option></select><p id="tdo" class="note" aria-live="polite"></p>`,
  init(el) {
   const tick = () => $("#tn", el).textContent = Math.floor(Date.now() / 1000);
@@ -1591,7 +1591,22 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     const d = new Date(ms ? v : v * 1000);
     if (!Number.isFinite(d.getTime())) { o.textContent = "Timestamp is outside the supported date range."; return; }
     o.innerHTML = `Interpreted as ${ms ? "milliseconds" : "seconds"}.<br>Local: <b>${d.toLocaleString("en-GB", {dateStyle:"full",timeStyle:"medium"})}</b><br>UTC (ISO 8601): <b>${d.toISOString()}</b>`;
+    discord(d);
   };
+  // Discord timestamp codes: Discord shows <t:seconds:style> in each reader's own time zone and language.
+  const discord = d => {
+    const s = Math.floor(d.getTime() / 1000), box = $("#tdc", el), gb = (opts) => d.toLocaleString("en-GB", opts);
+    const diff = (d - Date.now()) / 1000, units = [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60], ["second", 1]];
+    const [unit, size] = units.find(([, n]) => Math.abs(diff) >= n) || units[units.length - 1];
+    const rel = new Intl.RelativeTimeFormat("en-GB", {numeric: "auto"}).format(Math.round(diff / size), unit);
+    const styles = [["t", "Short time", gb({hour: "2-digit", minute: "2-digit"})], ["T", "Long time", gb({hour: "2-digit", minute: "2-digit", second: "2-digit"})],
+      ["d", "Short date", gb({day: "2-digit", month: "2-digit", year: "numeric"})], ["D", "Long date", gb({day: "numeric", month: "long", year: "numeric"})],
+      ["f", "Short date and time", gb({day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"})],
+      ["F", "Long date and time", gb({weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"})], ["R", "Relative", rel]];
+    box.hidden = false;
+    $("tbody", box).innerHTML = styles.map(([k, name, preview]) => `<tr><td><code>&lt;t:${s}:${k}&gt;</code></td><td>${name}</td><td>${esc(preview)}</td><td><button type="button" data-code="&lt;t:${s}:${k}&gt;">Copy</button></td></tr>`).join("");
+  };
+  $("#tdc", el).addEventListener("click", e => { const b = e.target.closest("button[data-code]"); if (b) copy(b.dataset.code, b); });
   $("#tu-now", el).onclick = () => { const ms = $("#tu-unit", el).value === "milliseconds"; $("#tu", el).value = ms ? Date.now() : Math.floor(Date.now() / 1000); fromU(); };
   const fromD = () => { const v = $("#td", el).value, o = $("#tdo", el); if (!v) { o.textContent = ""; return; } const utc = $("#td-zone", el).value === "utc", ms = new Date(v + (utc ? "Z" : "")).getTime(); o.textContent = Number.isFinite(ms) ? `Unix time: ${Math.floor(ms / 1000)} seconds · ${ms} milliseconds · ${utc ? "UTC" : "Local time"}` : "Enter a valid date and time."; };
   $("#td-zone", el).addEventListener("change", fromD);

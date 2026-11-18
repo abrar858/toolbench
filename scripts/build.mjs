@@ -72,8 +72,11 @@ ${url ? `<meta property="og:url" content="${url}">\n` : ""}<meta property="og:ti
 <script>try{const t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>`;
 
 // Footer: one link per category, to that category's tools on the home page.
+// Supplementary pages: which category they belong to, and their address.
+const EXTRA_PAGE = {salary: ["finance", "salary-after-tax.html"], automation: ["general", "automation-builder.html"]};
+const catOf = current => EXTRA_PAGE[current]?.[0] || tool(current)?.cat;
 const footCats = current => {
-  const cur = current === "salary" ? "finance" : tool(current)?.cat;
+  const cur = catOf(current);
   return Object.entries(CATS).map(([cat, label]) => {
     const n = TOOLS.filter(t => t.cat === cat).length + (EXTRA_CARDS[cat] || []).length;
     return `<a href="./#${cat}"${cat === cur ? ' class="is-current"' : ""}>${esc(label)} tools <small>${n}</small></a>`;
@@ -95,14 +98,14 @@ const CHEVRON = '<svg class="chev" width="12" height="12" viewBox="0 0 12 12" ar
 const menuItem = (href, icon, name, desc, current) =>
   `<li><a href="${href}"${current ? ' aria-current="page"' : ""}><span class="mm-ico" aria-hidden="true">${esc(icon)}</span><span class="mm-text"><strong>${esc(name)}</strong><small>${esc(desc)}</small></span></a></li>`;
 function siteMenu(current) {
-  const currentCat = current === "salary" ? "finance" : tool(current)?.cat;
+  const currentCat = catOf(current);
   return `<nav class="mega" id="site-menu" aria-label="Tool categories">${Object.entries(CATS).map(([cat, label]) => {
     const list = TOOLS.filter(t => t.cat === cat);
     const items = list.map(t => menuItem(byId.get(t.id).slug, ICONS[t.id] || "•", t.name, t.desc, t.id === current)).join("")
-      + (EXTRA_CARDS[cat] || []).map(x => menuItem(x.href, x.icon, x.name, x.desc, x.href === "salary-after-tax.html" && current === "salary")).join("");
+      + (EXTRA_CARDS[cat] || []).map(x => menuItem(x.href, x.icon, x.name, x.desc, x.href === EXTRA_PAGE[current]?.[1])).join("");
     const count = list.length + (EXTRA_CARDS[cat] || []).length;
     return `<details class="mm${cat === currentCat ? " is-current" : ""}" data-cat="${cat}"><summary>${esc(label)}${CHEVRON}</summary><div class="mm-panel"><div class="mm-intro"><p class="mm-count">${count} tools</p><p class="mm-title">${esc(label)}</p><p class="mm-blurb">${CAT_BLURB[cat]}</p><a class="mm-all" href="./#${cat}">All ${esc(label)} tools <span aria-hidden="true">→</span></a></div><ul class="mm-list" aria-label="${esc(label)} tools">${items}</ul></div></details>`;
-  }).join("")}<a class="mm-link" href="automation-builder.html">Automations</a></nav>`;
+  }).join("")}<a class="mm-link" href="automation-builder.html"${current === "automation" ? ' aria-current="page"' : ""}>Automations</a></nav>`;
 }
 const MENU_BTN = '<button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path class="l1" d="M4 7h16"/><path class="l2" d="M4 12h16"/><path class="l3" d="M4 17h16"/></svg></button>';
 const headerBar = current => `<header class="top">
@@ -387,7 +390,101 @@ const PROSE = [
     <p class="checked">Last updated: November 2026.</p>`},
 ];
 
-const pages = ["", ...TOOL_CONTENT.map(c => c.slug), "salary-after-tax.html", ...SALARIES.map(salarySlug), "automation-builder.html", "about.html", "privacy.html"];
+/* ---------- Automation builder (its app lives in assets/automation.js and assets/automation.css) ---------- */
+function automationPage() {
+  const slug = "automation-builder.html", url = ORIGIN + slug;
+  const trail = [[SITE, "./"], ["General tools", "./#general"], ["Automation builder", slug]];
+  return `${head({title: "Free Text Automation Builder – No-code Workflows | ToolsBravo", ogTitle: "Free Text Automation Builder | ToolsBravo",
+    description: "Chain text steps like find and replace, case changes, JSON formatting, URL and Base64 encoding into a reusable workflow. Free, private, no account.", url})}
+<link rel="stylesheet" href="assets/automation.css">
+${ld(crumbsLd(trail))}
+${ld({"@context": "https://schema.org", "@type": "WebApplication", name: "Automation builder", url, description: "Chain text transformation steps into a reusable workflow that runs in your browser.",
+  applicationCategory: "UtilitiesApplication", operatingSystem: "Any modern web browser", isAccessibleForFree: true, inLanguage: "en-GB",
+  offers: {"@type": "Offer", price: "0", priceCurrency: "GBP"}, publisher: {"@type": "Organization", name: SITE, url: ORIGIN}})}
+</head>
+<body data-tool="automation">
+${headerFor("automation")}
+<main id="app" tabindex="-1">
+<div class="wrap tool">
+  ${crumbs(trail)}
+  ${toolHead({eyebrow: "GENERAL TOOLS", h1: "Automation builder", lede: "Build a workflow from text steps, connect them and run it in your browser. No account, server or subscription."})}
+  <div class="ab">
+${read("scripts/pages/automation-builder.body.html").trim()}
+  </div>
+</div>
+</main>
+${footer("automation")}
+<script src="assets/tools.js"></script>
+<script src="assets/automation.js"></script>
+</body>
+</html>
+`;
+}
+
+/* ---------- Guides: practical explainers that link to the tool that does the job ---------- */
+const GUIDES = [{
+  slug: "electronic-vs-digital-signature.html",
+  title: "Electronic vs Digital Signatures Explained | ToolsBravo",
+  description: "What an electronic signature is, how a certificate-based digital signature differs, when each is accepted in the UK, and how to sign a PDF for free.",
+  h1: "Electronic vs digital signatures",
+  lede: "An electronic signature is any signature added to a document electronically. A digital signature is one particular kind that uses a certificate and cryptography to show who signed and that nothing changed afterwards. Here's what each one does, and when a simple electronic signature is enough.",
+  updated: "2026-11-18", updatedText: "18 November 2026",
+  trail: [["Sign PDF", "sign-pdf.html"]],
+  related: ["sign-pdf", "merge-pdf", "compress-pdf"],
+  sections: [
+    ["The short answer", `<div class="table-wrap"><table><thead><tr><th scope="col"></th><th scope="col">Electronic signature</th><th scope="col">Digital signature</th></tr></thead><tbody>
+<tr><th scope="row">What it is</th><td>A typed name, a drawn or uploaded signature image, a tick box or an “I agree” click</td><td>A cryptographic seal made with a private key and a certificate issued to the signer</td></tr>
+<tr><th scope="row">Shows who signed</th><td>Only through surrounding evidence, such as the email it came from</td><td>The certificate links the signature to an identity, checked to the level the certificate provider promises</td></tr>
+<tr><th scope="row">Shows later changes</th><td>No</td><td>Yes: PDF readers flag the signature as invalid if the document changes after signing</td></tr>
+<tr><th scope="row">What you need</th><td>Any e-signing tool, including <a href="sign-pdf.html">Sign PDF</a></td><td>A digital ID or a signing service that issues certificates</td></tr>
+<tr><th scope="row">Cost</th><td>Usually free</td><td>Often paid, through a certificate or signing-service provider</td></tr>
+</tbody></table></div>`],
+    ["Is an electronic signature valid in the UK?", `<p>For most everyday documents, yes. In England and Wales the Law Commission confirmed in its 2019 report on the <a href="https://www.lawcom.gov.uk/project/electronic-execution-of-documents/">electronic execution of documents</a> that an electronic signature is capable of validly signing a document, including a deed, as long as the person signing intends to authenticate it and any other formalities for that kind of document are met. The Electronic Communications Act 2000 lets electronic signatures be used as evidence, and under UK eIDAS a <em>qualified</em> electronic signature has the same legal effect as a handwritten one.</p><p>Scotland and Northern Ireland have their own rules, and other countries differ, so check if the document is for use elsewhere.</p>`],
+    ["When a simple electronic signature may not be enough", `<ul><li><strong>Wills.</strong> In England and Wales a will must still be signed and witnessed in person. The temporary rule allowing video witnessing ended on 31 January 2024 (<a href="https://www.gov.uk/guidance/guidance-on-making-wills-using-video-conferencing">GOV.UK guidance</a>).</li><li><strong>Deeds that need a witness</strong>, such as some property documents. HM Land Registry only accepts electronic signatures that follow its <a href="https://www.gov.uk/government/publications/electronic-signatures-accepted-by-hm-land-registry-pg82">practice guide 82</a>, usually arranged through a conveyancer.</li><li><strong>The recipient's own rules.</strong> Banks, courts, government departments and overseas organisations may insist on a handwritten signature or a particular kind of digital signature.</li></ul><p>If you're unsure, ask whoever you're sending it to which kind of signature they accept. This page is general information, not legal advice.</p>`],
+    ["What ToolsBravo's Sign PDF does", `<p><a href="sign-pdf.html">Sign PDF</a> adds a simple electronic signature: your drawn, typed or uploaded signature, plus your name, initials or the date, placed onto the pages of the PDF in your browser. The document isn't uploaded anywhere.</p><p>It doesn't create a certificate-based digital signature and it doesn't check who you are. That suits tenancy and consent forms, school forms, quotes, job offers and similar documents, where the other side accepts electronic signatures.</p>`],
+    ["Making a signed PDF more trustworthy", `<ul><li>Send it from your usual email address, so there's a record of who sent it and when.</li><li>Add the date next to your signature.</li><li>Keep a copy of exactly what you sent.</li><li>Remember that anyone with PDF-editing software can change a PDF signed with a picture of a signature. If the other side needs proof that nothing changed, ask them to send it through a service that adds a digital signature.</li></ul>`],
+    ["How to tell if a PDF has a digital signature", `<p>Open it in Adobe Acrobat Reader. A digitally signed PDF shows a banner such as “Signed and all signatures are valid” and lists each signature in the Signatures panel, with the certificate behind it. A signature that is only an image on the page doesn't appear there.</p>`],
+  ],
+  faqs: [
+    ["Is a typed name a legal signature?", "In England and Wales it generally can be, for most everyday documents, if you type it intending to sign. Some documents, such as wills, have stricter rules."],
+    ["Can I sign a PDF without a digital ID?", "Yes. Draw, type or upload your signature with Sign PDF and download the signed copy. You only need a digital ID if the recipient asks for a certificate-based digital signature."],
+    ["Is ToolsBravo's signature a digital signature?", "No. It's a simple electronic signature placed on the page. It doesn't use a certificate or verify your identity."],
+    ["Do I need a witness?", "Only if the document itself requires one, for example a deed or a will. Check with whoever asked you to sign."],
+  ],
+}];
+function guidePage(g) {
+  const url = ORIGIN + g.slug, trail = [[SITE, "./"], ...g.trail, [g.h1, g.slug]], titles = g.sections.map(([t]) => t).concat("Frequently asked questions");
+  return `${head({title: g.title, description: g.description, url})}
+${ld(crumbsLd(trail))}
+${ld({"@context": "https://schema.org", "@type": "Article", headline: g.h1, description: g.description, url, inLanguage: "en-GB", dateModified: g.updated, datePublished: g.updated,
+  author: {"@type": "Organization", name: SITE, url: ORIGIN}, publisher: {"@type": "Organization", name: SITE, url: ORIGIN, logo: {"@type": "ImageObject", url: ORIGIN + "assets/icon-512.png"}}, image: ORIGIN + "assets/og.png"})}
+${ld(faqLd(g.faqs.map(([q, a]) => [q, esc(a)])))}
+</head>
+<body>
+${header}
+<main id="app" tabindex="-1">
+<div class="wrap tool">
+  ${crumbs(trail)}
+  ${toolHead({eyebrow: "GUIDE", h1: esc(g.h1), lede: g.lede, meta: [`Updated ${g.updatedText}`]})}
+  <div class="tool-cols">
+    <article class="guide prose">
+      ${g.sections.map(([t, body]) => h2(t) + body).join("\n      ")}
+      ${h2("Frequently asked questions")}
+      <div class="faq">${g.faqs.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("")}</div>
+      <p class="guide-cta"><a class="btn-primary" href="sign-pdf.html">Sign a PDF now →</a></p>
+    </article>
+    <aside class="tool-aside">${toc(titles)}${asideLinks("Related tools", g.related.map(id => [tool(id).name, byId.get(id).slug]))}</aside>
+  </div>
+</div>
+</main>
+${footer(null)}
+<script src="assets/tools.js"></script>
+</body>
+</html>
+`;
+}
+
+const pages = ["", ...TOOL_CONTENT.map(c => c.slug), "salary-after-tax.html", ...SALARIES.map(salarySlug), "automation-builder.html", ...GUIDES.map(g => g.slug), "about.html", "privacy.html"];
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${pages.map(p => `  <url><loc>${ORIGIN}${p}</loc></url>`).join("\n")}
@@ -407,6 +504,8 @@ const home = read("index.html")
 const outputs = {"sitemap.xml": sitemap, "index.html": home, "404.html": notFound, "salary-after-tax.html": salaryHub()};
 for (const c of TOOL_CONTENT) outputs[c.slug] = toolPage(c);
 for (const p of PROSE) outputs[p.slug] = prosePage(p);
+for (const g of GUIDES) outputs[g.slug] = guidePage(g);
+outputs["automation-builder.html"] = automationPage();
 SALARIES.forEach((g, i) => { outputs[salarySlug(g)] = salaryPage(g, i); });
 
 // Sanity checks that protect search snippets.
@@ -423,7 +522,7 @@ for (const c of TOOL_CONTENT) {
 
 // Cache busting: tag the shared CSS and JS with a hash of their content, so after every
 // deploy browsers fetch the new files instead of pairing new pages with cached old code.
-const VERSIONED = ["assets/tools.js", "assets/site.css", ...new Set(TOOL_CONTENT.map(c => c.script).filter(Boolean))];
+const VERSIONED = ["assets/tools.js", "assets/site.css", "assets/automation.js", "assets/automation.css", ...new Set(TOOL_CONTENT.map(c => c.script).filter(Boolean))];
 const assetVersion = Object.fromEntries(VERSIONED.map(p => [p, createHash("sha256").update(read(p)).digest("hex").slice(0, 10)]));
 const versionedRe = new RegExp(`(${VERSIONED.map(p => p.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")).join("|")})(?:\\?v=[0-9a-f]+)?"`, "g");
 for (const [path, body] of Object.entries(outputs)) {
