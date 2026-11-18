@@ -630,6 +630,10 @@ const TOOLS = [
  init(el) {
   let wb = null, file = null; const go = $("#xc-go", el), msg = $("#xc-msg", el), sel = $("#xc-sheet", el);
   pickOneFile(el, "xc", async f => {
+    // Invalidate the previous workbook before attempting to load a replacement.
+    wb = null; file = null; go.disabled = true; sel.disabled = true;
+    sel.innerHTML = "<option>Choose a file first</option>";
+    $("#xc-out", el).innerHTML = "";
     try { wb = await readBook(f); file = f; fillSheets(sel, wb); sel.disabled = false; go.disabled = false; const p = $("#xc-file", el); p.hidden = false; p.textContent = `${f.name} · ${fsize(f.size)} · ${plural(wb.SheetNames.length, "sheet")}`; $("#xc-out", el).innerHTML = ""; say(msg, "Choose a sheet and separator."); }
     catch (e) { say(msg, e.message, true); }
   });
