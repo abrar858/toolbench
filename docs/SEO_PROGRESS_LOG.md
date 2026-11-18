@@ -2,6 +2,14 @@
 
 Newest first. Record what changed, how it was tested, and what Search Console showed — including "no data yet".
 
+## 2026-11-19 — New tool: Edit PDF
+
+**Research:** Google autocomplete (en-GB) for 22 PDF-editing phrasings: the dominant needs are changing existing text (often "with the same font"), removing it (remove/delete/erase, white out, hide), redaction (redact, black out), adding content (text, images, drawing, highlights), filling forms, and "no sign up / without login". Competitors (iLovePDF, Sejda, Smallpdf, PDF24) upload files and delete them after 1–2 hours; Sejda limits free use; Smallpdf's free plan has no redaction. Vendor sources agree that a box over selectable text is not redaction.
+
+**Built:** `/edit-pdf.html` with `assets/edit-pdf.js`. Edit text (click a line; cover with the sampled background colour and redraw in the closest standard font at the same size, colour and weight), add text, whiteout, true redaction (affected pages redrawn as images with boxes burned in, old content and annotations dropped, file rebuilt from its pages), highlight, box, freehand drawing, images, form filling (editable or flattened). All in the browser.
+
+**Verified:** redacted words are absent from every decoded stream and from text extraction; text and drawings land in place on 0/90/180/270° pages with a crop box; outputs pass MuPDF with no repairs and the strict structure checks (generation 0, one object per number, classic xref), including the previously-edited fixture.
+
 ## 2026-11-19 — Finance pages: early repayment, weekly budgets, AER
 
 **Search Console (owner export, last 24 hours, 18 Nov):** 159 impressions, 0 clicks, average position about 45; 77% UK, 91% desktop. Loan repayment calculator 78 impressions (position 52.8), savings 24 (45.0), CSV to Excel 12 (33.0), Excel to CSV 9 (16.2), budget planner 6 (15.8). Breadcrumbs valid: 24 → 38. The six salary pages missing from the breadcrumb export have the same valid markup as listed ones (processing lag, no change).
