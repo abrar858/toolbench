@@ -191,9 +191,10 @@ ${headerFor(c.id)}
   </div></aside>
   </div>
 </div>
+<div class="wrap"><div data-feedback-widget="${c.slug.replace(/\\.html$/, \"\")}"></div></div>
 </main>
 ${footer(t.id)}
-<script src="assets/tools.js"></script>${c.script ? `\n<script src="${c.script}"></script>` : ""}
+<script src="assets/tools.js"></script><script defer src="assets/feedback.js"></script>${c.script ? `\n<script src="${c.script}"></script>` : ""}
 </body>
 </html>
 `;
