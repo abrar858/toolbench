@@ -2,6 +2,19 @@
 
 Newest first. Record what changed, how it was tested, and what Search Console showed — including "no data yet".
 
+## 2026-11-18 — Guide, Automation builder, Discord codes, IndexNow
+
+**Search Console (owner):** live URL test of the home page passed (indexable, all resources loaded). 16 impressions, 0 clicks in 24 hours. Page-indexing report still processing. `https://www.toolsbravo.com` still fails TLS: DNS now correct (`www` CNAME → `abrar858.github.io`), but the GitHub Pages certificate covers `toolsbravo.com` only — waiting for GitHub to reissue it.
+
+**Changed:**
+- New guide `/electronic-vs-digital-signature.html` (Article, BreadcrumbList, FAQPage markup matching visible content), linked from Sign PDF.
+- Automation builder now generated in the site template: header menu (marked current), breadcrumbs, footer, light/dark theme. Its app code moved to `assets/automation.js` / `assets/automation.css` (versioned). Audit warnings: 1 → 0.
+- Unix timestamp converter: Discord timestamp codes.
+- IndexNow: key file and a workflow that notifies IndexNow engines (Bing and others) of changed pages after each deploy.
+- README, and ready-to-paste directory listings in `docs/LISTINGS.md`.
+
+**Tests:** see the PRs.
+
 ## 2026-11-17 — Baseline and technical audit
 
 **Search Console (owner screenshots, 16–17 Nov):** 14 impressions, 0 clicks in the latest 24 hours (too little data to judge CTR). 33 HTTPS URLs, 0 non-HTTPS. Breadcrumbs: 24 valid, 0 invalid. Sitemap: success, 69 discovered, last read 16 Nov. Page indexing: processing. Core Web Vitals: no data.

@@ -12,6 +12,7 @@ Competition note: brand names of large incumbents (for example "i love pdf", "ad
 | Primary query | Secondary phrasings seen | Intent | Page | Coverage / action |
 |---|---|---|---|---|
 | sign pdf online free | sign pdf online free no account, no sign up, add signature to pdf, sign pdf on iphone | Do | `/sign-pdf.html` | Covered (no account, phone, privacy). Keep. |
+| electronic vs digital signature | is an electronic signature legal uk, digital signature pdf | Learn | `/electronic-vs-digital-signature.html` | Guide; links to Sign PDF |
 | merge pdf | merge pdf files, merge pdf online free, merge pdf and jpg | Do | `/merge-pdf.html` | Covered; images-into-PDF via JPG to PDF is linked. |
 | compress pdf | **compress pdf to 200kb / 100kb / 500kb / 1mb** | Do, to a size limit | `/compress-pdf.html` | **Gap → add "fit under a size" option and guidance** |
 | pdf to jpg | pdf to jpg converter free | Do | `/pdf-to-jpg.html` | Covered |
@@ -53,7 +54,7 @@ Competition note: brand names of large incumbents (for example "i love pdf", "ad
 | json formatter | json formatter and validator | Do | `/json-formatter.html` | Covered |
 | base64 decode | to image, to pdf, to file | Do | `/base64-encoder-decoder.html` | Covered |
 | uuid generator | v4, v7 | Do | `/uuid-generator.html` | Covered |
-| unix timestamp converter | to date, milliseconds, **discord** | Do | `/unix-timestamp-converter.html` | Discord timestamp codes not offered — possible small feature |
+| unix timestamp converter | to date, milliseconds, **discord** | Do | `/unix-timestamp-converter.html` | Covered: Discord `<t:…>` codes with previews and copy buttons |
 | password generator | 12 / 16 characters, words | Do | `/password-generator.html` | Covered (length, passphrases) |
 | word counter | — | Do | `/word-counter.html` | Covered |
 | age calculator | by date of birth | Do | `/age-calculator.html` | Covered |

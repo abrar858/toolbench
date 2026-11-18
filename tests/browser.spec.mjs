@@ -860,3 +860,44 @@ test('image compressor reaches 20 KB for form photos', async ({page}) => {
  const d = await download(page, () => page.locator('#ix-out [data-dl="0"]').click());
  expect((await readDownload(d)).length).toBeLessThanOrEqual(20 * 1024);
 });
+
+/* ---------- Automation builder in the site design, Discord codes, guide ---------- */
+test('automation builder uses the site header, menu and footer and follows the theme', async ({page}) => {
+ const errors = []; page.on('pageerror', e => errors.push(e.message));
+ await page.goto('/automation-builder.html');
+ await expect(page.locator('.site-head #site-menu')).toHaveCount(1);
+ await expect(page.locator('.mm-link[aria-current=page]')).toHaveText('Automations');
+ await expect(page.locator('footer.site-foot .foot-cats a.is-current')).toContainText('General');
+ await expect(page.locator('nav.crumbs')).toContainText('General tools');
+ await expect(page.locator('main h1')).toHaveText('Automation builder');
+ await expect(page.locator('#nodes .graph-node')).toHaveCount(2);
+ const bg = () => page.locator('.ab .graph-node').first().evaluate(n => getComputedStyle(n).backgroundColor);
+ const light = await bg();
+ await page.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
+ expect(await bg()).not.toBe(light);
+ expect(errors).toEqual([]);
+});
+
+test('unix timestamp converter gives Discord timestamp codes', async ({page}) => {
+ await page.goto('/unix-timestamp-converter.html');
+ await page.locator('#tu').fill('1767225600');
+ await expect(page.locator('#tdc')).toBeVisible();
+ await expect(page.locator('#tdc tbody tr')).toHaveCount(7);
+ await expect(page.locator('#tdc code').first()).toHaveText('<t:1767225600:t>');
+ await expect(page.locator('#tdc tbody')).toContainText('<t:1767225600:R>');
+ await expect(page.locator('#tdc tbody')).toContainText('1 January 2026');
+ await page.locator('#tu').fill('1767225600000');
+ await expect(page.locator('#tdc code').first()).toHaveText('<t:1767225600:t>');
+});
+
+test('signature guide is reachable from Sign PDF and links back', async ({page}) => {
+ await page.goto('/sign-pdf.html');
+ await page.locator('a[href="electronic-vs-digital-signature.html"]').click();
+ await expect(page.locator('main h1')).toHaveText('Electronic vs digital signatures');
+ await expect(page.locator('.tool-meta')).toContainText('Updated 18 November 2026');
+ await expect(page.locator('.guide table tbody tr')).toHaveCount(5);
+ for (const width of [1280, 375]) { await page.setViewportSize({width, height: 800}); expect(await page.locator('.guide .table-wrap').evaluate(w => w.scrollWidth <= w.clientWidth + 1), `table fits at ${width}px`).toBe(true); }
+ await expect(page.locator('.faq details')).toHaveCount(4);
+ await page.locator('.guide-cta a').click();
+ await expect(page).toHaveURL(/sign-pdf\.html$/);
+});
