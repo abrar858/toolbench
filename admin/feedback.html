@@ -20,6 +20,6 @@ $('sign-in').addEventListener('submit',async e=>{e.preventDefault();notice('Sign
 $('logout').addEventListener('click',async()=>{await db.auth.signOut();await gate();});
 for(const id of ['category','status-filter'])$(id).addEventListener('change',()=>{page=0;load();});
 $('refresh').addEventListener('click',load);$('previous').addEventListener('click',()=>{page=Math.max(0,page-1);load();});$('next').addEventListener('click',()=>{page++;load();});
-$('export').addEventListener('click',()=>{const columns=['created_at','tool_slug','category','rating','message','status'];const csv=[columns.join(','),...visible.map(row=>columns.map(k=>'"'+String(row[k]??'').replaceAll('"','""')+'"').join(','))].join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='toolsbravo-feedback-page-'+(page+1)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+$('export').addEventListener('click',()=>{const columns=['created_at','tool_slug','category','rating','message','status'];const csv=[columns.join(','),...visible.map(row=>columns.map(k=>'"'+(/^[\\s]*[=+@-]/.test(String(row[k]??''))?"'":"")+String(row[k]??'').replaceAll('"','""')+'"').join(','))].join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='toolsbravo-feedback-page-'+(page+1)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 gate();
 </script></body></html>
