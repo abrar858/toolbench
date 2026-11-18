@@ -137,7 +137,7 @@ const footer = current => `<footer class="site-foot"><div class="wrap">
   <nav class="foot-cats" aria-label="Tool categories">${footCats(current)}</nav>
   <div class="foot-bar">
     <p>© <span id="yr">2026</span> <span class="sn">${SITE}</span> · Finance results are estimates for guidance only, not financial advice.</p>
-    <p class="foot-links"><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="automation-builder.html">Automations</a></p>
+    <p class="foot-links"><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="automation-builder.html">Automations</a><a href="admin/feedback.html">Admin login</a></p>
   </div>
 </div></footer>`;
 
