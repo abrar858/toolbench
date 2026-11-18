@@ -1768,17 +1768,44 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   el.addEventListener("input", run); el.addEventListener("change", run); run();
  }},
 {id: "budget-planner", cat: "finance", name: "50/30/20 budget planner", desc: "Split monthly income into needs, wants and savings.",
- ui: `<div class="row"><div><label for="bi">Take-home pay (£)</label><input id="bi" inputmode="decimal" value="2200"></div><div><label for="bf">Paid</label><select id="bf"><option value="12" selected>Monthly</option><option value="13">Every 4 weeks</option><option value="26">Every 2 weeks (fortnightly)</option><option value="52">Weekly</option><option value="1">Yearly (after tax)</option></select></div></div><div class="out" id="bo"></div>
-  <p class="note">Needs are bills you must pay: rent, council tax, energy, food, transport, minimum debt payments. Wants are everything optional. The last 20% goes to savings or paying debt off faster.</p>`,
+ ui: `<label for="bm">How would you like to enter your income?</label>
+  <select id="bm"><option value="manual">I know my take-home pay</option><option value="hourly">Hourly rate and contracted hours</option><option value="annual">Annual gross salary</option></select>
+  <div id="bmanual" class="row"><div><label for="bi">Take-home pay (£)</label><input id="bi" inputmode="decimal" value="2200"></div><div><label for="bf">Paid</label><select id="bf"><option value="12" selected>Monthly</option><option value="13">Every 4 weeks</option><option value="26">Fortnightly</option><option value="52">Weekly</option><option value="1">Yearly (after tax)</option></select></div></div>
+  <div id="bhourly" hidden><div class="row"><div><label for="br">Hourly rate (£)</label><input id="br" inputmode="decimal" value="12.21"></div><div><label for="bh">Contracted hours</label><input id="bh" inputmode="decimal" value="37.5"></div><div><label for="bp">Hours are per</label><select id="bp"><option value="52">Week</option><option value="12">Month</option></select></div></div></div>
+  <div id="bannual" hidden><label for="bg">Gross annual salary (£)</label><input id="bg" inputmode="decimal" value="30000"></div>
+  <div id="bdeductions" hidden><details><summary>Salary deductions (optional)</summary><label for="bpen">Pension contribution (% of gross pay)</label><input id="bpen" inputmode="decimal" value="0"></details><p class="note">2026/27 estimate for England, Wales and Northern Ireland using the standard personal allowance, employee National Insurance and a net-pay pension arrangement. Excludes Scottish tax, student loans, tax-code adjustments and other payroll deductions. Actual payslips may differ.</p></div>
+  <div class="out" id="bo" aria-live="polite"></div>
+  <p class="note">The 50/30/20 rule is a guideline, not a requirement. Needs include rent, bills, food, transport and minimum debt payments. The last 20% can go to savings or additional debt repayments.</p>`,
  init(el) {
+  const fields = ["bm","bi","bf","br","bh","bp","bg","bpen"].reduce((a, id) => (a[id] = $("#" + id, el), a), {});
+  const o = $("#bo", el);
   const run = () => {
-    const i = num($("#bi", el).value), per = Number($("#bf", el).value), o = $("#bo", el);
-    if (!(i > 0)) return o.innerHTML = `<p class="err">Enter your income after tax.</p>`;
-    // Splits are shown for the period you're paid; other periods use the yearly total (52 weeks, 26 fortnights, 13 four-week periods).
-    const year = i * per, label = {1: "a year", 12: "a month", 13: "every 4 weeks", 26: "a fortnight", 52: "a week"}[per];
-    const split = (amount, what) => `<div class="stats">${stats([[gbp(amount * .5), `Needs (50%) ${what}`], [gbp(amount * .3), `Wants (30%) ${what}`], [gbp(amount * .2), `Savings and debt (20%) ${what}`]])}</div>`;
-    const also = [[12, "a month"], [52, "a week"]].filter(([p]) => p !== per).map(([p, l]) => `${gbp(year / p * .5)} / ${gbp(year / p * .3)} / ${gbp(year / p * .2)} ${l}`);
-    o.innerHTML = split(i, label) + `<p class="note">That's ${gbp(year)} a year after tax. Needs / wants / savings: ${also.join("; ")}.</p>`;
+    const mode = fields.bm.value, manual = mode === "manual", hourly = mode === "hourly";
+    $("#bmanual", el).hidden = !manual;
+    $("#bhourly", el).hidden = !hourly;
+    $("#bannual", el).hidden = mode !== "annual";
+    $("#bdeductions", el).hidden = manual;
+    let year, intro = "";
+    if (manual) {
+      const amount = num(fields.bi.value), periods = Number(fields.bf.value);
+      if (!Number.isFinite(amount) || amount < 0) return o.innerHTML = '<p class="err">Enter a valid take-home pay of zero or more.</p>';
+      year = amount * periods;
+    } else {
+      const pension = num(fields.bpen.value);
+      const rate = num(fields.br.value), hours = num(fields.bh.value);
+      const gross = hourly ? rate * hours * Number(fields.bp.value) : num(fields.bg.value);
+      if (!Number.isFinite(gross) || gross < 0 || (hourly && (!Number.isFinite(rate) || rate < 0 || !Number.isFinite(hours) || hours < 0)) || !Number.isFinite(pension) || pension < 0 || pension > 100)
+        return o.innerHTML = '<p class="err">Enter valid non-negative pay and hours, and a pension percentage from 0 to 100.</p>';
+      const pay = ukPay(gross, pension);
+      year = pay.net;
+      intro = `<p class="big">${gbp(pay.net / 12)} estimated take-home a month</p><p class="sub">Gross annual pay: ${gbp(gross)} · Income Tax: ${gbp(pay.tax)} · Employee NI: ${gbp(pay.ni)} · Pension: ${gbp(pay.pen)} (annual estimates)</p>`;
+    }
+    const periods = manual ? Number(fields.bf.value) : 12;
+    const amount = year / periods;
+    const label = {1:"a year",12:"a month",13:"every 4 weeks",26:"a fortnight",52:"a week"}[periods];
+    const split = (n, suffix) => stats([[gbp(n * .5), "Needs (50%) " + suffix],[gbp(n * .3), "Wants (30%) " + suffix],[gbp(n * .2), "Savings and debt (20%) " + suffix]]);
+    o.innerHTML = intro + '<div class="stats">' + split(amount, label) + '</div>' +
+      `<p class="note">Annual take-home: ${gbp(year)}. Monthly needs / wants / savings: ${gbp(year / 12 * .5)} / ${gbp(year / 12 * .3)} / ${gbp(year / 12 * .2)}. Weekly: ${gbp(year / 52 * .5)} / ${gbp(year / 52 * .3)} / ${gbp(year / 52 * .2)}.</p>`;
   };
   el.addEventListener("input", run); el.addEventListener("change", run); run();
  }}
