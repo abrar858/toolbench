@@ -1349,6 +1349,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   const strength = bits => bits < 40 ? ["Weak", 25, "err"] : bits < 60 ? ["Fair", 50, "mid"] : bits < 80 ? ["Strong", 75, "good"] : ["Very strong", 100, "good"];
   const showAll = (list, bits, note) => {
     last = list;
+    $("#pc", el).disabled = !list.length;
     $("#po", el).innerHTML = list.map(p => `<p class="big mono pw">${esc(p)}</p>`).join("");
     const [label, pct, cls] = strength(bits), m = $("#pmeter", el);
     m.style.width = pct + "%"; m.className = cls;
@@ -1358,7 +1359,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   const genChars = n => {
     const len = +$("#pl", el).value; $("#plv", el).textContent = len;
     const on = Object.keys(sets).filter(k => $("#" + k, el).checked);
-    if (!on.length) { $("#po", el).innerHTML = ""; $("#pst", el).innerHTML = `<span class="err">Tick at least one type of character.</span>`; return; }
+    if (!on.length) { last = []; $("#pc", el).disabled = true; $("#po", el).innerHTML = ""; $("#pmeter", el).style.width = "0%"; $("#pst", el).innerHTML = `<span class="err">Tick at least one type of character.</span>`; return; }
     const active = Object.fromEntries(on.map(k => [k, $("#pa", el).checked ? sets[k].replace(/[Il1O0]/g, "") : sets[k]]));
     const pool = on.map(k => active[k]).join(""), one = () => { let p; do { p = Array.from({length: len}, () => pool[rnd(pool.length)]).join(""); } while (!on.every(k => [...p].some(c => active[k].includes(c)))); return p; };
     showAll(Array.from({length: n}, one), len * Math.log2(pool.length), `${len} characters`);
@@ -1367,7 +1368,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     if (!words) {
       $("#pst", el).textContent = "Loading word list…";
       try { words = (await (await fetch(vendorUrl("eff-wordlist.txt"))).text()).split("\n").map(w => w.trim()).filter(Boolean); }
-      catch { $("#pst", el).innerHTML = `<span class="err">The word list couldn't be loaded. Check your connection and try again.</span>`; return; }
+      catch { last = []; $("#pc", el).disabled = true; $("#po", el).innerHTML = ""; $("#pmeter", el).style.width = "0%"; $("#pst", el).innerHTML = `<span class="err">The word list couldn't be loaded. Check your connection and try again.</span>`; return; }
     }
     const count = +$("#pwn", el).value, sep = $("#pwsep", el).value, cap = $("#pwcap", el).checked, num = $("#pwnum", el).checked;
     const one = () => { const w = Array.from({length: count}, () => { const x = words[rnd(words.length)]; return cap ? x[0].toUpperCase() + x.slice(1) : x; }); if (num) w.splice(rnd(count + 1), 0, String(rnd(100))); return w.join(sep); };
