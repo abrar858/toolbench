@@ -901,3 +901,57 @@ test('signature guide is reachable from Sign PDF and links back', async ({page})
  await page.locator('.guide-cta a').click();
  await expect(page).toHaveURL(/sign-pdf\.html$/);
 });
+
+/* ---------- Finance search intent: early repayment, weekly budgets, AER ----------
+   Expected figures were computed independently with closed-form formulas (not the tools' monthly loops),
+   and are the same figures quoted on the pages. */
+test('loan calculator: lump sum, early settlement and a £30,000 example match independent figures', async ({page}) => {
+ await page.goto('/loan-repayment-calculator.html');
+ await expect(page.locator('#lo .big')).toHaveText('£197.54 a month');
+ await page.locator('.loan-early summary').click();
+ await page.locator('#ll').fill('2000');
+ await page.locator('#llm').fill('12');
+ await expect(page.locator('#lo')).toContainText('cleared in 4 years');
+ await expect(page.locator('#lo')).toContainText('saves £544.78 in interest');
+ await page.locator('#ll').fill('0');
+ await page.locator('#ls').fill('24');
+ await expect(page.locator('#lo .settle')).toContainText('£6,407.12');
+ await expect(page.locator('#lo .settle')).toContainText('£6,477.37');
+ await expect(page.locator('#lo .settle')).toContainText('£634.09');
+ await page.locator('#ls').fill('99');
+ await expect(page.locator('#lo .err')).toContainText('settlement month');
+ await page.locator('#ls').fill('');
+ await page.locator('#la').fill('30000'); await page.locator('#ly').fill('10');
+ await expect(page.locator('#lo .big')).toHaveText('£346.78 a month');
+ await expect(page.locator('#lo')).toContainText('£11,613.75');
+});
+
+test('budget planner splits weekly, fortnightly and monthly pay', async ({page}) => {
+ await page.goto('/budget-planner.html');
+ await expect(page.locator('#bo')).toContainText('£1,100.00');
+ await page.locator('#bf').selectOption('52');
+ await page.locator('#bi').fill('500');
+ await expect(page.locator('#bo .stats')).toContainText('£250.00');
+ await expect(page.locator('#bo .stats')).toContainText('£150.00');
+ await expect(page.locator('#bo .stats')).toContainText('£100.00');
+ await expect(page.locator('#bo')).toContainText('£26,000.00 a year');
+ await expect(page.locator('#bo')).toContainText('£1,083.33 / £650.00 / £433.33 a month');
+ // Fortnightly: the same £500 is now per fortnight, so the split per payday is unchanged and the year halves.
+ await page.locator('#bf').selectOption('26');
+ await expect(page.locator('#bo .stats')).toContainText('Needs (50%) a fortnight');
+ await expect(page.locator('#bo')).toContainText('£13,000.00 a year');
+});
+
+test('savings calculator converts gross rates and AER', async ({page}) => {
+ await page.goto('/savings-calculator.html');
+ await expect(page.locator('#vo .big')).toHaveText('£16,149.84');
+ await page.locator('.aer-conv summary').click();
+ await expect(page.locator('#ao .big')).toHaveText('5.12% AER');
+ await page.locator('#ar').fill('4.5'); await page.locator('#af').selectOption('4');
+ await expect(page.locator('#ao .big')).toHaveText('4.58% AER');
+ await page.locator('#ar').fill('4'); await page.locator('#af').selectOption('12'); await page.locator('#ad').selectOption('aer');
+ await expect(page.locator('#ao .big')).toHaveText('3.93% gross');
+ await page.locator('#af').selectOption('1');
+ await expect(page.locator('#ao .big')).toHaveText('4.00% gross');
+ await expect(page.locator('#vo .big')).toHaveText('£16,149.84');
+});
