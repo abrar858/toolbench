@@ -29,3 +29,5 @@ Project: `egypshduxktdyubwiaoo` (London, Supabase Free). Branch: `feature/tool-f
 - No claim is made that email alerts, screenshots, or automated backup are implemented.
 
 Release gate: the generated site must be committed and all static checks must pass before merging.
+
+Verification: generated pages have been rebuilt on the feature branch and the dedicated Node test suite passed in GitHub Actions.
