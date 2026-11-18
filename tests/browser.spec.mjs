@@ -1150,3 +1150,13 @@ test('feedback widget validates review and submits correct tool slug',async ({pa
  await expect(page.locator('#feedback-status')).toContainText('received');
  expect(payload).toMatchObject({tool_slug:'word-counter',category:'review',rating:5,message:'Useful tool, thank you'});
 });
+
+test('public footer opens admin sign-in on mobile',async ({page})=>{
+ await page.setViewportSize({width:375,height:812});
+ await page.goto('/');
+ const admin=page.locator('footer a[href="admin/feedback.html"]');
+ await expect(admin).toBeVisible();
+ await admin.click();
+ await expect(page).toHaveURL(/\/admin\/feedback\.html$/);
+ await expect(page.locator('#sign-in')).toBeVisible();
+});
