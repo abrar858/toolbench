@@ -33,3 +33,16 @@ jobs:
         run: |
           node scripts/build.mjs --check
           node --test tests/*.test.mjs
+      - name: Verify live feedback endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          endpoint="https://egypshduxktdyubwiaoo.supabase.co/functions/v1/submit-feedback"
+          code=$(curl --retry 2 --retry-delay 2 --max-time 20 -sS -o /tmp/feedback-response -w '%{http_code}' -H 'Origin: https://toolsbravo.com' -H 'Content-Type: application/json' -d '{"tool_slug":"ci-feedback","category":"bug","message":"Automated integration test"}' "$endpoint")
+          cat /tmp/feedback-response
+          test "$code" = 201
+          code=$(curl --max-time 20 -sS -o /tmp/feedback-invalid -w '%{http_code}' -H 'Origin: https://toolsbravo.com' -H 'Content-Type: application/json' -d '{"tool_slug":"bad slug","category":"review","message":"invalid"}' "$endpoint")
+          test "$code" = 400
+          code=$(curl --max-time 20 -sS -o /tmp/feedback-cors -w '%{http_code}' -H 'Origin: https://untrusted.example' -H 'Content-Type: application/json' -d '{"tool_slug":"ci-feedback","category":"bug","message":"Invalid origin test"}' "$endpoint")
+          test "$code" = 403
+
