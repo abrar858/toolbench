@@ -526,7 +526,7 @@ for (const c of TOOL_CONTENT) {
 
 // Cache busting: tag the shared CSS and JS with a hash of their content, so after every
 // deploy browsers fetch the new files instead of pairing new pages with cached old code.
-const VERSIONED = ["assets/tools.js", "assets/site.css", "assets/automation.js", "assets/automation.css", ...new Set(TOOL_CONTENT.map(c => c.script).filter(Boolean))];
+const VERSIONED = ["assets/tools.js", "assets/feedback.js", "assets/site.css", "assets/automation.js", "assets/automation.css", ...new Set(TOOL_CONTENT.map(c => c.script).filter(Boolean))];
 const assetVersion = Object.fromEntries(VERSIONED.map(p => [p, createHash("sha256").update(read(p)).digest("hex").slice(0, 10)]));
 const versionedRe = new RegExp(`(${VERSIONED.map(p => p.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")).join("|")})(?:\\?v=[0-9a-f]+)?"`, "g");
 for (const [path, body] of Object.entries(outputs)) {
