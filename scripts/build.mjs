@@ -132,7 +132,7 @@ const toolHead = ({eyebrow, h1, lede, meta}) => `<header class="tool-head">
 const footer = current => `<footer class="site-foot"><div class="wrap">
   <div class="foot-brand">
     <a class="logo" href="./" aria-label="${SITE} home"><img src="assets/icon.svg" alt="" width="28" height="28" loading="lazy"><span>${SITE}</span></a>
-    <p>Free browser tools for PDFs, Office files, money and code. Tool inputs stay in your browser. Optional feedback is sent securely for review; see our privacy notice.</p>
+    <p>Free browser tools for PDFs, Office files, money and code. Tool inputs stay in your browser; your theme and saved automation workflows may be stored locally. Optional feedback is sent securely for review; see our privacy notice.</p>
   </div>
   <nav class="foot-cats" aria-label="Tool categories">${footCats(current)}</nav>
   <div class="foot-bar">
