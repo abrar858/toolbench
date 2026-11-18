@@ -132,7 +132,7 @@ const toolHead = ({eyebrow, h1, lede, meta}) => `<header class="tool-head">
 const footer = current => `<footer class="site-foot"><div class="wrap">
   <div class="foot-brand">
     <a class="logo" href="./" aria-label="${SITE} home"><img src="assets/icon.svg" alt="" width="28" height="28" loading="lazy"><span>${SITE}</span></a>
-    <p>Free browser tools for PDFs, Office files, money and code. Nothing you add is uploaded; only your theme and saved automation workflows may be stored locally on your device.</p>
+    <p>Free browser tools for PDFs, Office files, money and code. Tool inputs stay in your browser; your theme and saved automation workflows may be stored locally. Optional feedback is sent securely for review; see our privacy notice.</p>
   </div>
   <nav class="foot-cats" aria-label="Tool categories">${footCats(current)}</nav>
   <div class="foot-bar">
@@ -191,9 +191,10 @@ ${headerFor(c.id)}
   </div></aside>
   </div>
 </div>
+<div class="wrap"><div data-feedback-widget="${c.slug.replace(/\.html$/, "")}"></div></div>
 </main>
 ${footer(t.id)}
-<script src="assets/tools.js"></script>${c.script ? `\n<script src="${c.script}"></script>` : ""}
+<script src="assets/tools.js"></script><script defer src="assets/feedback.js"></script>${c.script ? `\n<script src="${c.script}"></script>` : ""}
 </body>
 </html>
 `;
@@ -374,19 +375,19 @@ const PROSE = [
   {slug: "about.html", title: `About ${SITE} | Free, Private Online Tools`, h1: `About ${SITE}`,
     description: `Who makes ${SITE}, how its free calculators and tools work, how results are checked, and how to report a problem.`,
     lede: "Free everyday calculators, text tools, converters and developer utilities that work on phones and computers, with no account, subscription or app to install.",
-    html: `<h2>Private by design</h2><p>The tools run in your browser. What you type into a calculator, text box or converter is processed on your own device and is not uploaded to a ${SITE} server. The site has no accounts, no adverts and no tracking cookies. Fonts and libraries are hosted on ToolsBravo itself, so your browser doesn't contact other companies to use the tools. Read the <a href="privacy.html">privacy notice</a> for details.</p>
+    html: `<h2>Private by design</h2><p>The tools run in your browser. What you type into a calculator, text box or converter is processed on your own device and is not uploaded to a ${SITE} server. Visitors do not need accounts to use the tools; there are no adverts or tracking cookies. Fonts and libraries are hosted on ToolsBravo itself, so your browser doesn't contact other companies to use the tools. Read the <a href="privacy.html">privacy notice</a> for details.</p>
     <h2>How results are checked</h2><p>The source code is public on <a href="https://github.com/abrar858/toolbench">GitHub</a>. Automated tests run on every change. They check the UK income tax and National Insurance figures against worked examples, test that every tool loads without errors, and confirm that worked examples quoted on each page match what the tool calculates.</p>
     <p>UK finance tools use the published rates for the stated tax year. Each finance page shows the date its rates were last checked against GOV.UK guidance. Rates are reviewed each spring before the new tax year starts on 6 April.</p>
     <h2>Limits of the calculators</h2><p>Finance results are estimates for guidance, not financial, tax or legal advice. UK pay estimates use stated assumptions and may not reflect your tax code, region, benefits, pension scheme, student loan or other deductions. Confirm important figures with official guidance, your payslip or a qualified professional. Health tools such as the BMI calculator are screening estimates, not a diagnosis.</p>
     <h2>Report a problem or suggest a tool</h2><p>Found a wrong result, a broken page or a missing tool? Open an issue in the <a href="https://github.com/abrar858/toolbench/issues">${SITE} GitHub repository</a>. Please do not include personal information in public issues.</p>`},
   {slug: "privacy.html", title: `Privacy | ${SITE}`, h1: "Privacy",
-    description: `How ${SITE} handles your data: tools run in your browser, with no accounts, adverts or tracking cookies.`,
-    lede: `${SITE} is designed so the calculations, conversions and text processing in its tools happen in your browser.`,
-    html: `<p>The site does not use accounts, an application database, analytics scripts or advertising trackers.</p>
-    <h2>External services</h2><p>Fonts and code libraries are served from toolsbravo.com itself, so using the tools doesn't connect your browser to Google or other third parties. The site is hosted on GitHub Pages, so GitHub may process technical connection data such as IP addresses and server logs under its policies.</p>
-    <h2>Information you enter</h2><p>Tool inputs are processed in your browser and are not sent to a ${SITE} application server. Avoid entering sensitive information on shared devices. Browser extensions and the device you use may have their own access.</p>
-    <h2>Cookies and local storage</h2><p>${SITE} does not set tracking cookies. Your browser's local storage is used only to remember your light or dark theme choice and, in the automation builder, your saved workflow. Both stay on your device. If advertising, analytics, accounts or other third-party services are introduced, this notice will be updated before launch.</p>
-    <h2>Contact</h2><p>For enquiries, use the project's <a href="https://github.com/abrar858/toolbench">GitHub repository</a>. Do not post personal information in public issues.</p>
+    description: `How ${SITE} handles tool inputs and optional feedback. Tools run in your browser; feedback is sent to our secure provider.`,
+    lede: `${SITE} keeps tool inputs in your browser. Optional feedback is processed separately.`,
+    html: `<p>Calculations, conversions, and files you use with the tools are processed locally in your browser. We do not receive the documents, passwords or calculator values you enter into those tools.</p>
+    <h2>Hosting and external services</h2><p>The website is hosted on GitHub Pages, which may process IP addresses and connection logs. If you choose to send feedback, your browser connects to Supabase (our feedback database and submission provider). The private administrator dashboard loads a JavaScript library from esm.sh when an administrator visits it. We do not use advertising trackers on tool pages.</p>
+    <h2>Optional feedback</h2><p>When you submit a review, bug report or feature request, we collect the selected tool, feedback category, optional rating, message and submission time. Supabase processes your submission. The server uses a temporary hash derived from connection information to limit abuse; the hash is not intended to identify you. We do not ask for your name or email in the feedback form. Please do not include personal, medical or financial information in the message. Submissions are private until reviewed and are not published automatically.</p>
+    <h2>Purpose, retention and requests</h2><p>We use feedback to improve the tools, investigate problems and moderate reviews. We retain submissions while they are needed for those purposes, subject to periodic review; a fixed automatic deletion schedule has not yet been implemented. To request deletion or raise a privacy concern, contact us through the <a href="https://github.com/abrar858/toolbench">project's GitHub repository</a> without posting sensitive details publicly.</p>
+    <h2>Local storage and administrator login</h2><p>On public tool pages, local storage is used only for your theme choice and locally saved automation workflows. The private feedback administrator dashboard uses Supabase Authentication to manage administrator sessions; ordinary visitors do not need an account to submit feedback.</p>
     <p class="checked">Last updated: November 2026.</p>`},
 ];
 
@@ -525,7 +526,7 @@ for (const c of TOOL_CONTENT) {
 
 // Cache busting: tag the shared CSS and JS with a hash of their content, so after every
 // deploy browsers fetch the new files instead of pairing new pages with cached old code.
-const VERSIONED = ["assets/tools.js", "assets/site.css", "assets/automation.js", "assets/automation.css", ...new Set(TOOL_CONTENT.map(c => c.script).filter(Boolean))];
+const VERSIONED = ["assets/tools.js", "assets/feedback.js", "assets/site.css", "assets/automation.js", "assets/automation.css", ...new Set(TOOL_CONTENT.map(c => c.script).filter(Boolean))];
 const assetVersion = Object.fromEntries(VERSIONED.map(p => [p, createHash("sha256").update(read(p)).digest("hex").slice(0, 10)]));
 const versionedRe = new RegExp(`(${VERSIONED.map(p => p.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")).join("|")})(?:\\?v=[0-9a-f]+)?"`, "g");
 for (const [path, body] of Object.entries(outputs)) {

@@ -10,7 +10,7 @@ test('every tool renders without uncaught browser errors', async ({page})=>{
  for(const {slug} of TOOL_CONTENT){
   await page.goto('/'+slug);
   await expect(page.locator('main h1')).toBeVisible();
-  await expect(page.locator('main .panel')).toBeVisible();
+  await expect(page.locator('main .tool-main > section.panel')).toBeVisible();
   await expect(page.locator('main .panel input,main .panel textarea,main .panel select').first()).toBeVisible();
  }
  expect(errors).toEqual([]);
@@ -1131,4 +1131,22 @@ test('edit PDF: clear errors, and fits a phone screen', async ({page}) => {
  await page.locator('[data-tool=edit]').click();
  await page.getByRole('button', {name: 'Edit text: Tenancy agreement'}).click();
  await expect(page.locator('#ep-tdialog')).toBeVisible();
+});
+
+test('feedback widget validates review and submits correct tool slug',async ({page})=>{
+ let payload;
+ await page.route('**/functions/v1/submit-feedback',async route=>{
+   const headers={'access-control-allow-origin':route.request().headers()['origin']||'*','access-control-allow-headers':'content-type','access-control-allow-methods':'POST, OPTIONS'};
+   if(route.request().method()==='OPTIONS')return route.fulfill({status:204,headers});
+   payload=route.request().postDataJSON();
+   await route.fulfill({status:201,headers,contentType:'application/json',body:JSON.stringify({ok:true})});
+ });
+ await page.goto('/word-counter.html');
+ await expect(page.locator('#feedback-heading')).toBeVisible();
+ await page.locator('#feedback-message').fill('Useful tool, thank you');
+ await expect(page.locator('#feedback-rating')).toHaveAttribute('required','');
+ await page.locator('#feedback-rating').selectOption('5');
+ await page.locator('#tool-feedback-form button[type="submit"]').click();
+ await expect(page.locator('#feedback-status')).toContainText('received');
+ expect(payload).toMatchObject({tool_slug:'word-counter',category:'review',rating:5,message:'Useful tool, thank you'});
 });
