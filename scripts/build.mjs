@@ -496,7 +496,10 @@ ${pages.map(p => `  <url><loc>${ORIGIN}${p}</loc></url>`).join("\n")}
 const homeCtx = {document: {title: "", querySelector: () => ({content: "", textContent: "", dataset: {}}), querySelectorAll: () => []}, window: {}, navigator: {}};
 vm.createContext(homeCtx);
 vm.runInContext(js.slice(0, js.indexOf("function showHome(")) + ";globalThis.HOME = homeHTML();", homeCtx);
+// Every tool card on the home page: core tools plus the extra cards (salary table, automation builder).
+const TOOL_COUNT = TOOLS.length + Object.values(EXTRA_CARDS).flat().length;
 const home = read("index.html")
+  .replace(/content="\d+ free online tools/, () => `content="${TOOL_COUNT} free online tools`)
   .replace(/<header class="top">[\s\S]*?<\/header>/, () => headerBar(null))
   .replace(/<main id="app" tabindex="-1">[\s\S]*?<\/main>/, () => `<main id="app" tabindex="-1">${homeCtx.HOME}</main>`)
   .replace(/<footer[\s\S]*?<\/footer>/, () => footer(null));
