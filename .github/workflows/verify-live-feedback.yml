@@ -1,0 +1,28 @@
+name: Verify ToolsBravo feedback production
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Verify live feedback pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          sleep 25
+          for attempt in $(seq 1 12); do
+            if curl --max-time 20 --retry 2 -fsSL "https://toolsbravo.com/word-counter.html" -o /tmp/tool-page && grep -q 'data-feedback-widget="word-counter"' /tmp/tool-page && grep -q 'assets/feedback.js' /tmp/tool-page; then break; fi
+            sleep 15
+          done
+          grep -q 'data-feedback-widget="word-counter"' /tmp/tool-page
+          grep -q 'assets/feedback.js' /tmp/tool-page
+          curl --max-time 20 -fsSL 'https://toolsbravo.com/admin/feedback.html' -o /tmp/admin-page
+          grep -q 'feedback_admins' /tmp/admin-page
+          curl --max-time 20 -fsSL 'https://toolsbravo.com/privacy.html' -o /tmp/privacy-page
+          grep -q 'Optional feedback' /tmp/privacy-page
+          echo "Production feedback pages verified."
