@@ -1662,22 +1662,45 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
  }},
 {id: "loan-calculator", cat: "finance", name: "Loan repayment calculator", desc: "Monthly payment, total interest, repayment schedule and overpayments.",
  ui: `<div class="row"><div><label for="la">Amount borrowed (£)</label><input id="la" inputmode="decimal" value="10000"></div><div><label for="lr">Interest rate (APR %)</label><input id="lr" inputmode="decimal" value="6.9"></div></div>
-  <div class="row"><div><label for="ly">Years</label><input id="ly" type="number" min="0" value="5"></div><div><label for="lm">Extra months</label><input id="lm" type="number" min="0" max="11" value="0"></div><div><label for="lx">Overpay each month (£, optional)</label><input id="lx" inputmode="decimal" value="0"></div></div><div class="out" id="lo"></div>`,
+  <div class="row"><div><label for="ly">Years</label><input id="ly" type="number" min="0" value="5"></div><div><label for="lm">Extra months</label><input id="lm" type="number" min="0" max="11" value="0"></div><div><label for="lx">Overpay each month (£, optional)</label><input id="lx" inputmode="decimal" value="0"></div></div>
+  <details class="loan-early"><summary>Pay off early: lump sum or full settlement</summary>
+  <div class="row"><div><label for="ll">One-off lump sum (£)</label><input id="ll" inputmode="decimal" value="0"></div><div><label for="llm">Paid after month</label><input id="llm" type="number" min="1" value="12"></div><div><label for="ls">Settle in full after month (optional)</label><input id="ls" type="number" min="1" placeholder="e.g. 24"></div></div>
+  <p class="note">A lump sum lowers the balance and keeps the same monthly payment, so the loan ends sooner. Settling estimates what you'd still owe after that month's payment, and what you'd avoid paying.</p></details><div class="out" id="lo"></div>`,
  init(el) {
   let sched = [];
   const run = () => {
     const P = num($("#la", el).value), apr = num($("#lr", el).value), r = apr / 1200, years = Number($("#ly", el).value), months = Number($("#lm", el).value), n = years * 12 + months, o = $("#lo", el), extra = num($("#lx", el).value) || 0;
     if (!(P > 0) || !Number.isFinite(apr) || apr < 0 || !Number.isInteger(years) || years < 0 || !Number.isInteger(months) || months < 0 || months > 11 || !(n > 0) || n > 1200) return o.innerHTML = `<p class="err">Enter a positive amount, non-negative APR, and a term of 1–1,200 months (extra months 0–11).</p>`;
     if (extra < 0) return o.innerHTML = `<p class="err">Overpayments can't be negative.</p>`;
+    const lump = num($("#ll", el).value) || 0, lumpAt = Number($("#llm", el).value), settleRaw = $("#ls", el).value.trim(), settleAt = settleRaw ? Number(settleRaw) : 0;
+    if (lump < 0) return o.innerHTML = `<p class="err">The lump sum can't be negative.</p>`;
+    if (lump > 0 && !(Number.isInteger(lumpAt) && lumpAt >= 1 && lumpAt <= n)) return o.innerHTML = `<p class="err">Enter the month of the lump sum as a whole number from 1 to ${n}.</p>`;
+    if (settleRaw && !(Number.isInteger(settleAt) && settleAt >= 1 && settleAt <= n)) return o.innerHTML = `<p class="err">Enter the settlement month as a whole number from 1 to ${n}.</p>`;
     const pay = r ? P * r / (1 - Math.pow(1 + r, -n)) : P / n;
-    // Month-by-month schedule, including any overpayment.
+    // Month-by-month schedule, including any regular overpayment and a one-off lump sum paid after that month's payment.
     sched = []; let bal = P, paidInt = 0;
-    for (let m = 1; bal > 0.005 && m <= n; m++) { const i = bal * r, due = Math.min(bal + i, pay + extra); bal = bal + i - due; paidInt += i; sched.push({m, pay: due, interest: i, principal: due - i, bal: Math.max(0, bal)}); }
+    for (let m = 1; bal > 0.005 && m <= n; m++) {
+      const i = bal * r; let due = Math.min(bal + i, pay + extra);
+      if (lump > 0 && m === lumpAt) due = Math.min(bal + i, due + lump);
+      bal = bal + i - due; paidInt += i; sched.push({m, pay: due, interest: i, principal: due - i, bal: Math.max(0, bal)});
+    }
     const months_ = sched.length, totalPaid = sched.reduce((t, x) => t + x.pay, 0), years_ = [];
     for (let y = 0; y * 12 < months_; y++) { const rows = sched.slice(y * 12, y * 12 + 12); years_.push({y: y + 1, pay: rows.reduce((t, x) => t + x.pay, 0), interest: rows.reduce((t, x) => t + x.interest, 0), principal: rows.reduce((t, x) => t + x.principal, 0), bal: rows[rows.length - 1].bal}); }
-    const saving = extra > 0 ? `<p class="note ok-msg">Overpaying ${gbp(extra)} a month clears it ${dur(n - months_)} sooner and saves ${gbp(pay * n - P - paidInt)} in interest.</p>` : "";
-    o.innerHTML = `<p class="big">${gbp(pay)} a month</p><p class="sub">for ${dur(n)}${extra > 0 ? `, or ${gbp(pay + extra)} with your overpayment, cleared in ${dur(months_)}` : ""}</p>
-      <div class="stats" style="margin-top:14px">${stats([[gbp(extra > 0 ? totalPaid : pay * n), "Total repaid"], [gbp(extra > 0 ? paidInt : pay * n - P), "Total interest"]])}</div>${saving}
+    const over = extra > 0 || lump > 0, what = [extra > 0 ? `overpaying ${gbp(extra)} a month` : "", lump > 0 ? `a ${gbp(lump)} lump sum after month ${lumpAt}` : ""].filter(Boolean).join(" and ");
+    const saving = over ? `<p class="note ok-msg">${what[0].toUpperCase() + what.slice(1)} clears it ${dur(n - months_)} sooner and saves ${gbp(pay * n - P - paidInt)} in interest.</p>` : "";
+    // Settling in full after a given month: the balance left then, the interest still to come, and the extra
+    // interest a UK lender may add (up to 58 days on most personal loans; the lender's settlement figure is exact).
+    let settle = "";
+    if (settleAt) {
+      if (settleAt >= months_) settle = `<p class="note">The loan is already cleared by month ${months_}, so there's nothing left to settle after month ${settleAt}.</p>`;
+      else {
+        const left = sched[settleAt - 1].bal, future = sched.slice(settleAt).reduce((t, x) => t + x.interest, 0), extraInt = left * (apr / 100) * 58 / 365;
+        settle = `<div class="settle"><p class="sub" style="margin:14px 0 6px"><strong>Settling in full after month ${settleAt}</strong></p><div class="stats">${stats([[gbp(left), "Balance left"], [gbp(left + extraInt), "Settlement, with up to 58 days' interest"], [gbp(Math.max(0, future - extraInt)), "Interest saved, at least"]])}</div>
+          <p class="note">Lenders can usually add up to 58 days' interest when you settle, and some fixed-rate loans have a small fee. Ask your lender for a settlement figure: that's the exact amount.</p></div>`;
+      }
+    }
+    o.innerHTML = `<p class="big">${gbp(pay)} a month</p><p class="sub">for ${dur(n)}${over ? `, cleared in ${dur(months_)} with ${what}` : ""}</p>
+      <div class="stats" style="margin-top:14px">${stats([[gbp(over ? totalPaid : pay * n), "Total repaid"], [gbp(over ? paidInt : pay * n - P), "Total interest"]])}</div>${saving}${settle}
       <details class="schedule"><summary>Repayment schedule by year</summary><div class="tablewrap"><table><tr><th>Year</th><th>Paid</th><th>Interest</th><th>Capital</th><th>Balance left</th></tr>${years_.map(x => `<tr><th scope="row">${x.y}</th><td>${gbp(x.pay)}</td><td>${gbp(x.interest)}</td><td>${gbp(x.principal)}</td><td>${gbp(x.bal)}</td></tr>`).join("")}</table></div>
       <div class="btns"><button type="button" id="l-csv">Download monthly schedule (CSV)</button></div></details>`;
     $("#l-csv", o).onclick = () => saveBlob(new Blob(["﻿Month,Payment,Interest,Capital,Balance\n" + sched.map(x => [x.m, x.pay, x.interest, x.principal, x.bal].map(v => typeof v === "number" && !Number.isInteger(v) ? v.toFixed(2) : v).join(",")).join("\n")], {type: "text/csv"}), "loan-schedule.csv");
@@ -1686,7 +1709,10 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
  }},
 {id: "savings-calculator", cat: "finance", name: "Savings calculator", desc: "See how regular saving and compound interest grow.",
  ui: `<div class="row"><div><label for="vs">Starting amount (£)</label><input id="vs" inputmode="decimal" value="1000"></div><div><label for="vm">Monthly deposit (£)</label><input id="vm" inputmode="decimal" value="100"></div></div>
-  <div class="row"><div><label for="vr">Interest rate (AER %)</label><input id="vr" inputmode="decimal" value="4"></div><div><label for="vy">Years</label><input id="vy" type="number" min="1" max="50" value="10"></div></div><div class="out" id="vo"></div>`,
+  <div class="row"><div><label for="vr">Interest rate (AER %)</label><input id="vr" inputmode="decimal" value="4"></div><div><label for="vy">Years</label><input id="vy" type="number" min="1" max="50" value="10"></div></div><div class="out" id="vo"></div>
+  <details class="aer-conv"><summary>AER calculator: convert a gross rate to AER, or back</summary>
+  <div class="row"><div><label for="ar">Rate (%)</label><input id="ar" inputmode="decimal" value="5"></div><div><label for="af">Interest paid</label><select id="af"><option value="12" selected>Monthly</option><option value="4">Quarterly</option><option value="2">Twice a year</option><option value="1">Yearly</option><option value="365">Daily</option></select></div><div><label for="ad">This rate is</label><select id="ad"><option value="gross" selected>The gross rate</option><option value="aer">The AER</option></select></div></div>
+  <div class="out" id="ao"></div><p class="note">AER = (1 + gross rate ÷ payments a year)<sup>payments a year</sup> − 1. Banks show both: the gross rate is what's paid each time, the AER lets you compare accounts that pay at different frequencies.</p></details>`,
  init(el) {
   const run = () => {
     const s = num($("#vs", el).value), d = num($("#vm", el).value), y = Number($("#vy", el).value), aer = num($("#vr", el).value), o = $("#vo", el);
@@ -1698,7 +1724,21 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     o.innerHTML = `<p class="big">${gbp(bal)}</p><p class="sub">after ${plural(y, "year")}: ${gbp(dep)} paid in and ${gbp(bal - dep)} interest</p>
       <div class="tablewrap" style="margin-top:14px"><table><tr><th></th><th>Paid in</th><th>Interest</th><th>Balance</th></tr>${rows}</table></div>`;
   };
-  el.addEventListener("input", run); run();
+  // Gross rate <-> AER for a given number of interest payments a year.
+  const conv = () => {
+    const rate = num($("#ar", el).value), n = Number($("#af", el).value), fromGross = $("#ad", el).value === "gross", o = $("#ao", el);
+    if (!Number.isFinite(rate) || rate <= -100 || rate > 1000) return o.innerHTML = `<p class="err">Enter a rate between -100% and 1,000%.</p>`;
+    const pct = v => `${v.toLocaleString("en-GB", {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
+    const freq = {12: "monthly", 4: "quarterly", 2: "twice a year", 1: "yearly", 365: "daily"}[n];
+    if (fromGross) {
+      const aer = (Math.pow(1 + rate / 100 / n, n) - 1) * 100;
+      o.innerHTML = `<p class="big">${pct(aer)} AER</p><p class="sub">${pct(rate)} gross, paid ${freq}. £10,000 earns about ${gbp(10000 * aer / 100)} in a year.</p>`;
+    } else {
+      const gross = (Math.pow(1 + rate / 100, 1 / n) - 1) * n * 100;
+      o.innerHTML = `<p class="big">${pct(gross)} gross</p><p class="sub">paid ${freq}, for ${pct(rate)} AER. £10,000 earns about ${gbp(10000 * rate / 100)} in a year.</p>`;
+    }
+  };
+  el.addEventListener("input", e => (e.target.closest(".aer-conv") ? conv : run)()); el.addEventListener("change", conv); run(); conv();
  }},
 {id: "debt-payoff", cat: "finance", name: "Debt payoff calculator", desc: "How long until a card or loan is cleared, and the interest cost.",
  ui: `<div class="row"><div><label for="db">Balance owed (£)</label><input id="db" inputmode="decimal" value="3000"></div><div><label for="dr">Interest rate (APR %)</label><input id="dr" inputmode="decimal" value="24.9"></div><div><label for="dp">Monthly payment (£)</label><input id="dp" inputmode="decimal" value="150"></div></div><div class="out" id="do"></div>`,
@@ -1728,15 +1768,19 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   el.addEventListener("input", run); el.addEventListener("change", run); run();
  }},
 {id: "budget-planner", cat: "finance", name: "50/30/20 budget planner", desc: "Split monthly income into needs, wants and savings.",
- ui: `<div class="row"><div><label for="bi">Monthly take-home pay (£)</label><input id="bi" inputmode="decimal" value="2200"></div></div><div class="out" id="bo"></div>
+ ui: `<div class="row"><div><label for="bi">Take-home pay (£)</label><input id="bi" inputmode="decimal" value="2200"></div><div><label for="bf">Paid</label><select id="bf"><option value="12" selected>Monthly</option><option value="13">Every 4 weeks</option><option value="26">Every 2 weeks (fortnightly)</option><option value="52">Weekly</option><option value="1">Yearly (after tax)</option></select></div></div><div class="out" id="bo"></div>
   <p class="note">Needs are bills you must pay: rent, council tax, energy, food, transport, minimum debt payments. Wants are everything optional. The last 20% goes to savings or paying debt off faster.</p>`,
  init(el) {
   const run = () => {
-    const i = num($("#bi", el).value), o = $("#bo", el);
-    if (!(i > 0)) return o.innerHTML = `<p class="err">Enter your monthly income after tax.</p>`;
-    o.innerHTML = `<div class="stats">${stats([[gbp(i * .5), "Needs (50%)"], [gbp(i * .3), "Wants (30%)"], [gbp(i * .2), "Savings and debt (20%)"]])}</div>`;
+    const i = num($("#bi", el).value), per = Number($("#bf", el).value), o = $("#bo", el);
+    if (!(i > 0)) return o.innerHTML = `<p class="err">Enter your income after tax.</p>`;
+    // Splits are shown for the period you're paid; other periods use the yearly total (52 weeks, 26 fortnights, 13 four-week periods).
+    const year = i * per, label = {1: "a year", 12: "a month", 13: "every 4 weeks", 26: "a fortnight", 52: "a week"}[per];
+    const split = (amount, what) => `<div class="stats">${stats([[gbp(amount * .5), `Needs (50%) ${what}`], [gbp(amount * .3), `Wants (30%) ${what}`], [gbp(amount * .2), `Savings and debt (20%) ${what}`]])}</div>`;
+    const also = [[12, "a month"], [52, "a week"]].filter(([p]) => p !== per).map(([p, l]) => `${gbp(year / p * .5)} / ${gbp(year / p * .3)} / ${gbp(year / p * .2)} ${l}`);
+    o.innerHTML = split(i, label) + `<p class="note">That's ${gbp(year)} a year after tax. Needs / wants / savings: ${also.join("; ")}.</p>`;
   };
-  el.addEventListener("input", run); run();
+  el.addEventListener("input", run); el.addEventListener("change", run); run();
  }}
 ];
 

@@ -43,7 +43,9 @@ Competition note: brand names of large incumbents (for example "i love pdf", "ad
 | salary after tax uk | salary after tax uk table, monthly | Know | `/salary-after-tax.html` | Covered (table) |
 | £30,000 after tax uk | per month, and NI | Know | `/30000-after-tax.html` (and 27 others) | Covered; one page per salary, distinct figures |
 | vat calculator uk | — | Do | `/vat-calculator.html` | Covered |
-| loan repayment calculator uk | with extra payments | Do | `/loan-repayment-calculator.html` | Covered; title now says "With Overpayments" |
+| 50 30 20 budget calculator | **weekly** (Search Console) | Do | `/budget-planner.html` | Pay frequency incl. weekly and fortnightly |
+| savings calculator uk | **aer calculator**, compound interest (Search Console) | Do | `/savings-calculator.html` | Gross ↔ AER converter |
+| loan repayment calculator uk | with extra payments; **loan early repayment calculator, estimate early loan payoff, 30000 loan over 10 years** (Search Console) | Do | `/loan-repayment-calculator.html` | Overpayments, lump sum, settlement estimate, £30k example |
 | working days calculator uk | 2026, bank holidays | Do | `/date-difference-calculator.html` | Covered |
 
 ## General and developer

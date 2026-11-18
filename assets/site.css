@@ -711,3 +711,9 @@ input[type=checkbox],input[type=radio]{width:24px;height:24px;margin:0;flex:none
 .guide .table-wrap thead th{font-weight:700;color:var(--ink)}
 .guide .table-wrap th[scope=row]{width:24%;white-space:normal;font-weight:600;color:var(--ink)}
 @media(max-width:560px){.guide .table-wrap table{font-size:.85rem}.guide .table-wrap th,.guide .table-wrap td{padding:8px 6px}}
+
+/* Finance tools: optional sections (loan early repayment, AER converter) */
+.loan-early,.aer-conv{margin:14px 0 4px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:var(--field)}
+.loan-early>summary,.aer-conv>summary{cursor:pointer;font-weight:600;padding:12px 0;min-height:44px;display:flex;align-items:center}
+.loan-early[open],.aer-conv[open]{padding-bottom:12px}
+.aer-conv .out{margin-top:12px}

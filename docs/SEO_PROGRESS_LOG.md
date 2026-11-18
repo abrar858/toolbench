@@ -2,6 +2,20 @@
 
 Newest first. Record what changed, how it was tested, and what Search Console showed — including "no data yet".
 
+## 2026-11-19 — Finance pages: early repayment, weekly budgets, AER
+
+**Search Console (owner export, last 24 hours, 18 Nov):** 159 impressions, 0 clicks, average position about 45; 77% UK, 91% desktop. Loan repayment calculator 78 impressions (position 52.8), savings 24 (45.0), CSV to Excel 12 (33.0), Excel to CSV 9 (16.2), budget planner 6 (15.8). Breadcrumbs valid: 24 → 38. The six salary pages missing from the breadcrumb export have the same valid markup as listed ones (processing lag, no change).
+
+**Gaps found (page vs query):** "loan early repayment calculator" / "estimate early loan payoff": no lump sum or settlement. "50 30 20 budget calculator weekly": monthly only. "aer calculator": no gross ↔ AER conversion.
+
+**Changed (PR: finance search intent):**
+- Loan: one-off lump sum after a chosen month; "settle in full after month N" with the balance left, a settlement estimate including up to 58 days of interest, and the minimum interest saved; £30,000 over 10 years example; early-settlement guidance (Early Settlement Regulations 2004). Title "Loan Repayment & Early Payoff Calculator UK".
+- Budget: pay frequency (weekly, fortnightly, 4-weekly, monthly, yearly) with monthly and weekly equivalents; weekly worked example. Title names weekly pay.
+- Savings: gross rate ↔ AER converter (monthly, quarterly, twice yearly, yearly, daily); AER explanation with examples. Title names AER.
+- Every figure quoted on these pages was computed with closed-form formulas and is asserted against the tools in browser tests.
+
+**Measure:** 28-day positions for these pages and queries against the 18 Nov baseline (loan 52.8, budget 15.8, savings 45.0). Not before mid-December.
+
 ## 2026-11-18 — Guide, Automation builder, Discord codes, IndexNow
 
 **Search Console (owner):** live URL test of the home page passed (indexable, all resources loaded). 16 impressions, 0 clicks in 24 hours. Page-indexing report still processing. `https://www.toolsbravo.com` still fails TLS: DNS now correct (`www` CNAME → `abrar858.github.io`), but the GitHub Pages certificate covers `toolsbravo.com` only — waiting for GitHub to reissue it.

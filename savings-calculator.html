@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Savings Calculator UK – Compound Interest Growth | ToolsBravo</title>
-<meta name="description" content="See how a starting amount and monthly deposits grow with compound interest over 1 to 50 years, with a year-by-year table. Free UK savings calculator.">
+<title>Savings &amp; AER Calculator UK – Compound Interest | ToolsBravo</title>
+<meta name="description" content="See how savings and monthly deposits grow with compound interest, year by year, and convert a gross interest rate to AER. Free UK savings calculator.">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="https://toolsbravo.com/savings-calculator.html">
 <meta name="theme-color" content="#0B2545">
@@ -12,8 +12,8 @@
 <meta property="og:site_name" content="ToolsBravo">
 <meta property="og:locale" content="en_GB">
 <meta property="og:url" content="https://toolsbravo.com/savings-calculator.html">
-<meta property="og:title" content="Savings Calculator UK – Compound Interest Growth">
-<meta property="og:description" content="See how a starting amount and monthly deposits grow with compound interest over 1 to 50 years, with a year-by-year table. Free UK savings calculator.">
+<meta property="og:title" content="Savings &amp; AER Calculator UK – Compound Interest">
+<meta property="og:description" content="See how savings and monthly deposits grow with compound interest, year by year, and convert a gross interest rate to AER. Free UK savings calculator.">
 <meta property="og:image" content="https://toolsbravo.com/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -24,11 +24,11 @@
 <link rel="manifest" href="site.webmanifest">
 <link rel="preload" href="assets/fonts/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=ec415cb8be">
+<link rel="stylesheet" href="assets/site.css?v=aa6785663a">
 <script>try{const t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Savings calculator","url":"https://toolsbravo.com/savings-calculator.html","description":"See how a starting amount and monthly deposits grow with compound interest over 1 to 50 years, with a year-by-year table. Free UK savings calculator.","applicationCategory":"FinanceApplication","operatingSystem":"Any modern web browser","isAccessibleForFree":true,"inLanguage":"en-GB","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"},"publisher":{"@type":"Organization","name":"ToolsBravo","url":"https://toolsbravo.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Savings calculator","url":"https://toolsbravo.com/savings-calculator.html","description":"See how savings and monthly deposits grow with compound interest, year by year, and convert a gross interest rate to AER. Free UK savings calculator.","applicationCategory":"FinanceApplication","operatingSystem":"Any modern web browser","isAccessibleForFree":true,"inLanguage":"en-GB","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"},"publisher":{"@type":"Organization","name":"ToolsBravo","url":"https://toolsbravo.com/"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ToolsBravo","item":"https://toolsbravo.com/"},{"@type":"ListItem","position":2,"name":"Finance tools","item":"https://toolsbravo.com/#finance"},{"@type":"ListItem","position":3,"name":"Savings calculator","item":"https://toolsbravo.com/savings-calculator.html"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is AER?","acceptedAnswer":{"@type":"Answer","text":"The annual equivalent rate shows what you would earn in a year with interest compounded, so accounts that pay interest at different frequencies can be compared fairly."}},{"@type":"Question","name":"How much will £100 a month grow to?","acceptedAnswer":{"@type":"Answer","text":"At 4% AER with £1,000 to start, about £16,150 after 10 years. Enter your own figures to see your result."}},{"@type":"Question","name":"Does the calculator include tax?","acceptedAnswer":{"@type":"Answer","text":"No. It shows growth before any tax on interest."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is AER?","acceptedAnswer":{"@type":"Answer","text":"The annual equivalent rate shows what you would earn in a year with interest compounded, so accounts that pay interest at different frequencies can be compared fairly."}},{"@type":"Question","name":"How do I convert a gross rate to AER?","acceptedAnswer":{"@type":"Answer","text":"Open AER calculator, enter the gross rate and how often interest is paid. For example, 5% gross paid monthly is 5.12% AER."}},{"@type":"Question","name":"How much will £100 a month grow to?","acceptedAnswer":{"@type":"Answer","text":"At 4% AER with £1,000 to start, about £16,150 after 10 years. Enter your own figures to see your result."}},{"@type":"Question","name":"Does the calculator include tax?","acceptedAnswer":{"@type":"Answer","text":"No. It shows growth before any tax on interest."}}]}</script>
 </head>
 <body data-tool="savings-calculator">
 <a class="skip-link" href="#app">Skip to content</a>
@@ -45,31 +45,36 @@
   <header class="tool-head">
     <span class="eyebrow">FINANCE TOOLS</span>
     <h1>Savings and compound interest calculator</h1>
-    <p class="lede">See how your savings grow with a starting amount, regular monthly deposits and compound interest, with a year-by-year breakdown.</p>
+    <p class="lede">See how your savings grow with a starting amount, regular monthly deposits and compound interest, with a year-by-year breakdown. Convert a bank's gross rate into AER, or back.</p>
     <ul class="tool-meta"><li>Free, no sign-up</li><li>Runs privately in your browser</li><li>Updated for 2026/27</li></ul>
   </header>
   <div class="tool-cols">
   <div class="tool-main">
   <section class="panel" aria-label="Savings calculator"><div class="row"><div><label for="vs">Starting amount (£)</label><input id="vs" inputmode="decimal" value="1000"></div><div><label for="vm">Monthly deposit (£)</label><input id="vm" inputmode="decimal" value="100"></div></div>
-  <div class="row"><div><label for="vr">Interest rate (AER %)</label><input id="vr" inputmode="decimal" value="4"></div><div><label for="vy">Years</label><input id="vy" type="number" min="1" max="50" value="10"></div></div><div class="out" id="vo"></div></section>
+  <div class="row"><div><label for="vr">Interest rate (AER %)</label><input id="vr" inputmode="decimal" value="4"></div><div><label for="vy">Years</label><input id="vy" type="number" min="1" max="50" value="10"></div></div><div class="out" id="vo"></div>
+  <details class="aer-conv"><summary>AER calculator: convert a gross rate to AER, or back</summary>
+  <div class="row"><div><label for="ar">Rate (%)</label><input id="ar" inputmode="decimal" value="5"></div><div><label for="af">Interest paid</label><select id="af"><option value="12" selected>Monthly</option><option value="4">Quarterly</option><option value="2">Twice a year</option><option value="1">Yearly</option><option value="365">Daily</option></select></div><div><label for="ad">This rate is</label><select id="ad"><option value="gross" selected>The gross rate</option><option value="aer">The AER</option></select></div></div>
+  <div class="out" id="ao"></div><p class="note">AER = (1 + gross rate ÷ payments a year)<sup>payments a year</sup> − 1. Banks show both: the gross rate is what's paid each time, the AER lets you compare accounts that pay at different frequencies.</p></details></section>
   <article class="guide">
     <h2 id="how-to-use-the-savings-calculator">How to use the savings calculator</h2>
-    <ol><li>Enter your starting amount.</li><li>Enter how much you will add each month.</li><li>Enter the interest rate (AER) and the number of years.</li><li>Read the final balance, how much you paid in, the interest earned and the year-by-year table.</li></ol>
+    <ol><li>Enter your starting amount.</li><li>Enter how much you will add each month.</li><li>Enter the interest rate (AER) and the number of years.</li><li>Read the final balance, how much you paid in, the interest earned and the year-by-year table.</li><li>To compare accounts, open AER calculator and enter a rate and how often interest is paid.</li></ol>
     <h2 id="how-compound-interest-works">How compound interest works</h2>
     <p>Compound interest means you earn interest on your interest. The calculator converts the AER into an equivalent monthly rate, adds interest to the balance each month and then adds your monthly deposit. Over long periods, the interest can grow to more than the amount you paid in.</p>
     <h2 id="worked-example">Worked example</h2>
     <p>Start with <strong>£1,000</strong>, save <strong>£100 a month</strong> at <strong>4% AER</strong> for <strong>10 years</strong>. You pay in £13,000 and finish with about <strong>£16,149.84</strong>, so £3,149.84 is interest.</p>
+    <h2 id="aer-and-gross-rate">AER and gross rate</h2>
+    <p>Savings accounts quote two rates. The <strong>gross rate</strong> is the rate before compounding, used to work out each interest payment. The <strong>AER</strong> (annual equivalent rate) shows what you'd earn over a year once that interest is added to your balance, so accounts that pay monthly, quarterly or yearly can be compared fairly.</p><p>AER = (1 + gross rate ÷ n)<sup>n</sup> − 1, where n is the number of interest payments a year.</p><ul><li><strong>5% gross paid monthly</strong> is <strong>5.12% AER</strong>.</li><li><strong>4.5% gross paid quarterly</strong> is <strong>4.58% AER</strong>.</li><li>Going the other way, <strong>4% AER paid monthly</strong> is <strong>3.93% gross</strong>.</li></ul><p>When interest is paid once a year, the gross rate and the AER are the same.</p>
     <h2 id="things-to-keep-in-mind">Things to keep in mind</h2>
     <p>Real savings rates change over time, and inflation reduces what your money can buy. Interest above your Personal Savings Allowance may be taxable, while interest in an ISA is tax-free. This is a guide, not financial advice.</p>
     
     <h2 id="frequently-asked-questions">Frequently asked questions</h2>
-    <div class="faq"><details><summary>What is AER?</summary><p>The annual equivalent rate shows what you would earn in a year with interest compounded, so accounts that pay interest at different frequencies can be compared fairly.</p></details><details><summary>How much will £100 a month grow to?</summary><p>At 4% AER with £1,000 to start, about £16,150 after 10 years. Enter your own figures to see your result.</p></details><details><summary>Does the calculator include tax?</summary><p>No. It shows growth before any tax on interest.</p></details></div>
+    <div class="faq"><details><summary>What is AER?</summary><p>The annual equivalent rate shows what you would earn in a year with interest compounded, so accounts that pay interest at different frequencies can be compared fairly.</p></details><details><summary>How do I convert a gross rate to AER?</summary><p>Open AER calculator, enter the gross rate and how often interest is paid. For example, 5% gross paid monthly is 5.12% AER.</p></details><details><summary>How much will £100 a month grow to?</summary><p>At 4% AER with £1,000 to start, about £16,150 after 10 years. Enter your own figures to see your result.</p></details><details><summary>Does the calculator include tax?</summary><p>No. It shows growth before any tax on interest.</p></details></div>
     <p class="checked">Rates last checked against HMRC guidance on <time datetime="2026-11-15">15 November 2026</time> for the 2026/27 tax year. Sources: <a href="https://www.gov.uk/income-tax-rates" rel="noopener">GOV.UK income tax rates</a>, <a href="https://www.gov.uk/national-insurance-rates-letters" rel="noopener">National Insurance rates</a>.</p>
   </article>
   <div class="related related-bottom"><h2>Related tools</h2><ul><li><a href="budget-planner.html">50/30/20 budget planner</a></li><li><a href="uk-take-home-pay-calculator.html">UK take-home pay calculator</a></li><li><a href="debt-payoff-calculator.html">Debt payoff calculator</a></li></ul></div>
   </div>
   <aside class="tool-aside"><div class="tool-aside-inner">
-    <nav class="aside-card toc" aria-label="On this page"><h2>On this page</h2><ul><li><a href="#how-to-use-the-savings-calculator">How to use the savings calculator</a></li><li><a href="#how-compound-interest-works">How compound interest works</a></li><li><a href="#worked-example">Worked example</a></li><li><a href="#things-to-keep-in-mind">Things to keep in mind</a></li><li><a href="#frequently-asked-questions">Frequently asked questions</a></li></ul></nav>
+    <nav class="aside-card toc" aria-label="On this page"><h2>On this page</h2><ul><li><a href="#how-to-use-the-savings-calculator">How to use the savings calculator</a></li><li><a href="#how-compound-interest-works">How compound interest works</a></li><li><a href="#worked-example">Worked example</a></li><li><a href="#aer-and-gross-rate">AER and gross rate</a></li><li><a href="#things-to-keep-in-mind">Things to keep in mind</a></li><li><a href="#frequently-asked-questions">Frequently asked questions</a></li></ul></nav>
     <div class="aside-card"><h2>Related tools</h2><ul><li><a href="budget-planner.html">50/30/20 budget planner</a></li><li><a href="uk-take-home-pay-calculator.html">UK take-home pay calculator</a></li><li><a href="debt-payoff-calculator.html">Debt payoff calculator</a></li></ul></div>
   </div></aside>
   </div>
@@ -86,6 +91,6 @@
     <p class="foot-links"><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="automation-builder.html">Automations</a></p>
   </div>
 </div></footer>
-<script src="assets/tools.js?v=92019c3fee"></script>
+<script src="assets/tools.js?v=04f434a2b1"></script>
 </body>
 </html>
