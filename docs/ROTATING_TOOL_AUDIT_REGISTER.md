@@ -1,6 +1,6 @@
 # ToolsBravo rotating functional audit register
 
-Last run: **2026-11-19 03:03 UTC**. Base: `main` commit `5ca0ab8f8537ae2a49913e798b8667a12fbd5ada`. This register distinguishes **source inspection** from **executed tests**. No tool is considered functionally passed until real input/output and download/browser checks succeed.
+Last run: **2026-11-20 12:01 UTC**. Base: `main` commit `5ca0ab8f8537ae2a49913e798b8667a12fbd5ada`. This register distinguishes **source inspection** from **executed tests**. No tool is considered functionally passed until real input/output and download/browser checks succeed.
 
 ## Rotation
 
@@ -214,3 +214,11 @@ Last run: **2026-11-19 03:03 UTC**. Base: `main` commit `5ca0ab8f8537ae2a49913e7
 - Runtime: `git ls-remote https://github.com/abrar858/toolbench.git HEAD` failed `Could not resolve host: github.com`; `curl -IL --max-time 10 https://toolsbravo.com` failed `Could not resolve host: toolsbravo.com`. This is the audit environment's DNS blocker, not evidence of a public outage. No Node/Playwright checkout/tests, production inputs/outputs, mobile/browser console, accessibility or downloadable-file validation completed. Zero new executable passes or fails; no new defect confirmed.
 - Next rotation: test Hash Generator SHA-256 known-answer and valid-to-oversized file, Base64 Unicode/binary roundtrip and rapid replacement, URL plus/Unicode/malformed percent escapes, UUID count/format and UK tax thresholds. Regress PRs #22/#23/#26/#33 with real fixtures, capture expected/actual, console, mobile 375px, keyboard and downloaded-file integrity. Keep all 49 tools on rotation and mark blocked work unverified.
 - Documentation-only register update. No merges, deployments, DNS/payment/user-data changes, disabled tests or paid services.
+
+## Rotation update — 2026-11-20 12:01 UTC
+
+- **Preflight confirmed via GitHub REST:** `main` is still `5ca0ab8f8537ae2a49913e798b8667a12fbd5ada` (2026-11-18 23:16 UTC). Open PR #33 addresses negative overtime thresholds; #32 is the audit register PR; other existing corrective PRs must be checked before new fixes. No overlapping code changes made.
+- **CI evidence, newly reverified:** main SHA workflow runs show **success** for [static checks](https://github.com/abrar858/toolbench/actions/runs/44419315993) and [Pages deployment](https://github.com/abrar858/toolbench/actions/runs/44419316167), both triggered 2026-11-18 23:16 UTC. Latest audit-branch [browser smoke workflow](https://github.com/abrar858/toolbench/actions/runs/44724016302) completed successfully on 2026-11-20 11:02 UTC. This is CI evidence, not proof of 49-tool functional coverage or live user flows.
+- **Production and local execution blocker reproduced:** `curl -IL https://toolsbravo.com` returned `curl: (6) Could not resolve host: toolsbravo.com`; `git ls-remote https://github.com/abrar858/toolbench.git HEAD` returned `Could not resolve host: github.com`. Therefore no direct browser input/output, mobile, console, accessibility, download-integrity, or local repository test suite was executed in this run. Do not mark tools PASS/FAIL based on source or workflow existence.
+- **Coverage:** zero newly executable-tested tools; 49 advertised tools remain scheduled. Prior source-confirmed findings remain pending browser reproduction and review, especially spreadsheet replacement (#22/#23), password stale-copy (#26), and overtime threshold (#33).
+- **Next rotation:** inspect current PR CI per corrective branch; obtain actual executable browser evidence for Hash SHA-256 known answer, Base64 Unicode/binary, URL malformed escape, UUID v4 format/count, UK salary tax boundaries, then verify downloads and 360px/768px keyboard/a11y; expand per-tool rows from sitemap. No merge/deploy, DNS/payment/user-data edits, or paid services.
