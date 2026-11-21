@@ -62,17 +62,19 @@ export const OFFICE_CONTENT = [
 },
 {
   id: "excel-to-csv", howTo: "How to convert Excel to CSV", slug: "excel-to-csv.html",
-  title: "Excel to CSV – Convert XLSX to CSV Free",
-  description: "Export one or every sheet of an Excel file to CSV with comma, semicolon or tab separators and UTF-8 encoding. Free and private.",
+  title: "Excel to CSV Converter – XLSX & XLS to CSV Free",
+  description: "Convert Excel XLSX or XLS to CSV: one sheet or every sheet, with comma, semicolon or tab separators and UTF-8. Free converter, nothing uploaded.",
   h1: "Excel to CSV converter",
   lede: "Export Excel sheets to CSV for importing into other software, databases, email tools and online shops.",
   steps: ["Choose an .xlsx, .xls or .ods file.", "Pick the sheet and separator. Use semicolon for software set up for European number formats.", "Tick Export every sheet to get one CSV per sheet in a ZIP file.", "Press Convert to CSV and download."],
   sections: [
     ["Which separator?", "<ul><li><strong>Comma</strong>: the standard for most software and the UK and US.</li><li><strong>Semicolon</strong>: used where the comma is the decimal mark, such as much of Europe.</li><li><strong>Tab</strong>: safest when values themselves contain commas; saved as .tsv.</li></ul>"],
+    ["Saving as CSV in Excel itself", "<p>If you have Excel, you can also do it there:</p><ol><li>Open the workbook and go to the sheet you want.</li><li>Choose <strong>File › Save As</strong> (on a Mac, <strong>File › Save As</strong> or <strong>Save a Copy</strong>).</li><li>Under the file type, choose <strong>CSV UTF-8 (Comma delimited)</strong>.</li><li>Save, and say yes when Excel warns that only the current sheet is saved.</li></ol><p>Excel saves one sheet at a time, so a workbook with several sheets needs one Save As per sheet. This converter can export every sheet at once, and lets you choose a semicolon or tab separator. In Google Sheets, use <strong>File › Download › Comma-separated values</strong>, which also saves the current sheet only.</p>"],
     ["UTF-8 and special characters", "<p>The UTF-8 marker option helps Excel show £, €, accents and other characters correctly when the CSV is opened again. Turn it off only if the software you are importing into rejects it.</p>"],
   ],
   faqs: [
     ["How do I save one Excel sheet as CSV?", "Choose the file, pick the sheet and press Convert to CSV."],
+    ["How do I convert Excel to CSV in Excel?", "Use File › Save As and choose CSV UTF-8 (Comma delimited). Excel saves only the sheet that's open, so repeat it for each sheet, or use this converter to export them all at once."],
     ["Can I export all sheets at once?", "Yes. Tick 'Export every sheet' to download a ZIP with one CSV per sheet."],
     ["Are formulas kept?", "CSV can only store values, so the calculated results are exported, not the formulas."],
     PRIVATE,

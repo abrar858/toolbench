@@ -276,10 +276,10 @@ export const FILE_CONTENT = [
 },
 {
   id: "image-resizer", howTo: "How to resize an image", slug: "image-resizer.html",
-  title: "Image Resizer – Resize Photos to Pixels or Percent",
+  title: "Image Resizer – Resize Image in Pixels or Percent",
   description: "Resize JPG, PNG and WebP images to an exact width and height in pixels or by percentage, keeping proportions. Bulk, free and private.",
-  h1: "Image resizer",
-  lede: "Resize photos and images to exact pixel dimensions or a percentage, one at a time or in bulk.",
+  h1: "Image resizer: change the pixel size of a photo",
+  lede: "Resize an image to an exact size in pixels, or reduce it by a percentage, keeping its proportions. One photo at a time or many in bulk.",
   steps: ["Choose one or more images.", "Pick Width and height or Percentage.", "Enter a width, a height or both. With Keep proportions on, the image fits inside that size without stretching.", "Press Resize, then download the images."],
   sections: [
     ["Common sizes", "<ul><li>Full HD: 1920 × 1080 pixels</li><li>Instagram square: 1080 × 1080; portrait 1080 × 1350</li><li>Profile pictures: 400 × 400</li><li>Email-friendly photos: 1200 pixels wide</li><li>Passport-style photos for online forms: check the form, often 600 × 750</li></ul>"],
@@ -287,6 +287,7 @@ export const FILE_CONTENT = [
   ],
   faqs: [
     ["How do I resize an image to specific dimensions?", "Choose Width and height, enter the pixel size, turn off Keep proportions if it must be exact, and press Resize."],
+    ["How do I reduce the pixels of an image?", "Choose the image, pick Width and height, enter the new width in pixels (for example 1200) and leave Keep proportions on. The height is worked out for you. Or choose Percentage and enter 50 to halve both sides."],
     ["Does resizing reduce file size?", "Yes. Smaller dimensions mean fewer pixels and a smaller file. For even smaller files use the image compressor."],
     ["How do I resize an image to 20 KB or 50 KB?", "File size in KB is set by compression rather than pixel size. Use the image compressor, choose ‘Aim for a file size’ and pick 20 KB, 50 KB or another limit."],
     ["Can I make an image bigger?", "Yes, up to 400% or 16,384 pixels, but enlarging can't add detail, so it may look soft."],
