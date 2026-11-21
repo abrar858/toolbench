@@ -309,3 +309,13 @@ test('site-wide crawl: every page is in the sitemap, every internal link resolve
   }
  }
 });
+
+test('robots.txt hides repository files but never the pages or the assets they need',()=>{
+ const robots=readPage('robots.txt');
+ for(const d of ['/docs/','/tests/','/scripts/','/admin/'])assert.match(robots,new RegExp('^Disallow: '+d.replace(/\//g,'\/')+'$','m'),`blocks ${d}`);
+ assert.doesNotMatch(robots,/^Disallow: \/\s*$/m,'must not block the whole site');
+ assert.doesNotMatch(robots,/^Disallow: \/assets/m,'pages need their CSS and JavaScript crawlable');
+ const sitemap=[...readPage('sitemap.xml').matchAll(/<loc>https:\/\/toolsbravo\.com\/([^<]*)<\/loc>/g)].map(m=>'/'+m[1]);
+ const blocked=[...robots.matchAll(/^Disallow: (\S+)/gm)].map(m=>m[1]);
+ for(const u of sitemap)assert.ok(!blocked.some(b=>u.startsWith(b)),`sitemap page ${u} is blocked by robots.txt`);
+});

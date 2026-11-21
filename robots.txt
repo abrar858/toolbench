@@ -1,3 +1,11 @@
 User-agent: *
 Allow: /
+# Repository files that GitHub Pages also publishes but that aren't pages for visitors.
+Disallow: /docs/
+Disallow: /tests/
+Disallow: /scripts/
+Disallow: /admin/
+Disallow: /README.md
+Disallow: /DEPLOYMENT.md
+Disallow: /SEO-PLAN.md
 Sitemap: https://toolsbravo.com/sitemap.xml
