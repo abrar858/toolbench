@@ -1150,3 +1150,38 @@ test('feedback widget validates review and submits correct tool slug',async ({pa
  await expect(page.locator('#feedback-status')).toContainText('received');
  expect(payload).toMatchObject({tool_slug:'word-counter',category:'review',rating:5,message:'Useful tool, thank you'});
 });
+
+/* ---------- Near-page-1 searches (Search Console, 16–21 Nov) ---------- */
+test('loan page: common amounts table matches the calculator and independent figures', async ({page}) => {
+ await page.goto('/loan-repayment-calculator.html');
+ const table = page.locator('#common-loan-amounts + p + .table-wrap table');
+ await expect(table.locator('tbody tr')).toHaveCount(6);
+ // Independently computed earlier with closed-form maths: £10k over 5 years and £30k over 10 years at 6.9%.
+ await expect(table.locator('tr', {hasText: '£10,000'}).locator('td').nth(1)).toContainText('£197.54 a month');
+ await expect(table.locator('tr', {hasText: '£30,000'}).locator('td').nth(3)).toContainText('£346.78 a month');
+ await expect(table.locator('tr', {hasText: '£30,000'}).locator('td').nth(3)).toContainText('£11,613.75 interest');
+ // The table and the calculator agree for £15,000 over 5 years.
+ const cell = (await table.locator('tr', {hasText: '£15,000'}).locator('td').nth(1).textContent()).match(/£[\d,]+\.\d\d/)[0];
+ await page.locator('#la').fill('15000'); await page.locator('#ly').fill('5');
+ await expect(page.locator('#lo .big')).toHaveText(`${cell} a month`);
+ expect(await page.locator('.table-wrap').first().evaluate(w => w.scrollWidth <= w.clientWidth + 1)).toBe(true);
+});
+
+test('salary table shows per-fortnight take-home pay', async ({page}) => {
+ await page.goto('/salary-after-tax.html');
+ await expect(page.locator('table tr').first()).toContainText('Per fortnight');
+ const row = page.locator('tr', {has: page.locator('a[href="30000-after-tax.html"]')});
+ // £30,000: £25,119.60 a year after tax (2026/27), so £966.14 a fortnight and £483.07 a week.
+ await expect(row).toContainText('£25,119.60');
+ await expect(row).toContainText('£966.14');
+ await expect(row).toContainText('£483.07');
+});
+
+test('pages say what people searched for: hours with breaks, image pixels, Excel to CSV', async ({page}) => {
+ await page.goto('/time-duration-calculator.html');
+ await expect(page.locator('main h1')).toHaveText('Hours calculator with breaks');
+ await page.goto('/image-resizer.html');
+ await expect(page.locator('main h1')).toContainText('pixel size');
+ await page.goto('/excel-to-csv.html');
+ await expect(page.locator('#saving-as-csv-in-excel-itself')).toBeVisible();
+});

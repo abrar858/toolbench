@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Time Calculator &amp; Timesheet – Hours Worked and Pay | ToolsBravo</title>
-<meta name="description" content="Calculate hours between times with breaks and overnight shifts, and fill in a weekly timesheet with total hours, overtime and gross pay. Free.">
+<title>Hours Calculator with Breaks – Timesheet &amp; Pay | ToolsBravo</title>
+<meta name="description" content="Work out hours worked between two times minus breaks or lunch, including overnight shifts, and fill in a weekly timesheet with overtime and pay. Free.">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="https://toolsbravo.com/time-duration-calculator.html">
 <meta name="theme-color" content="#0B2545">
@@ -12,8 +12,8 @@
 <meta property="og:site_name" content="ToolsBravo">
 <meta property="og:locale" content="en_GB">
 <meta property="og:url" content="https://toolsbravo.com/time-duration-calculator.html">
-<meta property="og:title" content="Time Calculator &amp; Timesheet – Hours Worked and Pay">
-<meta property="og:description" content="Calculate hours between times with breaks and overnight shifts, and fill in a weekly timesheet with total hours, overtime and gross pay. Free.">
+<meta property="og:title" content="Hours Calculator with Breaks – Timesheet &amp; Pay">
+<meta property="og:description" content="Work out hours worked between two times minus breaks or lunch, including overnight shifts, and fill in a weekly timesheet with overtime and pay. Free.">
 <meta property="og:image" content="https://toolsbravo.com/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -26,9 +26,9 @@
 <link rel="preload" href="assets/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css?v=3aeaa33ef5">
 <script>try{const t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Time duration calculator","url":"https://toolsbravo.com/time-duration-calculator.html","description":"Calculate hours between times with breaks and overnight shifts, and fill in a weekly timesheet with total hours, overtime and gross pay. Free.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any modern web browser","isAccessibleForFree":true,"inLanguage":"en-GB","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"},"publisher":{"@type":"Organization","name":"ToolsBravo","url":"https://toolsbravo.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Time duration calculator","url":"https://toolsbravo.com/time-duration-calculator.html","description":"Work out hours worked between two times minus breaks or lunch, including overnight shifts, and fill in a weekly timesheet with overtime and pay. Free.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any modern web browser","isAccessibleForFree":true,"inLanguage":"en-GB","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"},"publisher":{"@type":"Organization","name":"ToolsBravo","url":"https://toolsbravo.com/"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ToolsBravo","item":"https://toolsbravo.com/"},{"@type":"ListItem","position":2,"name":"General tools","item":"https://toolsbravo.com/#general"},{"@type":"ListItem","position":3,"name":"Time duration calculator","item":"https://toolsbravo.com/time-duration-calculator.html"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I calculate my weekly hours and pay?","acceptedAnswer":{"@type":"Answer","text":"Enter each shift in the weekly timesheet, add your hourly rate and any overtime rule, and copy the summary."}},{"@type":"Question","name":"How do I calculate hours worked overnight?","acceptedAnswer":{"@type":"Answer","text":"Enter the start and end time as normal. When the end time is earlier than the start time, the calculator assumes the shift finished the next day and adds 24 hours before taking off your break."}},{"@type":"Question","name":"How do I convert minutes to decimal hours?","acceptedAnswer":{"@type":"Answer","text":"Divide the minutes by 60. 15 minutes is 0.25 hours, 30 minutes is 0.5 hours and 45 minutes is 0.75 hours."}},{"@type":"Question","name":"Can a shift be longer than 24 hours?","acceptedAnswer":{"@type":"Answer","text":"No. This tool handles shifts of up to 24 hours. For longer periods, use the date difference calculator."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I calculate my weekly hours and pay?","acceptedAnswer":{"@type":"Answer","text":"Enter each shift in the weekly timesheet, add your hourly rate and any overtime rule, and copy the summary."}},{"@type":"Question","name":"How do I calculate hours worked overnight?","acceptedAnswer":{"@type":"Answer","text":"Enter the start and end time as normal. When the end time is earlier than the start time, the calculator assumes the shift finished the next day and adds 24 hours before taking off your break."}},{"@type":"Question","name":"How do I calculate hours worked with a lunch break?","acceptedAnswer":{"@type":"Answer","text":"Enter the start and end time, then the unpaid break in minutes. For 09:00 to 17:30 with a 30-minute lunch, that's 8 hours 30 minutes minus 30 minutes: 8 hours worked."}},{"@type":"Question","name":"How do I convert minutes to decimal hours?","acceptedAnswer":{"@type":"Answer","text":"Divide the minutes by 60. 15 minutes is 0.25 hours, 30 minutes is 0.5 hours and 45 minutes is 0.75 hours."}},{"@type":"Question","name":"Can a shift be longer than 24 hours?","acceptedAnswer":{"@type":"Answer","text":"No. This tool handles shifts of up to 24 hours. For longer periods, use the date difference calculator."}}]}</script>
 </head>
 <body data-tool="time-duration">
 <a class="skip-link" href="#app">Skip to content</a>
@@ -44,8 +44,8 @@
   <nav class="crumbs" aria-label="Breadcrumb"><a href="./">ToolsBravo</a> › <a href="./#general">General tools</a> › <span aria-current="page">Time duration calculator</span></nav>
   <header class="tool-head">
     <span class="eyebrow">GENERAL TOOLS</span>
-    <h1>Time duration calculator</h1>
-    <p class="lede">Work out the hours in a shift, including overnight shifts and unpaid breaks, or fill in a whole week to get total hours, overtime and pay.</p>
+    <h1>Hours calculator with breaks</h1>
+    <p class="lede">Work out the hours worked in a shift after unpaid breaks or lunch, including overnight shifts, or fill in a whole week to get total hours, overtime and pay.</p>
     <ul class="tool-meta"><li>Free, no sign-up</li><li>Runs privately in your browser</li><li>Instant results</li></ul>
   </header>
   <div class="tool-cols">
@@ -66,7 +66,7 @@
     <p>Fill in the start, end and break for each day of the week. Overnight shifts are handled automatically when the end time is earlier than the start. Add your hourly rate to see gross pay, and an overtime threshold and rate if you're paid more after a set number of hours. For example, five days of 9:00 to 17:30 with 30-minute breaks is 40 hours; at £12.71 an hour with time and a half after 37.5 hours, that's £524.29 before tax.</p>
     
     <h2 id="frequently-asked-questions">Frequently asked questions</h2>
-    <div class="faq"><details><summary>How do I calculate my weekly hours and pay?</summary><p>Enter each shift in the weekly timesheet, add your hourly rate and any overtime rule, and copy the summary.</p></details><details><summary>How do I calculate hours worked overnight?</summary><p>Enter the start and end time as normal. When the end time is earlier than the start time, the calculator assumes the shift finished the next day and adds 24 hours before taking off your break.</p></details><details><summary>How do I convert minutes to decimal hours?</summary><p>Divide the minutes by 60. 15 minutes is 0.25 hours, 30 minutes is 0.5 hours and 45 minutes is 0.75 hours.</p></details><details><summary>Can a shift be longer than 24 hours?</summary><p>No. This tool handles shifts of up to 24 hours. For longer periods, use the date difference calculator.</p></details></div>
+    <div class="faq"><details><summary>How do I calculate my weekly hours and pay?</summary><p>Enter each shift in the weekly timesheet, add your hourly rate and any overtime rule, and copy the summary.</p></details><details><summary>How do I calculate hours worked overnight?</summary><p>Enter the start and end time as normal. When the end time is earlier than the start time, the calculator assumes the shift finished the next day and adds 24 hours before taking off your break.</p></details><details><summary>How do I calculate hours worked with a lunch break?</summary><p>Enter the start and end time, then the unpaid break in minutes. For 09:00 to 17:30 with a 30-minute lunch, that's 8 hours 30 minutes minus 30 minutes: 8 hours worked.</p></details><details><summary>How do I convert minutes to decimal hours?</summary><p>Divide the minutes by 60. 15 minutes is 0.25 hours, 30 minutes is 0.5 hours and 45 minutes is 0.75 hours.</p></details><details><summary>Can a shift be longer than 24 hours?</summary><p>No. This tool handles shifts of up to 24 hours. For longer periods, use the date difference calculator.</p></details></div>
     
   </article>
   <div class="related related-bottom"><h2>Related tools</h2><ul><li><a href="date-difference-calculator.html">Date difference calculator</a></li><li><a href="age-calculator.html">Age calculator</a></li><li><a href="uk-take-home-pay-calculator.html">UK take-home pay calculator</a></li></ul></div>

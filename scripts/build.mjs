@@ -300,10 +300,10 @@ ${footer("salary")}
 
 function salaryHub() {
   const url = ORIGIN + "salary-after-tax.html", title = `UK Salary After Tax Table ${TAX_YEAR}`;
-  const description = `Take-home pay after income tax and National Insurance for UK salaries from ${k(SALARIES[0])} to ${k(SALARIES.at(-1))} in ${TAX_YEAR}, per year, month and week.`;
+  const description = `Take-home pay after income tax and National Insurance for UK salaries from ${k(SALARIES[0])} to ${k(SALARIES.at(-1))} in ${TAX_YEAR}, per year, month, fortnight and week.`;
   const trail = [[SITE, "./"], ["Finance tools", "./#finance"], ["Salary after tax", "salary-after-tax.html"]];
   const rows = SALARIES.map(g => { const r = ukPay(g, 0);
-    return `<tr><th scope="row"><a href="${salarySlug(g)}">${k(g)}</a></th><td>${gbp(r.tax)}</td><td>${gbp(r.ni)}</td><td>${gbp(r.net)}</td><td>${gbp(r.net / 12)}</td><td>${gbp(r.net / 52)}</td></tr>`; }).join("\n");
+    return `<tr><th scope="row"><a href="${salarySlug(g)}">${k(g)}</a></th><td>${gbp(r.tax)}</td><td>${gbp(r.ni)}</td><td>${gbp(r.net)}</td><td>${gbp(r.net / 12)}</td><td>${gbp(r.net / 26)}</td><td>${gbp(r.net / 52)}</td></tr>`; }).join("\n");
   return `${head({title: `${title} | ${SITE}`, description, url, ogTitle: title})}
 ${ld(crumbsLd(trail))}
 </head>
@@ -316,7 +316,7 @@ ${headerFor("salary")}
     lede: "Take-home pay for common UK salaries after income tax and employee National Insurance. Choose a salary for a full breakdown.",
     meta: ["England, Wales and Northern Ireland", `Updated for ${TAX_YEAR}`]})}
   <article class="guide guide-wide">
-    <div class="tablewrap"><table><tr><th>Salary</th><th>Income tax</th><th>National Insurance</th><th>Take-home per year</th><th>Per month</th><th>Per week</th></tr>
+    <div class="tablewrap"><table><tr><th>Salary</th><th>Income tax</th><th>National Insurance</th><th>Take-home per year</th><th>Per month</th><th>Per fortnight</th><th>Per week</th></tr>
 ${rows}
     </table></div>
     <p>Figures are for England, Wales and Northern Ireland with a standard 1257L tax code, no pension contribution and no student loan. For other salaries or to include a pension, use the <a href="uk-take-home-pay-calculator.html">UK take-home pay calculator</a>.</p>

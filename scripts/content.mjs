@@ -6,14 +6,20 @@ import {FILE_CONTENT} from "./content-files.mjs";
 import {OFFICE_CONTENT} from "./content-office.mjs";
 import {DEPTH} from "./content-depth.mjs";
 
+// Monthly repayment for a fixed-rate loan (the same formula as the loan calculator).
+const loanPmt = (P, apr, years) => { const r = apr / 1200, n = years * 12; return r ? P * r / (1 - Math.pow(1 + r, -n)) : P / n; };
+const money = v => "£" + v.toLocaleString("en-GB", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const LOAN_TABLE_APR = 6.9, LOAN_AMOUNTS = [5000, 10000, 15000, 20000, 25000, 30000], LOAN_YEARS = [3, 5, 7, 10];
+const loanTable = () => `<div class="table-wrap"><table><thead><tr><th scope="col">Amount</th>${LOAN_YEARS.map(y => `<th scope="col">${y} years</th>`).join("")}</tr></thead><tbody>${LOAN_AMOUNTS.map(P => `<tr><th scope="row">${money(P).replace(".00", "")}</th>${LOAN_YEARS.map(y => { const m = loanPmt(P, LOAN_TABLE_APR, y); return `<td>${money(m)} a month<br><small>${money(m * y * 12 - P)} interest</small></td>`; }).join("")}</tr>`).join("")}</tbody></table></div>`;
+
 const BASE_CONTENT = [
 /* ---------------- GENERAL ---------------- */
 {
   id: "time-duration", slug: "time-duration-calculator.html",
-  title: "Time Calculator & Timesheet – Hours Worked and Pay",
-  description: "Calculate hours between times with breaks and overnight shifts, and fill in a weekly timesheet with total hours, overtime and gross pay. Free.",
-  h1: "Time duration calculator",
-  lede: "Work out the hours in a shift, including overnight shifts and unpaid breaks, or fill in a whole week to get total hours, overtime and pay.",
+  title: "Hours Calculator with Breaks – Timesheet & Pay",
+  description: "Work out hours worked between two times minus breaks or lunch, including overnight shifts, and fill in a weekly timesheet with overtime and pay. Free.",
+  h1: "Hours calculator with breaks",
+  lede: "Work out the hours worked in a shift after unpaid breaks or lunch, including overnight shifts, or fill in a whole week to get total hours, overtime and pay.",
   steps: ["Enter the start time and end time of the shift.", "Add any unpaid break in minutes.", "Tick the next-day option for overnight shifts (an end time earlier than the start is treated as the next day automatically).", "Read the hours and minutes worked, plus the decimal hours to copy into a timesheet or payroll form."],
   sections: [
     ["How the calculation works", "<p>The calculator converts both times into minutes after midnight, subtracts the start from the end and adds 24 hours when the shift crosses midnight. Your unpaid break is then taken away. The result is shown as hours and minutes and as decimal hours, which is the format most payroll and invoicing systems expect.</p><p>Decimal hours are minutes divided by 60. For example, 7 hours 45 minutes is 7.75 hours, and 8 hours 20 minutes is about 8.33 hours.</p>"],
@@ -23,6 +29,7 @@ const BASE_CONTENT = [
   faqs: [
     ["How do I calculate my weekly hours and pay?","Enter each shift in the weekly timesheet, add your hourly rate and any overtime rule, and copy the summary."],
     ["How do I calculate hours worked overnight?", "Enter the start and end time as normal. When the end time is earlier than the start time, the calculator assumes the shift finished the next day and adds 24 hours before taking off your break."],
+    ["How do I calculate hours worked with a lunch break?", "Enter the start and end time, then the unpaid break in minutes. For 09:00 to 17:30 with a 30-minute lunch, that's 8 hours 30 minutes minus 30 minutes: 8 hours worked."],
     ["How do I convert minutes to decimal hours?", "Divide the minutes by 60. 15 minutes is 0.25 hours, 30 minutes is 0.5 hours and 45 minutes is 0.75 hours."],
     ["Can a shift be longer than 24 hours?", "No. This tool handles shifts of up to 24 hours. For longer periods, use the date difference calculator."],
   ],
@@ -390,10 +397,12 @@ const BASE_CONTENT = [
     ["Worked examples", "<ul><li>Borrowing <strong>£10,000 at 6.9% over 5 years</strong> costs about <strong>£197.54 a month</strong>. You repay £11,852.43 in total, of which £1,852.43 is interest.</li><li>A <strong>£200,000 mortgage at 4.5% over 25 years</strong> costs about <strong>£1,111.66 a month</strong> on a repayment basis, with about £133,499 of interest over the full term.</li><li>A <strong>£30,000 loan at 6.9% over 10 years</strong> costs about <strong>£346.78 a month</strong>, with £11,613.75 of interest in total.</li><li>A 0% deal of £5,000 over 24 months is £208.33 a month.</li></ul>"],
     ["Shorter or longer term?", "<p>A longer term lowers the monthly payment but usually increases the total interest. Compare both figures before you choose, and check for arrangement fees, which this estimate does not include. Your lender's figures may differ slightly because of how they calculate interest.</p>"],
     ["Repayment schedule and overpayments","<p>Open <em>Repayment schedule by year</em> to see how much of each year's payments goes on interest and how much reduces what you owe, and download the month-by-month schedule as a CSV file for Excel or Google Sheets. Enter an amount in <em>Overpay each month</em> to see how much sooner the loan is cleared and how much interest you save. For example, overpaying £100 a month on £10,000 at 6.9% over 5 years clears it in 38 months instead of 60. Check whether your lender charges early repayment fees first.</p>"],
+    ["Common loan amounts", `<p>Monthly repayments and total interest at ${LOAN_TABLE_APR}% APR, for comparison. Smaller loans often have higher rates, and your own rate depends on the lender and your credit record, so enter your quote above for exact figures.</p>${loanTable()}`],
     ["Lump sums and settling early", "<p>Open <em>Pay off early</em> to see the effect of a one-off payment, such as a bonus or savings, or of clearing the loan completely.</p><ul><li><strong>Lump sum:</strong> paying <strong>£2,000 after month 12</strong> on £10,000 at 6.9% over 5 years clears the loan in <strong>4 years instead of 5</strong> and saves <strong>£544.78</strong> in interest. Your monthly payment stays the same; the loan just ends sooner.</li><li><strong>Settling in full:</strong> after month 24 of the same loan, about <strong>£6,407.12</strong> is left to repay. With up to 58 days of extra interest, which lenders can usually add, the settlement would be about <strong>£6,477.37</strong>, and you would still save at least <strong>£634.09</strong> of interest.</li></ul><p>These are estimates. Your lender's settlement figure is the exact amount, and you can ask for it at any time.</p>"],
   ],
   faqs: [
     ["How much do overpayments save?","Enter your monthly overpayment and the calculator shows how many months sooner the loan ends and the interest saved, before any early repayment charges."],
+    ["How much is a £15,000 loan over 5 years?", `At ${LOAN_TABLE_APR}% APR, about ${money(loanPmt(15000, LOAN_TABLE_APR, 5))} a month, with ${money(loanPmt(15000, LOAN_TABLE_APR, 5) * 60 - 15000)} of interest in total. Enter your own rate to check your quote.`],
     ["How do I work out an early settlement figure?", "Open Pay off early and enter the month you want to settle after. The calculator shows the balance left and an estimate including up to 58 days of extra interest. Ask your lender for the exact settlement figure."],
     ["Is it worth paying off a loan early?", "It usually saves interest, because interest is charged on a smaller balance for less time. Check for an early repayment fee, and keep an emergency fund before using savings to clear a loan."],
     ["How much is a £10,000 loan per month?", "At 6.9% APR over 5 years, about £197.54 a month. Change the rate and term to see your own figures."],
