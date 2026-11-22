@@ -60,7 +60,12 @@ test('privacy and about pages are linked from the home page',()=>{
 });
 test('about page names the owner and a contact address; privacy page gives it for requests',()=>{
  const about=readFileSync(new URL('../about.html',import.meta.url),'utf8'),priv=readFileSync(new URL('../privacy.html',import.meta.url),'utf8');
- assert.match(about,/built and run by Bisma Zainab/);
+ assert.match(about,/Bisma Zainab<\/strong>, a professional developer/);
+ for(const [p,h] of [['about',about],['privacy',priv]]){
+  assert.doesNotMatch(h,/github.com/i,`${p}: no repository links`);
+  assert.doesNotMatch(h,/source code/i,`${p}: no source-code mentions`);
+ }
+ assert.doesNotMatch(readPage('index.html'),/github.com/i,'home: no repository links');
  assert.match(about,/href="mailto:bismaibrar@icloud.com"/);
  assert.match(about,/"@type":"AboutPage"/);
  assert.match(priv,/href="mailto:bismaibrar@icloud.com"/);
