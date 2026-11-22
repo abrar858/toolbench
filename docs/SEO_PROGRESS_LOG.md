@@ -2,6 +2,16 @@
 
 Newest first. Record what changed, how it was tested, and what Search Console showed — including "no data yet".
 
+## 2026-11-22 — Phase A: Extract PDF pages, mortgage overpayments, embeds, sources
+
+**Search Console (16–21 Nov, first export):** 1,212 impressions, 0 clicks, average position 52–59; 92% of impressions at position > 20, 13 on page 1. Zero clicks is expected at these positions.
+
+**Evidence → change:**
+- "extract pages from pdf", "extract pdf pages", "pdf extract", "pdf extractor": about 100 impressions at positions 80–95, landing on Split PDF. → New `/extract-pdf-pages.html` with a thumbnail page picker (click pages, or type ranges; all/odd/even/invert; one PDF or one per page). Split PDF retitled to target splitting.
+- Mortgage searches ("how to pay off mortgage in 10 years calculator" 37, "calculate repayments on home loan" 50) landing on the general loan page. → New `/mortgage-overpayment-calculator.html`: monthly overpayments, lump sum (shorter term or lower payment), mortgage-free-in-N-years, 10% allowance check, year-by-year balances. Figures asserted against closed-form maths.
+- Authority is the main gap for a 1-week-old domain. → Embeddable calculators (7) with copy-paste code and a credit link; embed pages are noindex with a canonical to the real page.
+- Trust on finance pages. → Each finance page cites its own sources (GOV.UK, legislation.gov.uk, Bank of England) with a review date; the generic income-tax note no longer appears on unrelated pages.
+
 ## 2026-11-19 — New tool: Edit PDF
 
 **Research:** Google autocomplete (en-GB) for 22 PDF-editing phrasings: the dominant needs are changing existing text (often "with the same font"), removing it (remove/delete/erase, white out, hide), redaction (redact, black out), adding content (text, images, drawing, highlights), filling forms, and "no sign up / without login". Competitors (iLovePDF, Sejda, Smallpdf, PDF24) upload files and delete them after 1–2 hours; Sejda limits free use; Smallpdf's free plan has no redaction. Vendor sources agree that a box over selectable text is not redaction.

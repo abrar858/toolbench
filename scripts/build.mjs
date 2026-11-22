@@ -4,7 +4,7 @@
 //   - 404.html, sitemap.xml and the crawlable tool directory on the home page
 //   node scripts/build.mjs           write the files
 //   node scripts/build.mjs --check   fail if any generated file is out of date
-import {readFileSync, writeFileSync, existsSync} from "node:fs";
+import {readFileSync, writeFileSync, existsSync, mkdirSync} from "node:fs";
 import vm from "node:vm";
 import {createHash} from "node:crypto";
 import {TOOL_CONTENT} from "./content.mjs";
@@ -148,6 +148,27 @@ const crumbsLd = items => ({"@context": "https://schema.org", "@type": "Breadcru
 const faqLd = faqs => ({"@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map(([q, a]) =>
   ({"@type": "Question", name: q, acceptedAnswer: {"@type": "Answer", text: strip(a)}}))});
 const faqHtml = faqs => `<div class="faq">${faqs.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${a}</p></details>`).join("")}</div>`;
+// Sources for a finance page, with when the figures and rules were last reviewed.
+const REVIEWED = "22 November 2026";
+const sourcesNote = c => `<p class="checked">${c.id === "take-home-pay" ? `Rates last checked against HMRC guidance on <time datetime="2026-11-15">${RATES_CHECKED}</time> for the ${TAX_YEAR} tax year.` : `Formulas and rules last reviewed on <time datetime="2026-11-22">${REVIEWED}</time>. Results are estimates, not financial advice.`} Sources: ${c.sources.map(([n, u]) => `<a href="${u}" rel="noopener">${esc(n)}</a>`).join(", ")}.</p>`;
+const EMBEDS = {"take-home-pay": 740, "vat-calculator": 400, "loan-calculator": 700, "mortgage-overpayment": 860, "savings-calculator": 1040, "budget-planner": 520, "percentage-calculator": 420};
+const embedCode = (t, c) => `<iframe src="${ORIGIN}embed/${c.slug}" title="${t.name}" width="100%" height="${EMBEDS[t.id]}" style="border:0;max-width:680px" loading="lazy"></iframe>\n<p><a href="${ORIGIN}${c.slug}">${t.name}</a> by ToolsBravo</p>`;
+const embedBox = (t, c) => EMBEDS[t.id] ? `<details class="embed-box"><summary>Add this calculator to your website</summary><p>Free to use on your own website or blog. Copy this code into your page and keep the credit link.</p><label class="sr-only" for="embed-code">Embed code</label><textarea id="embed-code" readonly rows="4">${esc(embedCode(t, c))}</textarea><div class="btns"><button type="button" class="embed-copy">Copy code</button></div></details>` : "";
+// A bare copy of a calculator for iframes: not indexed, canonical to the real page, root-relative links.
+function embedPage(id) {
+  const t = tool(id), c = byId.get(id), url = ORIGIN + c.slug;
+  return `${head({title: `${t.name} | ${SITE}`, description: c.description})}
+<link rel="canonical" href="${url}">
+<style>body.embed{margin:0;padding:12px;background:var(--bg)}body.embed .panel{margin:0}.embed-credit{margin:10px 2px 0;font-size:.85rem;color:var(--muted)}</style>
+</head>
+<body class="embed" data-tool="${id}">
+<main id="app"><section class="panel" aria-label="${esc(t.name)}">${t.ui}</section>
+<p class="embed-credit"><a href="${url}" target="_blank" rel="noopener">${esc(t.name)}</a> by <a href="${ORIGIN}" target="_blank" rel="noopener">ToolsBravo</a> · free, no sign-up</p></main>
+<script src="assets/tools.js"></script>
+</body>
+</html>
+`.replace(/(href|src)="(?!https?:|\/|#|data:)(?:\.\/)?([^"]*)"/g, '$1="/$2"');
+}
 const ratesNote = `<p class="checked">Rates last checked against HMRC guidance on <time datetime="2026-11-15">${RATES_CHECKED}</time> for the ${TAX_YEAR} tax year. Sources: <a href="https://www.gov.uk/income-tax-rates" rel="noopener">GOV.UK income tax rates</a>, <a href="https://www.gov.uk/national-insurance-rates-letters" rel="noopener">National Insurance rates</a>.</p>`;
 
 /* ---------- tool pages ---------- */
@@ -174,6 +195,7 @@ ${headerFor(c.id)}
   <div class="tool-cols">
   <div class="tool-main">
   <section class="panel" aria-label="${esc(t.name)}">${t.ui}</section>
+  ${embedBox(t, c)}
   <article class="guide">
     ${h2(howTo)}
     <ol>${c.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
@@ -181,7 +203,7 @@ ${headerFor(c.id)}
     ${c.id === "take-home-pay" ? `${h2(salaryHeading)}\n    <p>See the full breakdown for a specific salary, from ${k(SALARIES[0])} to ${k(SALARIES.at(-1))}, in the <a href="salary-after-tax.html">UK salary after tax table</a>.</p>` : ""}
     ${h2("Frequently asked questions")}
     ${faqHtml(c.faqs.map(([q, a]) => [q, esc(a)]))}
-    ${t.cat === "finance" ? ratesNote : ""}
+    ${c.sources ? sourcesNote(c) : ""}
   </article>
   <div class="related related-bottom"><h2>Related tools</h2><ul>${related.map(r => `<li><a href="${byId.get(r.id).slug}">${esc(r.name)}</a></li>`).join("")}</ul></div>
   </div>
@@ -510,6 +532,7 @@ for (const c of TOOL_CONTENT) outputs[c.slug] = toolPage(c);
 for (const p of PROSE) outputs[p.slug] = prosePage(p);
 for (const g of GUIDES) outputs[g.slug] = guidePage(g);
 outputs["automation-builder.html"] = automationPage();
+for (const id of Object.keys(EMBEDS)) outputs["embed/" + byId.get(id).slug] = embedPage(id);
 SALARIES.forEach((g, i) => { outputs[salarySlug(g)] = salaryPage(g, i); });
 
 // Sanity checks that protect search snippets.
@@ -538,7 +561,7 @@ const stale = [];
 for (const [path, body] of Object.entries(outputs)) {
   const current = existsSync(new URL(path, ROOT)) ? read(path) : null;
   if (current === body) continue;
-  if (check) stale.push(path); else writeFileSync(new URL(path, ROOT), body);
+  if (check) stale.push(path); else { mkdirSync(new URL(".", new URL(path, ROOT)), {recursive: true}); writeFileSync(new URL(path, ROOT), body); }
 }
 if (check && stale.length) { console.error("Out of date, run node scripts/build.mjs:\n  " + stale.join("\n  ")); process.exit(1); }
 console.log(check ? "Generated files are up to date." : `Wrote ${Object.keys(outputs).length} files.`);

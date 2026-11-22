@@ -383,6 +383,7 @@ const BASE_CONTENT = [
     ["Does this calculator work for Scotland?", "Not yet. Scotland has different income tax bands, so the results will not match a Scottish payslip. National Insurance is the same across the UK."],
     ["Does my pension reduce my tax?", "Yes. In a net pay arrangement, pension contributions are taken before income tax is calculated, so you pay less tax. National Insurance is still charged on your full salary."],
   ],
+  sources: [["GOV.UK: income tax rates","https://www.gov.uk/income-tax-rates"],["GOV.UK: National Insurance rates","https://www.gov.uk/national-insurance-rates-letters"],["GOV.UK: rates and thresholds for employers 2026 to 2027","https://www.gov.uk/guidance/rates-and-thresholds-for-employers-2026-to-2027"]],
   related: ["budget-planner", "savings-calculator", "loan-calculator"],
 },
 {
@@ -409,7 +410,30 @@ const BASE_CONTENT = [
     ["Can I use this as a mortgage calculator?", "Yes, for a repayment mortgage. Enter the mortgage amount, rate and term. It does not model interest-only mortgages, rate changes after a fixed period or fees."],
     ["What is APR?", "The annual percentage rate is the yearly cost of borrowing, including interest and some compulsory fees, which makes deals easier to compare."],
   ],
+  sources: [["Consumer Credit (Early Settlement) Regulations 2004","https://www.legislation.gov.uk/uksi/2004/1483"],["Bank of England: Bank Rate","https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate"]],
   related: ["debt-payoff", "savings-calculator", "take-home-pay"],
+},
+{
+  id: "mortgage-overpayment", slug: "mortgage-overpayment-calculator.html",
+  title: "Mortgage Overpayment Calculator UK – Interest Saved",
+  description: "See how monthly overpayments or a lump sum cut your mortgage term and interest, or how much to overpay to be mortgage-free sooner. Free UK calculator.",
+  h1: "Mortgage overpayment calculator",
+  lede: "Find out how much sooner you'd be mortgage-free and how much interest you'd save by overpaying each month or paying a lump sum, and what it takes to clear it by a date you choose.",
+  steps: ["Enter what you still owe, your interest rate and the years left.", "Add a monthly overpayment, a one-off lump sum, or both.", "For a lump sum, choose whether to keep your payment and finish sooner, or keep the end date and pay less.", "Or enter a number of years to see the monthly overpayment needed.", "Open Balance year by year to compare with and without overpaying."],
+  sections: [
+    ["Worked examples", "<p>For a <strong>£200,000 mortgage at 4.5% with 25 years left</strong>, the normal payment is <strong>£1,111.66 a month</strong>, with £133,499.49 of interest over the term.</p><ul><li><strong>Overpaying £200 a month</strong> clears it in 18 years 11 months instead of 25 years and saves <strong>£36,280.39</strong> in interest.</li><li><strong>A £10,000 lump sum after the first year</strong>, keeping the same payment, clears it 2 years 1 month sooner and saves <strong>£18,072.49</strong>. If you keep the end date instead, the payment drops to <strong>£1,054.82</strong> and you save £6,370.64.</li><li>To be <strong>mortgage-free in 15 years</strong>, overpay about <strong>£418.32 a month</strong>, saving about £58,101.90.</li></ul>"],
+    ["Shorter term or lower payments?", "<p>When you pay a lump sum, most lenders let you choose: keep paying the same amount and finish sooner, or keep the same end date and pay less each month. Finishing sooner saves far more interest, as the example shows. Lower payments give you breathing room. Regular monthly overpayments normally shorten the term.</p>"],
+    ["The 10% overpayment allowance", "<p>Many fixed-rate and tracker mortgages let you overpay up to 10% of the balance each year without an early repayment charge, and charge a percentage of the excess above that. Some deals allow more, some less, and variable rates often have no limit. The calculator flags first-year overpayments above 10% so you can check your own terms before paying.</p>"],
+    ["Overpay or save?", "<p>Overpaying saves interest at your mortgage rate, risk-free. Saving instead keeps the money available. Compare your mortgage rate with what savings would earn after tax, and keep an emergency fund first: money paid into a mortgage usually can't be taken back out. The <a href=\"savings-calculator.html\">savings calculator</a> shows the other side.</p>"],
+  ],
+  faqs: [
+    ["How much will I save by overpaying my mortgage?", "Enter your balance, rate and years left, then your overpayment. For £200,000 at 4.5% over 25 years, £200 a month extra saves about £36,280 and clears it about 6 years sooner."],
+    ["How much do I need to overpay to pay off my mortgage in 10 years?", "Enter 10 in mortgage-free in. The calculator shows the extra monthly payment needed and the interest you'd save."],
+    ["Is it better to reduce my term or my payment?", "Reducing the term saves much more interest. Reducing the payment frees up money each month. Most lenders let you choose when you make a lump sum."],
+    ["Can I overpay my mortgage without a penalty?", "Many fixed and tracker deals allow up to 10% of the balance a year without an early repayment charge. Check your mortgage offer or ask your lender."],
+  ],
+  sources: [["Bank of England: Bank Rate","https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate"]],
+  related: ["loan-calculator", "savings-calculator", "take-home-pay"],
 },
 {
   id: "savings-calculator", slug: "savings-calculator.html",
@@ -430,6 +454,7 @@ const BASE_CONTENT = [
     ["How much will £100 a month grow to?", "At 4% AER with £1,000 to start, about £16,150 after 10 years. Enter your own figures to see your result."],
     ["Does the calculator include tax?", "No. It shows growth before any tax on interest."],
   ],
+  sources: [["GOV.UK: tax on savings interest and the Personal Savings Allowance","https://www.gov.uk/apply-tax-free-interest-on-savings"],["Bank of England: Bank Rate","https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate"]],
   related: ["budget-planner", "take-home-pay", "debt-payoff"],
 },
 {
@@ -467,6 +492,7 @@ const BASE_CONTENT = [
     ["How do I add VAT at 5%?", "Change the VAT rate to 5 and choose 'Add VAT to this amount'."],
     ["Can I use other countries' VAT rates?", "Yes. Enter any rate. Amounts are shown in pounds, but the maths is the same for any currency."],
   ],
+  sources: [["GOV.UK: VAT rates","https://www.gov.uk/vat-rates"]],
   related: ["percentage-calculator", "take-home-pay", "budget-planner"],
 },
 {

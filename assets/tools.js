@@ -925,6 +925,72 @@ const TOOLS = [
     } catch (e) { say(msg, e.message, true); } finally { busy(go, false); }
   };
  }},
+{id: "extract-pages", cat: "files", name: "Extract PDF pages", desc: "Pick pages from a PDF and save them as a new PDF.",
+ ui: `${dropUI("xp-in", "application/pdf,.pdf", "Choose a PDF file", false)}<p id="xp-file" class="file-picked" hidden></p>
+  <div id="xp-work" hidden>
+   <div class="row"><div><label for="xp-pages">Pages to extract</label><input id="xp-pages" placeholder="e.g. 1-3, 5, 8-" autocomplete="off"></div>
+    <div><label for="xp-out-mode">Save as</label><select id="xp-out-mode"><option value="one">One PDF with all chosen pages</option><option value="each">A separate PDF for each page</option></select></div></div>
+   <div class="btns xp-quick" role="group" aria-label="Quick selection"><button type="button" data-sel="all">All</button><button type="button" data-sel="none">None</button><button type="button" data-sel="odd">Odd pages</button><button type="button" data-sel="even">Even pages</button><button type="button" data-sel="invert">Invert</button></div>
+   <p class="note">Click pages to choose them, or type page numbers above. Chosen pages are saved in page order.</p>
+   <div id="xp-grid" class="xp-grid" role="group" aria-label="Pages"></div>
+  </div>
+  <div class="btns"><button class="primary" id="xp-go" disabled>Extract pages</button></div><p id="xp-msg" class="note" aria-live="polite">Choose a PDF to start.</p><div id="xp-out"></div>`,
+ init(el) {
+  let file = null, count = 0, doc = null, observer = null; const chosen = new Set();
+  const go = $("#xp-go", el), msg = $("#xp-msg", el), input = $("#xp-pages", el), grid = $("#xp-grid", el);
+  // Page set <-> "1-3, 5, 8-" text.
+  const toText = () => { const s = [...chosen].sort((a, b) => a - b), out = []; for (let i = 0; i < s.length; i++) { let j = i; while (j + 1 < s.length && s[j + 1] === s[j] + 1) j++; out.push(j > i ? `${s[i] + 1}-${s[j] + 1}` : `${s[i] + 1}`); i = j; } return out.join(", "); };
+  const sync = (fromInput) => {
+    if (!fromInput) input.value = toText();
+    $$(".xp-page", grid).forEach(b => b.setAttribute("aria-pressed", String(chosen.has(+b.dataset.i))));
+    go.disabled = !chosen.size; go.textContent = chosen.size ? `Extract ${plural(chosen.size, "page")}` : "Extract pages";
+  };
+  input.addEventListener("input", () => {
+    chosen.clear();
+    try { if (input.value.trim()) pageGroups(input.value, count).flat().forEach(i => chosen.add(i)); input.removeAttribute("aria-invalid"); say(msg, chosen.size ? `${plural(chosen.size, "page")} chosen.` : "Choose pages to extract."); }
+    catch (e) { input.setAttribute("aria-invalid", "true"); say(msg, e.message, true); }
+    sync(true);
+  });
+  grid.addEventListener("click", ev => { const b = ev.target.closest(".xp-page"); if (!b) return; const i = +b.dataset.i; chosen.has(i) ? chosen.delete(i) : chosen.add(i); sync(); });
+  $(".xp-quick", el).addEventListener("click", ev => {
+    const k = ev.target.closest("[data-sel]")?.dataset.sel; if (!k) return;
+    const all = Array.from({length: count}, (_, i) => i), prev = new Set(chosen); chosen.clear();
+    ({all: () => all, none: () => [], odd: () => all.filter(i => i % 2 === 0), even: () => all.filter(i => i % 2 === 1), invert: () => all.filter(i => !prev.has(i))})[k]().forEach(i => chosen.add(i));
+    sync();
+  });
+  // Small previews, drawn only when they scroll into view.
+  const thumb = async (b) => {
+    if (b.dataset.done || !doc) return; b.dataset.done = "1";
+    try { const p = await doc.getPage(+b.dataset.i + 1), v1 = p.getViewport({scale: 1}), vp = p.getViewport({scale: Math.min(2, 220 / v1.width)}), c = b.querySelector("canvas");
+      c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height); const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+      await p.render({canvasContext: x, viewport: vp}).promise; p.cleanup(); } catch { delete b.dataset.done; }
+  };
+  wireDrop(el, "xp-in", async f => {
+    file = f[0]; go.disabled = true; $("#xp-out", el).innerHTML = ""; chosen.clear(); observer?.disconnect(); doc?.destroy(); doc = null;
+    try {
+      count = (await openPdf(file)).getPageCount(); doc = await openPdfJs(file);
+      const p = $("#xp-file", el); p.hidden = false; p.textContent = `${file.name} · ${fsize(file.size)} · ${plural(count, "page")}`;
+      grid.innerHTML = Array.from({length: count}, (_, i) => `<button type="button" class="xp-page" data-i="${i}" aria-pressed="false" aria-label="Page ${i + 1}"><canvas aria-hidden="true"></canvas><span>${i + 1}</span></button>`).join("");
+      observer = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && thumb(e.target)), {rootMargin: "200px"});
+      $$(".xp-page", grid).forEach(b => observer.observe(b));
+      $("#xp-work", el).hidden = false; input.value = ""; sync(); say(msg, "Click the pages you want, or type them in.");
+    } catch (e) { file = null; $("#xp-work", el).hidden = true; say(msg, e.message, true); }
+  });
+  go.onclick = async () => {
+    busy(go, true, "Extracting…");
+    try {
+      const {PDFDocument} = await pdfLib(), src = await openPdf(file), base = baseName(file), idx = [...chosen].sort((a, b) => a - b), items = [];
+      const sets = $("#xp-out-mode", el).value === "each" ? idx.map(i => [i]) : [idx];
+      for (const set of sets) {
+        const out = await PDFDocument.create(); (await out.copyPages(src, set)).forEach(p => out.addPage(p));
+        const label = set.length === 1 ? `page-${set[0] + 1}` : `pages-${toText().replace(/\s+/g, "").replace(/,/g, "_")}`;
+        items.push({name: `${base}-${label}.pdf`, blob: new Blob([await out.save({useObjectStreams: false})], {type: "application/pdf"}), note: plural(set.length, "page")});
+      }
+      showResults($("#xp-out", el), items);
+      say(msg, items.length === 1 ? `Your new PDF with ${plural(idx.length, "page")} is ready.` : `${items.length} PDFs are ready. Download them one by one or all as a ZIP.`);
+    } catch (e) { say(msg, e.message, true); } finally { busy(go, false); sync(); }
+  };
+ }},
 {id: "rotate-pdf", cat: "files", name: "Rotate PDF", desc: "Turn every page, or just some pages, of a PDF the right way up.",
  ui: `${dropUI("rp-in", "application/pdf,.pdf", "Choose a PDF file", false)}<p id="rp-file" class="file-picked" hidden></p>
   <div class="row"><div><label for="rp-angle">Rotate by</label><select id="rp-angle"><option value="90">90° clockwise</option><option value="180">180° (upside down)</option><option value="270">90° anticlockwise</option></select></div>
@@ -1762,6 +1828,52 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   };
   el.addEventListener("input", run); run();
  }},
+{id: "mortgage-overpayment", cat: "finance", name: "Mortgage overpayment calculator", desc: "See how overpaying or a lump sum shortens your mortgage and cuts interest.",
+ ui: `<div class="row"><div><label for="mo-bal">Mortgage balance (£)</label><input id="mo-bal" inputmode="decimal" value="200000"></div><div><label for="mo-rate">Interest rate (%)</label><input id="mo-rate" inputmode="decimal" value="4.5"></div></div>
+  <div class="row"><div><label for="mo-y">Years left</label><input id="mo-y" type="number" min="0" max="40" value="25"></div><div><label for="mo-m">Extra months</label><input id="mo-m" type="number" min="0" max="11" value="0"></div><div><label for="mo-x">Overpay each month (£)</label><input id="mo-x" inputmode="decimal" value="0"></div></div>
+  <div class="row"><div><label for="mo-l">One-off lump sum (£)</label><input id="mo-l" inputmode="decimal" value="0"></div><div><label for="mo-lm">Paid after month</label><input id="mo-lm" type="number" min="1" value="12"></div>
+   <div><label for="mo-mode">After the lump sum</label><select id="mo-mode"><option value="term">Keep the payment, end sooner</option><option value="pay">Keep the end date, pay less</option></select></div></div>
+  <div class="row"><div><label for="mo-t">Or: mortgage-free in (years, optional)</label><input id="mo-t" type="number" min="1" max="40" placeholder="e.g. 15"></div></div>
+  <div class="out" id="mo-out"></div>`,
+ init(el) {
+  const run = () => {
+    const B = num($("#mo-bal", el).value), rate = num($("#mo-rate", el).value), r = rate / 1200, n = Number($("#mo-y", el).value) * 12 + Number($("#mo-m", el).value);
+    const extra = num($("#mo-x", el).value) || 0, lump = num($("#mo-l", el).value) || 0, lumpAt = Number($("#mo-lm", el).value), lower = $("#mo-mode", el).value === "pay", target = Number($("#mo-t", el).value) || 0, o = $("#mo-out", el);
+    if (!(B > 0) || !Number.isFinite(rate) || rate < 0 || !Number.isInteger(n) || n < 1 || n > 480) return o.innerHTML = `<p class="err">Enter a positive balance, a rate of 0% or more, and 1 month to 40 years left.</p>`;
+    if (extra < 0 || lump < 0) return o.innerHTML = `<p class="err">Overpayments can't be negative.</p>`;
+    if (lump > 0 && !(Number.isInteger(lumpAt) && lumpAt >= 1 && lumpAt <= n)) return o.innerHTML = `<p class="err">Enter the lump sum month as a whole number from 1 to ${n}.</p>`;
+    const pmt = (P, m) => r ? P * r / (1 - Math.pow(1 + r, -m)) : P / m, base = pmt(B, n), baseInterest = base * n - B;
+    // Month by month with overpayments. A lump sum either shortens the term or, if chosen, lowers the payment for the remaining term.
+    let bal = B, pay = base, interest = 0, months = 0, newPay = null; const yearBal = [];
+    for (let m = 1; bal > 0.005 && m <= n; m++) {
+      const i = bal * r; interest += i;
+      let out = Math.min(bal + i, pay + extra);
+      if (lump > 0 && m === lumpAt) out = Math.min(bal + i, out + lump);
+      bal = bal + i - out; months = m;
+      if (lump > 0 && m === lumpAt && lower && bal > 0.005) { pay = pmt(bal, n - m); newPay = pay; }
+      if (m % 12 === 0) yearBal.push(Math.max(0, bal));
+    }
+    if (months % 12) yearBal.push(0);
+    const saved = baseInterest - interest, sooner = n - months, overYear1 = extra * Math.min(12, months) + (lump > 0 && lumpAt <= 12 ? lump : 0);
+    let html = `<p class="big">${gbp(base)} a month</p><p class="sub">to clear ${gbp(B)} in ${dur(n)}, with ${gbp(baseInterest)} of interest</p>`;
+    if (extra > 0 || lump > 0) {
+      html += `<div class="stats" style="margin-top:14px">${stats([[dur(months), "Mortgage-free in"], [gbp(saved), "Interest saved"], [sooner > 0 ? dur(sooner) : "Same end date", "Sooner"]])}</div>`;
+      if (newPay !== null) html += `<p class="note ok-msg">After the lump sum your monthly payment drops to ${gbp(newPay)}${extra > 0 ? ` (plus your ${gbp(extra)} overpayment)` : ""}.</p>`;
+      if (overYear1 > B * 0.1) html += `<p class="note">You'd overpay ${gbp(overYear1)} in the first year, more than 10% of the balance (${gbp(B * 0.1)}). Many fixed and tracker deals charge an early repayment charge above 10% a year, so check your mortgage terms.</p>`;
+      else html += `<p class="note">First-year overpayments: ${gbp(overYear1)}, within 10% of the balance (${gbp(B * 0.1)}), the allowance many lenders give without a charge.</p>`;
+    }
+    if (target) {
+      if (target * 12 >= n) html += `<p class="note">You're already due to finish within ${plural(target, "year")}.</p>`;
+      else { const need = pmt(B, target * 12) - base; html += `<p class="note ok-msg">To be mortgage-free in ${plural(target, "year")}, overpay about <strong>${gbp(need)} a month</strong> (${gbp(base + need)} in total), saving about ${gbp(baseInterest - ((base + need) * target * 12 - B))} in interest.</p>`; }
+    }
+    if (extra > 0 || lump > 0) {
+      const rows = yearBal.map((b, k) => { const y = k + 1, m = Math.min(y * 12, n), noOver = r ? B * Math.pow(1 + r, m) - base * (Math.pow(1 + r, m) - 1) / r : B - base * m; return `<tr><th scope="row">${y}</th><td>${gbp(Math.max(0, noOver))}</td><td>${gbp(b)}</td></tr>`; }).join("");
+      html += `<details class="schedule"><summary>Balance year by year</summary><div class="tablewrap"><table><tr><th>Year</th><th>Without overpaying</th><th>With overpaying</th></tr>${rows}</table></div></details>`;
+    }
+    o.innerHTML = html;
+  };
+  el.addEventListener("input", run); el.addEventListener("change", run); run();
+ }},
 {id: "savings-calculator", cat: "finance", name: "Savings calculator", desc: "See how regular saving and compound interest grow.",
  ui: `<div class="row"><div><label for="vs">Starting amount (£)</label><input id="vs" inputmode="decimal" value="1000"></div><div><label for="vm">Monthly deposit (£)</label><input id="vm" inputmode="decimal" value="100"></div></div>
   <div class="row"><div><label for="vr">Interest rate (AER %)</label><input id="vr" inputmode="decimal" value="4"></div><div><label for="vy">Years</label><input id="vy" type="number" min="1" max="50" value="10"></div></div><div class="out" id="vo"></div>
@@ -1843,6 +1955,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
 const SLUGS = {
   "sign-pdf": "sign-pdf.html",
   "edit-pdf": "edit-pdf.html",
+  "extract-pages": "extract-pdf-pages.html",
   "merge-word": "merge-word-documents.html",
   "pdf-to-excel": "pdf-to-excel.html", "excel-to-pdf": "excel-to-pdf.html", "csv-to-excel": "csv-to-excel.html", "excel-to-csv": "excel-to-csv.html", "merge-excel": "merge-excel-files.html", "excel-to-json": "excel-to-json.html", "remove-duplicate-rows": "remove-duplicate-rows.html", "excel-viewer": "excel-viewer.html",
   "merge-pdf": "merge-pdf.html", "split-pdf": "split-pdf.html", "rotate-pdf": "rotate-pdf.html", "delete-pdf-pages": "delete-pdf-pages.html", "jpg-to-pdf": "jpg-to-pdf.html", "pdf-to-jpg": "pdf-to-jpg.html", "pdf-to-word": "pdf-to-word.html", "word-to-pdf": "word-to-pdf.html", "compress-pdf": "compress-pdf.html", "image-converter": "image-converter.html", "image-compressor": "image-compressor.html", "image-resizer": "image-resizer.html",
@@ -1852,7 +1965,7 @@ const SLUGS = {
   "age-calculator": "age-calculator.html", "percentage-calculator": "percentage-calculator.html", "json-formatter": "json-formatter.html",
   "base64": "base64-encoder-decoder.html", "url-encoder": "url-encoder-decoder.html", "hash-generator": "hash-generator.html",
   "uuid-generator": "uuid-generator.html", "timestamp-converter": "unix-timestamp-converter.html", "colour-converter": "colour-converter.html",
-  "take-home-pay": "uk-take-home-pay-calculator.html", "loan-calculator": "loan-repayment-calculator.html", "savings-calculator": "savings-calculator.html",
+  "take-home-pay": "uk-take-home-pay-calculator.html", "loan-calculator": "loan-repayment-calculator.html", "mortgage-overpayment": "mortgage-overpayment-calculator.html", "savings-calculator": "savings-calculator.html",
   "debt-payoff": "debt-payoff-calculator.html", "vat-calculator": "vat-calculator.html", "budget-planner": "budget-planner.html"
 };
 const CATS = [
@@ -1866,7 +1979,7 @@ const app = $("#app");
 const DEF_DESC = $('meta[name="description"]').content, DEF_TITLE = document.title;
 
 // Small icon glyph for each tool card.
-const ICONS = {"sign-pdf": "✍", "edit-pdf": "✎", "merge-word": "W+", "pdf-to-excel": "XLS", "excel-to-pdf": "PDF", "csv-to-excel": "CSV", "excel-to-csv": "⇢", "merge-excel": "⊞", "excel-to-json": "{ }", "remove-duplicate-rows": "≠", "excel-viewer": "▤",
+const ICONS = {"sign-pdf": "✍", "edit-pdf": "✎", "extract-pages": "⇱", "mortgage-overpayment": "⌂", "merge-word": "W+", "pdf-to-excel": "XLS", "excel-to-pdf": "PDF", "csv-to-excel": "CSV", "excel-to-csv": "⇢", "merge-excel": "⊞", "excel-to-json": "{ }", "remove-duplicate-rows": "≠", "excel-viewer": "▤",
   "merge-pdf": "⧉", "split-pdf": "✂", "rotate-pdf": "↻", "delete-pdf-pages": "⌫", "jpg-to-pdf": "JPG", "pdf-to-jpg": "PDF", "pdf-to-word": "W", "word-to-pdf": "DOC", "compress-pdf": "⇲", "image-converter": "⇆", "image-compressor": "◫", "image-resizer": "⤢",
   "time-duration": "◷", "aspect-ratio": "▭", "text-sorter": "⇅", "date-difference": "▦", "bmi-calculator": "♡", "word-counter": "¶",
   "case-converter": "Aa", "password-generator": "✱", "unit-converter": "⇄", "age-calculator": "✦", "percentage-calculator": "%",
@@ -1944,9 +2057,13 @@ function route() {
   if (SLUGS[id]) { location.replace(SLUGS[id]); return; }
   showHome(CATS.some(c => c.id === id) ? id : null);
 }
-$("#siteName").textContent = SITE; $$(".sn").forEach(s => s.textContent = SITE);
-$("#yr").textContent = new Date().getFullYear();
-$(".skip-link").addEventListener("click", e => { e.preventDefault(); app.focus(); app.scrollIntoView(); });
+// Embedded calculators have no site header or footer.
+if ($("#siteName")) $("#siteName").textContent = SITE;
+$$(".sn").forEach(s => s.textContent = SITE);
+if ($("#yr")) $("#yr").textContent = new Date().getFullYear();
+// "Add this calculator to your website": copy the embed code.
+document.addEventListener("click", e => { const b = e.target.closest(".embed-copy"); if (b) copy(b.closest(".embed-box").querySelector("textarea").value, b); });
+$(".skip-link")?.addEventListener("click", e => { e.preventDefault(); app.focus(); app.scrollIntoView(); });
 const PAGE_TOOL = TOOLS.find(x => x.id === document.body.dataset.tool);
 if (PAGE_TOOL) PAGE_TOOL.init($(".panel"));
 else if (document.body.dataset.page === "home") { window.addEventListener("hashchange", route); route(); }
