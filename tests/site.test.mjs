@@ -70,6 +70,17 @@ test('about page names the owner and a contact address; privacy page gives it fo
  assert.match(about,/"@type":"AboutPage"/);
  assert.match(priv,/href="mailto:bismaibrar@icloud.com"/);
 });
+test('salary pages give student loan and Scottish figures for that salary',()=>{
+ const p50=readPage('50000-after-tax.html'),p25=readPage('25000-after-tax.html'),p110=readPage('110000-after-tax.html');
+ // Independent figures: Scottish 2026/27 bands and Plan 2 at 9% over £29,385.
+ assert.ok(p50.includes('pays £8,982.05 income tax'));
+ assert.ok(p50.includes('repay £1,855.35 a year'));
+ assert.ok(p25.includes('you repay nothing at £25,000'));
+ assert.ok(p25.includes('£39.67 a year more than'));
+ assert.ok(p110.includes('pays £37,482.05 income tax'));
+ assert.ok(p50.includes('after tax with a student loan</h2>'));
+ assert.ok(p50.includes('after tax in Scotland</h2>'));
+});
 test('financial calculators reject invalid negative rates',()=>{
  assert.match(script,/apr < 0/);
  assert.match(script,/aer <= -100/);
