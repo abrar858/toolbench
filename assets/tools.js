@@ -1248,12 +1248,13 @@ const TOOLS = [
 
 /* ---------- GENERAL ---------- */
 
-{id: "time-duration",cat:"general",name:"Time duration calculator",desc:"Shift hours with overnight times and breaks, plus a weekly timesheet with pay.",
+{id: "time-duration",cat:"general",name:"Hours calculator",desc:"Work hours with breaks, overnight shifts and a weekly timesheet with pay.",
 ui:`<div class="row"><div><label for="dur-start">Start time</label><input id="dur-start" type="time"></div><div><label for="dur-end">End time</label><input id="dur-end" type="time"></div><div><label for="dur-break">Break (minutes)</label><input id="dur-break" type="number" min="0" step="1" value="0"></div></div><label class="check"><input id="dur-next" type="checkbox"> End on next day</label><div id="dur-out" class="out" aria-live="polite"></div><p class="note">Earlier end times automatically count as overnight. For equal times, select next day for 24 hours. Supports shifts up to 24 hours. Uses clock times without daylight-saving adjustments.</p>
  <h2 class="panel-title">Weekly timesheet and pay</h2>
  <div class="tablewrap"><table class="ts"><thead><tr><th scope="col">Day</th><th scope="col">Start</th><th scope="col">End</th><th scope="col">Break (min)</th><th scope="col">Hours</th></tr></thead><tbody>${["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((d, i) => `<tr><th scope="row">${d}</th><td><input type="time" id="ts-s${i}" aria-label="${d} start"${i < 5 ? ' value="09:00"' : ""}></td><td><input type="time" id="ts-e${i}" aria-label="${d} end"${i < 5 ? ' value="17:30"' : ""}></td><td><input type="number" id="ts-b${i}" aria-label="${d} break in minutes" min="0" step="1" value="${i < 5 ? 30 : 0}"></td><td class="ts-h" id="ts-h${i}"></td></tr>`).join("")}</tbody></table></div>
+ <div class="row"><div><label for="ts-round">Round each day to the nearest</label><select id="ts-round"><option value="0">No rounding</option><option value="5">5 minutes</option><option value="6">6 minutes (tenth of an hour)</option><option value="15">15 minutes (quarter hour)</option></select></div></div>
  <div class="row"><div><label for="ts-rate">Hourly rate (£, optional)</label><input id="ts-rate" inputmode="decimal" placeholder="e.g. 12.71"></div><div><label for="ts-ot">Overtime after (hours a week)</label><input id="ts-ot" type="number" min="0" step="0.5" placeholder="e.g. 40"></div><div><label for="ts-otx">Overtime rate</label><select id="ts-otx"><option value="1.5">Time and a half (×1.5)</option><option value="2">Double time (×2)</option><option value="1.25">×1.25</option><option value="1">Same rate</option></select></div></div>
- <div id="ts-out" class="out" aria-live="polite"></div><div class="btns"><button id="ts-clear">Clear the week</button><button id="ts-copy">Copy summary</button></div>`,
+ <div id="ts-out" class="out" aria-live="polite"></div><div class="btns"><button id="ts-clear">Clear the week</button><button id="ts-copy">Copy summary</button><button id="ts-csv">Download timesheet (CSV)</button></div>`,
 init(el){
 const parse=s=>{if(!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(s))return NaN;const [h,m]=s.split(":").map(Number);return h*60+m;};
 const run=()=>{const a=parse($("#dur-start",el).value),b=parse($("#dur-end",el).value),raw=$("#dur-break",el).value.trim(),br=Number(raw),o=$("#dur-out",el);
@@ -1266,14 +1267,15 @@ const n=total-br;o.innerHTML='<p class="big">'+plural(Math.floor(n/60),"hour")+'
 };
 // Weekly timesheet: each row is a shift (overnight when the end is earlier than the start).
 const hm=m=>`${Math.floor(m/60)}h ${String(m%60).padStart(2,"0")}m`;
-let summary="";
+let summary="",rowsOut=[];
+const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const sheet=()=>{
- let mins=0,days=0,bad=[];
+ let mins=0,days=0,bad=[];rowsOut=[];const rnd=Number($("#ts-round",el).value)||0;
  for(let i=0;i<7;i++){const s=parse($(`#ts-s${i}`,el).value),e=parse($(`#ts-e${i}`,el).value),b=Number($(`#ts-b${i}`,el).value||0),cell=$(`#ts-h${i}`,el);
   if(!Number.isFinite(s)||!Number.isFinite(e)){cell.textContent="–";continue;}
   const len=e-s+(e<=s?1440:0);
   if(!Number.isFinite(b)||b<0||b>=len){cell.textContent="Check break";bad.push(i);continue;}
-  cell.textContent=hm(len-b);mins+=len-b;days++;}
+  const w=rnd?Math.round((len-b)/rnd)*rnd:len-b;cell.textContent=hm(w);mins+=w;days++;rowsOut.push([DAYS[i],$(`#ts-s${i}`,el).value,$(`#ts-e${i}`,el).value,b,hm(w),(w/60).toFixed(2)]);}
  const rate=num($("#ts-rate",el).value),otAfter=Number($("#ts-ot",el).value),otx=Number($("#ts-otx",el).value),o=$("#ts-out",el);
  const hours=mins/60,otHours=Number.isFinite(otAfter)&&$("#ts-ot",el).value!==""&&hours>otAfter?hours-otAfter:0,basic=hours-otHours;
  const pay=rate>0?basic*rate+otHours*rate*otx:null;
@@ -1285,6 +1287,7 @@ const sheet=()=>{
 };
 $("#ts-clear",el).onclick=()=>{for(let i=0;i<7;i++){$(`#ts-s${i}`,el).value="";$(`#ts-e${i}`,el).value="";$(`#ts-b${i}`,el).value=0;}sheet();};
 $("#ts-copy",el).onclick=e=>copy(summary,e.target);
+$("#ts-csv",el).onclick=()=>saveBlob(new Blob(["\uFEFFDay,Start,End,Break (min),Hours,Decimal hours\n"+rowsOut.map(r=>r.join(",")).join("\n")+`\nTotal,,,,,${rowsOut.reduce((t,r)=>t+Number(r[5]),0).toFixed(2)}`],{type:"text/csv"}),"timesheet.csv");
 const both=()=>{run();sheet();};
 el.addEventListener("input",both);el.addEventListener("change",both);both();
 }},
@@ -1817,7 +1820,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
       else {
         const left = sched[settleAt - 1].bal, future = sched.slice(settleAt).reduce((t, x) => t + x.interest, 0), extraInt = left * (apr / 100) * 58 / 365;
         settle = `<div class="settle"><p class="sub" style="margin:14px 0 6px"><strong>Settling in full after month ${settleAt}</strong></p><div class="stats">${stats([[gbp(left), "Balance left"], [gbp(left + extraInt), "Settlement, with up to 58 days' interest"], [gbp(Math.max(0, future - extraInt)), "Interest saved, at least"]])}</div>
-          <p class="note">Lenders can usually add up to 58 days' interest when you settle, and some fixed-rate loans have a small fee. Ask your lender for a settlement figure: that's the exact amount.</p></div>`;
+          <p class="note">Lenders can usually add up to 58 days' interest when you settle, and some fixed-rate loans have a small fee. Ask your lender for a settlement figure: that's the exact amount. For a closer estimate, use the <a href="early-loan-settlement-calculator.html">early loan settlement calculator</a>.</p></div>`;
       }
     }
     o.innerHTML = `<p class="big">${gbp(pay)} a month</p><p class="sub">for ${dur(n)}${over ? `, cleared in ${dur(months_)} with ${what}` : ""}</p>
@@ -1827,6 +1830,53 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     $("#l-csv", o).onclick = () => saveBlob(new Blob(["﻿Month,Payment,Interest,Capital,Balance\n" + sched.map(x => [x.m, x.pay, x.interest, x.principal, x.bal].map(v => typeof v === "number" && !Number.isInteger(v) ? v.toFixed(2) : v).join(",")).join("\n")], {type: "text/csv"}), "loan-schedule.csv");
   };
   el.addEventListener("input", run); run();
+ }},
+{id: "loan-settlement", cat: "finance", name: "Early loan settlement calculator", desc: "Estimate your settlement figure and the interest saved by paying a loan off early.",
+ ui: `<div class="row"><div><label for="es-mode">I know</label><select id="es-mode"><option value="loan">The amount borrowed and the term</option><option value="stmt">My monthly payment and payments left</option></select></div><div><label for="es-apr">APR (%)</label><input id="es-apr" inputmode="decimal" value="9.9"></div></div>
+  <div class="row es-loan"><div><label for="es-amt">Amount borrowed (£)</label><input id="es-amt" inputmode="decimal" value="15000"></div><div><label for="es-term">Term (months)</label><input id="es-term" type="number" min="2" max="600" value="60"></div><div><label for="es-made">Payments made so far</label><input id="es-made" type="number" min="0" value="24"></div></div>
+  <div class="row es-stmt" style="display:none"><div><label for="es-pay">Monthly payment (£)</label><input id="es-pay" inputmode="decimal" value="314.86"></div><div><label for="es-left">Payments left</label><input id="es-left" type="number" min="1" max="600" value="36"></div></div>
+  <div class="row"><div><label for="es-days">Days until settlement (0–30)</label><input id="es-days" type="number" min="0" max="30" value="28"></div><div><label for="es-when">Agreement taken out</label><select id="es-when"><option value="new">On or after 1 February 2011</option><option value="old">Before 1 February 2011</option></select></div></div>
+  <div class="out" id="es-out" aria-live="polite"></div>
+  <p class="note">Assumes you ask just after a monthly payment, so no other payment falls due before you settle. Your lender's settlement statement gives the exact figure.</p>`,
+ init(el) {
+  const run = () => {
+    const o = $("#es-out", el), stmt = $("#es-mode", el).value === "stmt", apr = num($("#es-apr", el).value), days = Number($("#es-days", el).value), isNew = $("#es-when", el).value === "new";
+    $(".es-loan", el).style.display = stmt ? "none" : ""; $(".es-stmt", el).style.display = stmt ? "" : "none";
+    if (!Number.isFinite(apr) || apr < 0 || apr > 1000) return o.innerHTML = `<p class="err">Enter an APR of 0% or more.</p>`;
+    if (!(Number.isInteger(days) && days >= 0 && days <= 30)) return o.innerHTML = `<p class="err">Enter the days until settlement as a whole number from 0 to 30. Lenders use 28 days after they receive your request.</p>`;
+    // Statutory method: the APR is an annual effective rate; the monthly rate is its 12th root.
+    const A = apr / 100, i = Math.pow(1 + A, 1 / 12) - 1, pv = (p, n) => i ? p * (1 - Math.pow(1 + i, -n)) / i : p * n;
+    let pay, left;
+    if (stmt) {
+      pay = num($("#es-pay", el).value); left = Number($("#es-left", el).value);
+      if (!(pay > 0) || !(Number.isInteger(left) && left >= 1 && left <= 600)) return o.innerHTML = `<p class="err">Enter your monthly payment and the number of payments left (1 to 600).</p>`;
+    } else {
+      const P = num($("#es-amt", el).value), N = Number($("#es-term", el).value), made = Number($("#es-made", el).value);
+      if (!(P > 0) || !(Number.isInteger(N) && N >= 2 && N <= 600)) return o.innerHTML = `<p class="err">Enter the amount borrowed and a term of 2 to 600 months.</p>`;
+      if (!(Number.isInteger(made) && made >= 0 && made < N)) return o.innerHTML = `<p class="err">Payments made must be a whole number from 0 to ${N - 1}.</p>`;
+      pay = i ? P * i / (1 - Math.pow(1 + i, -N)) : P / N; left = N - made;
+    }
+    // Amount to settle d days after the last payment, the most a lender could ask if it defers the settlement
+    // date by a month (more than a year left), and the compensation allowed on newer agreements over £8,000.
+    const at = (n, d) => pv(pay, n) * Math.pow(1 + A, d / 365);
+    const figure = at(left, days), t = days / 365;
+    const deferred = left > 12 ? pv(pay, left) * Math.pow(1 + A, t + 1 / 12) + pay * (1 - Math.pow(1 + A, t)) : figure;
+    const remaining = pay * left, comp = isNew && figure > 8000 ? Math.min((left > 12 ? 0.01 : 0.005) * figure, remaining - figure) : 0;
+    const worst = deferred + comp, savedMin = Math.max(0, remaining - worst), savedMax = Math.max(0, remaining - figure);
+    let html = `<p class="big">${gbp(figure)} to settle</p><p class="sub">in ${plural(days, "day")}, instead of ${plural(left, "more payment")} of ${gbp(pay)} (${gbp(remaining)})</p>
+      <div class="stats" style="margin-top:14px">${stats([[gbp(savedMax), "Interest saved"], [gbp(worst), "Highest likely figure"], [gbp(savedMin), "Saved, at the least"]])}</div>`;
+    const why = [];
+    if (deferred > figure) why.push(`up to ${gbp(deferred - figure)} more if your lender works out the rebate one month later, which the rules allow when more than a year is left`);
+    if (comp > 0) why.push(`up to ${gbp(comp)} early repayment compensation (${left > 12 ? "1%" : "0.5%"} of the amount repaid), allowed because more than £8,000 is being repaid early`);
+    html += why.length ? `<p class="note">The highest likely figure adds ${why.join(", and ")}. Many lenders charge less, or nothing.</p>` : `<p class="note">With a year or less left and no more than £8,000 repaid early, the lender can't add a deferral or compensation, so the figure should be close.</p>`;
+    if (isNew && figure <= 8000 && left > 0) html += `<p class="note ok-msg">No early repayment compensation: you're repaying ${gbp(figure)}, below the £8,000 a year threshold.</p>`;
+    // Settling later: the figure and the interest still saved after more payments.
+    const rows = [];
+    for (let k = 6; k < left; k += k < 24 ? 6 : 12) { const f = at(left - k, days); rows.push(`<tr><th scope="row">${plural(k, "more payment")}</th><td>${gbp(f)}</td><td>${gbp(pay * (left - k) - f)}</td></tr>`); if (rows.length >= 8) break; }
+    if (rows.length) html += `<details class="schedule"><summary>If you settle later</summary><div class="tablewrap"><table><tr><th>After</th><th>Settlement figure</th><th>Interest saved</th></tr><tr><th scope="row">Now</th><td>${gbp(figure)}</td><td>${gbp(savedMax)}</td></tr>${rows.join("")}</table></div><p class="note">Before any deferral or compensation. Settling sooner always saves more interest.</p></details>`;
+    o.innerHTML = html;
+  };
+  el.addEventListener("input", run); el.addEventListener("change", run); run();
  }},
 {id: "mortgage-overpayment", cat: "finance", name: "Mortgage overpayment calculator", desc: "See how overpaying or a lump sum shortens your mortgage and cuts interest.",
  ui: `<div class="row"><div><label for="mo-bal">Mortgage balance (£)</label><input id="mo-bal" inputmode="decimal" value="200000"></div><div><label for="mo-rate">Interest rate (%)</label><input id="mo-rate" inputmode="decimal" value="4.5"></div></div>
@@ -1934,8 +1984,10 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   };
   el.addEventListener("input", run); el.addEventListener("change", run); run();
  }},
-{id: "budget-planner", cat: "finance", name: "50/30/20 budget planner", desc: "Split monthly income into needs, wants and savings.",
+{id: "budget-planner", cat: "finance", name: "50/30/20 budget planner", desc: "Split your pay into needs, wants and savings, and compare with what you spend.",
  ui: `<div class="row"><div><label for="bi">Take-home pay (£)</label><input id="bi" inputmode="decimal" value="2200"></div><div><label for="bf">Paid</label><select id="bf"><option value="12" selected>Monthly</option><option value="13">Every 4 weeks</option><option value="26">Every 2 weeks (fortnightly)</option><option value="52">Weekly</option><option value="1">Yearly (after tax)</option></select></div></div><div class="out" id="bo"></div>
+  <details class="bp-actual"><summary>Compare with what you actually spend</summary><p class="note">Enter what you spend in the same period as your pay.</p>
+  <div class="row"><div><label for="ban">Needs: bills, rent, food, travel (£)</label><input id="ban" inputmode="decimal" placeholder="e.g. 1250"></div><div><label for="baw">Wants (£)</label><input id="baw" inputmode="decimal" placeholder="e.g. 500"></div><div><label for="bas">Savings and extra debt payments (£)</label><input id="bas" inputmode="decimal" placeholder="e.g. 200"></div></div><div class="out" id="bao"></div></details>
   <p class="note">Needs are bills you must pay: rent, council tax, energy, food, transport, minimum debt payments. Wants are everything optional. The last 20% goes to savings or paying debt off faster.</p>`,
  init(el) {
   const run = () => {
@@ -1946,6 +1998,16 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     const split = (amount, what) => `<div class="stats">${stats([[gbp(amount * .5), `Needs (50%) ${what}`], [gbp(amount * .3), `Wants (30%) ${what}`], [gbp(amount * .2), `Savings and debt (20%) ${what}`]])}</div>`;
     const also = [[12, "a month"], [52, "a week"]].filter(([p]) => p !== per).map(([p, l]) => `${gbp(year / p * .5)} / ${gbp(year / p * .3)} / ${gbp(year / p * .2)} ${l}`);
     o.innerHTML = split(i, label) + `<p class="note">That's ${gbp(year)} a year after tax. Needs / wants / savings: ${also.join("; ")}.</p>`;
+    // Optional comparison with real spending in the same period.
+    const vals = ["#ban", "#baw", "#bas"].map(id => $(id, el).value.trim()), ao = $("#bao", el);
+    if (vals.every(v => v === "")) return ao.innerHTML = "";
+    const [n, w, sv] = vals.map(v => v === "" ? 0 : num(v));
+    if (![n, w, sv].every(v => Number.isFinite(v) && v >= 0)) return ao.innerHTML = `<p class="err">Spending amounts must be £0 or more.</p>`;
+    const spent = n + w + sv, left = i - spent, pct = v => `${(v / i * 100).toFixed(0)}%`;
+    const row = (name, act, share) => { const target = i * share, d = act - target; return `<tr><th scope="row">${name}</th><td>${gbp(act)} (${pct(act)})</td><td>${gbp(target)} (${share * 100}%)</td><td>${Math.abs(d) < 0.005 ? "On target" : d > 0 ? `${gbp(d)} over` : `${gbp(-d)} under`}</td></tr>`; };
+    ao.innerHTML = `<div class="tablewrap"><table><tr><th>${esc(label[0].toUpperCase() + label.slice(1))}</th><th>You spend</th><th>50/30/20 target</th><th>Difference</th></tr>${row("Needs", n, .5)}${row("Wants", w, .3)}${row("Savings and debt", sv, .2)}</table></div>`
+      + (left >= 0 ? `<p class="note ok-msg">${gbp(left)} left unallocated ${label}. Adding it to savings would put ${pct(sv + left)} towards savings and debt.</p>` : `<p class="err">You're spending ${gbp(-left)} more than you take home ${label}.</p>`)
+      + (n > i * .5 ? `<p class="note">Needs take ${pct(n)} of your pay. That's common with UK housing costs: aim to keep wants down so you can still save something.</p>` : "");
   };
   el.addEventListener("input", run); el.addEventListener("change", run); run();
  }}
@@ -1965,7 +2027,7 @@ const SLUGS = {
   "age-calculator": "age-calculator.html", "percentage-calculator": "percentage-calculator.html", "json-formatter": "json-formatter.html",
   "base64": "base64-encoder-decoder.html", "url-encoder": "url-encoder-decoder.html", "hash-generator": "hash-generator.html",
   "uuid-generator": "uuid-generator.html", "timestamp-converter": "unix-timestamp-converter.html", "colour-converter": "colour-converter.html",
-  "take-home-pay": "uk-take-home-pay-calculator.html", "loan-calculator": "loan-repayment-calculator.html", "mortgage-overpayment": "mortgage-overpayment-calculator.html", "savings-calculator": "savings-calculator.html",
+  "take-home-pay": "uk-take-home-pay-calculator.html", "loan-calculator": "loan-repayment-calculator.html", "loan-settlement": "early-loan-settlement-calculator.html", "mortgage-overpayment": "mortgage-overpayment-calculator.html", "savings-calculator": "savings-calculator.html",
   "debt-payoff": "debt-payoff-calculator.html", "vat-calculator": "vat-calculator.html", "budget-planner": "budget-planner.html"
 };
 const CATS = [
@@ -1979,7 +2041,7 @@ const app = $("#app");
 const DEF_DESC = $('meta[name="description"]').content, DEF_TITLE = document.title;
 
 // Small icon glyph for each tool card.
-const ICONS = {"sign-pdf": "✍", "edit-pdf": "✎", "extract-pages": "⇱", "mortgage-overpayment": "⌂", "merge-word": "W+", "pdf-to-excel": "XLS", "excel-to-pdf": "PDF", "csv-to-excel": "CSV", "excel-to-csv": "⇢", "merge-excel": "⊞", "excel-to-json": "{ }", "remove-duplicate-rows": "≠", "excel-viewer": "▤",
+const ICONS = {"sign-pdf": "✍", "edit-pdf": "✎", "extract-pages": "⇱", "mortgage-overpayment": "⌂", "loan-settlement": "✓", "merge-word": "W+", "pdf-to-excel": "XLS", "excel-to-pdf": "PDF", "csv-to-excel": "CSV", "excel-to-csv": "⇢", "merge-excel": "⊞", "excel-to-json": "{ }", "remove-duplicate-rows": "≠", "excel-viewer": "▤",
   "merge-pdf": "⧉", "split-pdf": "✂", "rotate-pdf": "↻", "delete-pdf-pages": "⌫", "jpg-to-pdf": "JPG", "pdf-to-jpg": "PDF", "pdf-to-word": "W", "word-to-pdf": "DOC", "compress-pdf": "⇲", "image-converter": "⇆", "image-compressor": "◫", "image-resizer": "⤢",
   "time-duration": "◷", "aspect-ratio": "▭", "text-sorter": "⇅", "date-difference": "▦", "bmi-calculator": "♡", "word-counter": "¶",
   "case-converter": "Aa", "password-generator": "✱", "unit-converter": "⇄", "age-calculator": "✦", "percentage-calculator": "%",

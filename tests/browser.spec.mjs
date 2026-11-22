@@ -1180,7 +1180,7 @@ test('salary table shows per-fortnight take-home pay', async ({page}) => {
 
 test('pages say what people searched for: hours with breaks, image pixels, Excel to CSV', async ({page}) => {
  await page.goto('/time-duration-calculator.html');
- await expect(page.locator('main h1')).toHaveText('Hours calculator with breaks');
+ await expect(page.locator('main h1')).toHaveText('Work hours calculator with breaks');
  await page.goto('/image-resizer.html');
  await expect(page.locator('main h1')).toContainText('pixel size');
  await page.goto('/excel-to-csv.html');
@@ -1271,4 +1271,82 @@ test('finance pages cite their own sources', async ({page}) => {
  await expect(page.locator('p.checked')).toContainText('HMRC');
  await page.goto('/budget-planner.html');
  await expect(page.locator('p.checked')).toHaveCount(0);
+});
+
+/* ---------- Near page 1 and early loan settlement ---------- */
+test('early loan settlement calculator matches independent statutory-method figures', async ({page}) => {
+ const errors = []; page.on('pageerror', e => errors.push(e.message));
+ await page.goto('/early-loan-settlement-calculator.html');
+ const out = page.locator('#es-out');
+ // £15,000 at 9.9% APR over 60 months, 24 paid: 36 × £314.86 left.
+ await expect(out.locator('.big')).toHaveText('£9,904.02 to settle');
+ await expect(out).toContainText('36 more payments of £314.86 (£11,335.01)');
+ await expect(out).toContainText('£1,430.99');
+ await expect(out).toContainText('£10,078.99');
+ await expect(out).toContainText('£1,256.02');
+ await expect(out).toContainText('up to £99.04 early repayment compensation (1%');
+ // Statement mode: £250 a month, 30 left, 12.9% APR — under £8,000, so no compensation.
+ await page.locator('#es-mode').selectOption('stmt');
+ await expect(page.locator('#es-amt')).toBeHidden();
+ await page.locator('#es-pay').fill('250'); await page.locator('#es-left').fill('30'); await page.locator('#es-apr').fill('12.9');
+ await expect(out.locator('.big')).toHaveText('£6,496.84 to settle');
+ await expect(out).toContainText('£6,560.53');
+ await expect(out).toContainText('below the £8,000 a year threshold');
+ // A year or less left: no deferral, no compensation.
+ await page.locator('#es-left').fill('12');
+ await expect(out).toContainText("the lender can't add a deferral or compensation");
+ // Older agreements: no section 95A compensation.
+ await page.locator('#es-mode').selectOption('loan'); await page.locator('#es-apr').fill('9.9'); await page.locator('#es-when').selectOption('old');
+ await expect(out).not.toContainText('compensation (');
+ await expect(out).toContainText('£9,979.95');
+ await page.locator('#es-days').fill('45');
+ await expect(out.locator('.err')).toContainText('0 to 30');
+ expect(errors).toEqual([]);
+});
+
+test('loan page links to the settlement calculator', async ({page}) => {
+ await page.goto('/loan-repayment-calculator.html');
+ await expect(page.locator('article a[href="early-loan-settlement-calculator.html"]').first()).toBeVisible();
+ await page.locator('.loan-early summary').click();
+ await page.locator('#ls').fill('24');
+ await expect(page.locator('#lo a[href="early-loan-settlement-calculator.html"]')).toHaveCount(1);
+});
+
+test('budget planner compares real spending with the 50/30/20 targets', async ({page}) => {
+ await page.goto('/budget-planner.html');
+ await expect(page.locator('#bao')).toBeEmpty();
+ await page.locator('.bp-actual summary').click();
+ await page.locator('#ban').fill('1250'); await page.locator('#baw').fill('500'); await page.locator('#bas').fill('200');
+ const ao = page.locator('#bao');
+ await expect(ao).toContainText('£150.00 over');
+ await expect(ao).toContainText('£160.00 under');
+ await expect(ao).toContainText('£240.00 under');
+ await expect(ao).toContainText('£250.00 left unallocated a month');
+ await expect(ao).toContainText('Needs take 57%');
+ await page.locator('#ban').fill('2000');
+ await expect(ao.locator('.err')).toContainText('£500.00 more than you take home');
+});
+
+test('hours calculator rounds each day for payroll and downloads the timesheet', async ({page}) => {
+ await page.goto('/time-duration-calculator.html');
+ await page.locator('#ts-s0').fill('09:02'); await page.locator('#ts-e0').fill('17:31');
+ await expect(page.locator('#ts-h0')).toHaveText('7h 59m');
+ await page.locator('#ts-round').selectOption('15');
+ await expect(page.locator('#ts-h0')).toHaveText('8h 00m');
+ await expect(page.locator('#ts-out')).toContainText('40.00');
+ const d = await download(page, () => page.locator('#ts-csv').click());
+ const csv = (await readDownload(d)).toString('utf8');
+ expect(csv).toContain('Monday,09:02,17:31,30,8h 00m,8.00');
+ expect(csv.trim().split('\n').at(-1)).toBe('Total,,,,,40.00');
+});
+
+test('near-page-1 pages answer their searches', async ({page}) => {
+ await page.goto('/excel-to-csv.html');
+ await expect(page.locator('h1')).toHaveText('Excel to CSV converter: XLSX and XLS to CSV');
+ await expect(page.locator('article')).toContainText('How do I convert XLS to CSV?');
+ await page.goto('/word-to-pdf.html');
+ await expect(page.locator('h1')).toHaveText('Word to PDF converter: DOCX to PDF');
+ await expect(page.locator('article')).toContainText('Other ways to turn a DOCX into a PDF');
+ await page.goto('/budget-planner.html');
+ await expect(page.locator('article')).toContainText('Is it the 50/30/20 or the 20/30/50 rule?');
 });
