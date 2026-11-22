@@ -762,3 +762,21 @@ input.ep-field[type=checkbox],input.ep-field[type=radio]{accent-color:var(--teal
   .ep-prop{font-size:.8rem}
   .ep-prop select{min-height:32px;padding:2px 6px}
 }
+
+/* Extract PDF pages: page picker */
+.xp-quick{margin:4px 0 0}
+.tool .panel .xp-quick button{min-height:36px;padding:6px 12px;font-size:.85rem}
+.xp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin:12px 0;max-height:min(70vh,760px);overflow:auto;padding:4px}
+.tool .panel .xp-page{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px;border:2px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;min-height:0;box-shadow:none}
+.tool .panel .xp-page canvas{display:block;width:100%;height:auto;min-height:120px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.tool .panel .xp-page span{font-size:.85rem;font-weight:600}
+.tool .panel .xp-page[aria-pressed=true]{border-color:var(--teal);background:var(--tint)}
+.tool .panel .xp-page[aria-pressed=true]::after{content:"✓";position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-size:.85rem}
+.tool .panel .xp-page:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
+@media(max-width:560px){.xp-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}}
+
+/* "Add this calculator to your website" */
+.embed-box{margin:12px 0 28px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:var(--surface)}
+.embed-box>summary{cursor:pointer;font-weight:600;padding:12px 0;min-height:44px;display:flex;align-items:center}
+.embed-box[open]{padding-bottom:12px}
+.embed-box textarea{width:100%;font:.8rem/1.4 var(--mono);resize:vertical}

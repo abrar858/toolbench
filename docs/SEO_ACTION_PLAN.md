@@ -25,6 +25,7 @@ Evidence: `SEO_AUDIT.md`. Query research: `SEO_KEYWORD_MAP.md`. Results: `SEO_PR
 | 2.3 | Remove duplicate rows: how to do it in Excel itself (Remove Duplicates, shortcut, UNIQUE, Mac) | ✅ Live (#19) |
 | 2.4 | Unix timestamp: Discord timestamp codes | ✅ PR (guide, automation, Discord) |
 | 2.5 | Scottish income tax in take-home pay and salary pages | Blocked until 2026/27 Scottish rates are verified from gov.scot / HMRC |
+| 2.9 | Phase A: Extract PDF pages, mortgage overpayment calculator, embeddable calculators, page-specific sources (from the 16–21 Nov Search Console export) | PR (Phase A) |
 | 2.8 | New Edit PDF tool (from autocomplete research on PDF-editing searches and competitor review) | PR (Edit PDF) |
 | 2.7 | Loan: lump sum and early settlement; Budget: weekly and fortnightly pay; Savings: gross ↔ AER (from the 18 Nov Search Console queries) | PR (finance search intent) |
 | 2.6 | Category landing pages (e.g. PDF tools) to replace `/#category` breadcrumb targets — only if each gives real guidance on choosing a tool | Proposed, decide after Search Console data |

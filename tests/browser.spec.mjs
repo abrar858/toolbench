@@ -721,7 +721,7 @@ test('header menus: click, hover, keyboard, Escape and outside click on desktop'
  await files.locator('summary').click();
  await expect(files.locator('.mm-panel')).toBeVisible();
  await expect(files.locator('a[aria-current=page]')).toContainText('Sign PDF');
- await expect(files.locator('.mm-list a')).toHaveCount(14);
+ await expect(files.locator('.mm-list a')).toHaveCount(15);
  // Only one menu open at a time.
  await office.locator('summary').click();
  await expect(office.locator('.mm-panel')).toBeVisible();
@@ -760,6 +760,7 @@ test('header menu on phones: menu button, current section open, no sideways scro
  await expect(page.locator('#site-menu')).toBeVisible();
  await expect(page.locator('.mm[data-cat=finance] .mm-panel')).toBeVisible();
  await expect(page.locator('.mm[data-cat=finance] a[aria-current=page]')).toContainText('Salary after tax table');
+ await page.locator('.mm-link').scrollIntoViewIfNeeded();
  await expect(page.locator('.mm-link')).toBeInViewport();
  expect(await page.evaluate(() => { const n = document.querySelector('#site-menu'); return [n.scrollWidth <= n.clientWidth, document.documentElement.scrollWidth <= innerWidth]; })).toEqual([true, true]);
  await page.locator('.mm[data-cat=files] summary').click();
@@ -1184,4 +1185,90 @@ test('pages say what people searched for: hours with breaks, image pixels, Excel
  await expect(page.locator('main h1')).toContainText('pixel size');
  await page.goto('/excel-to-csv.html');
  await expect(page.locator('#saving-as-csv-in-excel-itself')).toBeVisible();
+});
+
+/* ---------- Phase A: Extract PDF pages, mortgage overpayments, embeds, sources ---------- */
+const pdfPageTexts = (page, buf) => page.evaluate(async b64 => {
+ const doc = await (await pdfJs()).getDocument({data: Uint8Array.from(atob(b64), c => c.charCodeAt(0)), isEvalSupported: false}).promise, out = [];
+ for (let i = 1; i <= doc.numPages; i++) out.push((await (await doc.getPage(i)).getTextContent()).items.map(t => t.str).join(' '));
+ doc.destroy(); return out;
+}, buf.toString('base64'));
+
+test('extract PDF pages: click thumbnails or type ranges, then save one PDF or one per page', async ({page}) => {
+ await page.goto('/extract-pdf-pages.html');
+ await page.locator('#xp-in').setInputFiles(fixture('sign-long.pdf'));
+ await expect(page.locator('.xp-page')).toHaveCount(60);
+ await expect(page.locator('#xp-go')).toBeDisabled();
+ await page.getByRole('button', {name: 'Page 2', exact: true}).click();
+ await page.getByRole('button', {name: 'Page 5', exact: true}).click();
+ await page.getByRole('button', {name: 'Page 3', exact: true}).click();
+ await expect(page.locator('#xp-pages')).toHaveValue('2-3, 5');
+ await expect(page.locator('#xp-go')).toHaveText('Extract 3 pages');
+ let d = await download(page, async () => { await page.locator('#xp-go').click(); await page.locator('#xp-out [data-dl="0"]').click(); });
+ let texts = await pdfPageTexts(page, await readDownload(d));
+ expect(texts.map(t => t.match(/page (\d+)/)[1])).toEqual(['2', '3', '5']);
+ // Typing updates the thumbnails.
+ await page.locator('#xp-pages').fill('58-');
+ await expect(page.getByRole('button', {name: 'Page 60', exact: true})).toHaveAttribute('aria-pressed', 'true');
+ await expect(page.getByRole('button', {name: 'Page 2', exact: true})).toHaveAttribute('aria-pressed', 'false');
+ await page.locator('#xp-out-mode').selectOption('each');
+ await page.locator('#xp-go').click();
+ await expect(page.locator('#xp-out [data-dl]')).toHaveCount(3);
+ // Quick selection.
+ await page.locator('[data-sel=odd]').click();
+ await expect(page.locator('#xp-go')).toHaveText('Extract 30 pages');
+ await page.locator('[data-sel=invert]').click();
+ await expect(page.locator('#xp-pages')).toHaveValue(/^2, 4, 6/);
+ await page.locator('#xp-pages').fill('70');
+ await expect(page.locator('#xp-msg')).toContainText('outside pages 1 to 60');
+});
+
+test('mortgage overpayment calculator matches independent closed-form figures', async ({page}) => {
+ await page.goto('/mortgage-overpayment-calculator.html');
+ await expect(page.locator('#mo-out .big')).toHaveText('£1,111.66 a month');
+ await expect(page.locator('#mo-out')).toContainText('£133,499.49');
+ await page.locator('#mo-x').fill('200');
+ await expect(page.locator('#mo-out')).toContainText('18 years 11 months');
+ await expect(page.locator('#mo-out')).toContainText('£36,280.39');
+ await page.locator('#mo-x').fill('0'); await page.locator('#mo-l').fill('10000');
+ await expect(page.locator('#mo-out')).toContainText('£18,072.49');
+ await expect(page.locator('#mo-out')).toContainText('2 years 1 month');
+ await page.locator('#mo-mode').selectOption('pay');
+ await expect(page.locator('#mo-out')).toContainText('drops to £1,054.82');
+ await expect(page.locator('#mo-out')).toContainText('£6,370.64');
+ await page.locator('#mo-l').fill('0'); await page.locator('#mo-t').fill('15');
+ await expect(page.locator('#mo-out')).toContainText('£418.32 a month');
+ await page.locator('#mo-t').fill(''); await page.locator('#mo-x').fill('2000');
+ await expect(page.locator('#mo-out')).toContainText('more than 10% of the balance');
+});
+
+test('calculators can be embedded: copy box, bare noindex page, working calculator and credit link', async ({page}) => {
+ await page.goto('/vat-calculator.html');
+ await page.locator('.embed-box summary').click();
+ const code = await page.locator('#embed-code').inputValue();
+ expect(code).toContain('<iframe src="https://toolsbravo.com/embed/vat-calculator.html"');
+ expect(code).toContain('<a href="https://toolsbravo.com/vat-calculator.html">VAT calculator</a> by ToolsBravo');
+ const errors = []; page.on('pageerror', e => errors.push(e.message));
+ await page.goto('/embed/vat-calculator.html');
+ await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', 'noindex');
+ await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', 'https://toolsbravo.com/vat-calculator.html');
+ await expect(page.locator('.site-head')).toHaveCount(0);
+ await page.locator('#va').fill('100');
+ await expect(page.locator('#vto')).toContainText('£120.00');
+ await expect(page.locator('.embed-credit a').first()).toHaveAttribute('href', 'https://toolsbravo.com/vat-calculator.html');
+ await page.goto('/embed/mortgage-overpayment-calculator.html');
+ await expect(page.locator('#mo-out .big')).toHaveText('£1,111.66 a month');
+ expect(errors).toEqual([]);
+});
+
+test('finance pages cite their own sources', async ({page}) => {
+ await page.goto('/vat-calculator.html');
+ await expect(page.locator('p.checked a[href="https://www.gov.uk/vat-rates"]')).toHaveCount(1);
+ await expect(page.locator('p.checked')).not.toContainText('income tax');
+ await page.goto('/loan-repayment-calculator.html');
+ await expect(page.locator('p.checked a[href="https://www.legislation.gov.uk/uksi/2004/1483"]')).toHaveCount(1);
+ await page.goto('/uk-take-home-pay-calculator.html');
+ await expect(page.locator('p.checked')).toContainText('HMRC');
+ await page.goto('/budget-planner.html');
+ await expect(page.locator('p.checked')).toHaveCount(0);
 });
