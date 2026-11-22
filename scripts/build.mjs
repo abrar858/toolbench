@@ -234,10 +234,27 @@ function bands(g) {
     band: b.additional > 0 ? "additional rate (45%)" : b.higher > 0 ? "higher rate (40%)" : b.basic > 0 ? "basic rate (20%)" : "personal allowance (0%)"};
 }
 
+// 2026/27 student loan repayment thresholds (GOV.UK): 9% above the threshold, 6% for postgraduate loans.
+const STUDENT_LOANS = [["Plan 1", 26900, .09], ["Plan 2", 29385, .09], ["Plan 4 (Scotland)", 33795, .09], ["Plan 5", 25000, .09], ["Postgraduate Loan", 21000, .06]];
+const studentLoan = (g, [, threshold, rate]) => Math.max(0, g - threshold) * rate;
+// 2026/27 Scottish income tax (gov.scot): band widths on taxable income after the personal allowance.
+const SCOT_BANDS = [[3967, .19, "starter"], [16956, .20, "basic"], [31092, .21, "intermediate"], [62430, .42, "higher"], [125140, .45, "advanced"], [Infinity, .48, "top"]];
+function scotTax(g) {
+  const pa = g > 100000 ? Math.max(0, 12570 - (g - 100000) / 2) : 12570, ti = Math.max(0, g - pa);
+  let tax = 0, lo = 0, band = "personal allowance";
+  for (const [hi, rate, name] of SCOT_BANDS) { if (ti > lo) { tax += (Math.min(ti, hi) - lo) * rate; band = name; } lo = hi; }
+  return {tax, band};
+}
+const SALARY_SOURCES = `<p class="checked">Student loan thresholds from <a href="https://www.gov.uk/repaying-your-student-loan/what-you-pay" rel="noopener">GOV.UK: what you pay</a>. Scottish rates from <a href="https://www.gov.scot/publications/scottish-income-tax-rates-and-bands/pages/2026-to-2027/" rel="noopener">gov.scot: Scottish income tax 2026 to 2027</a>.</p>`;
+
 function salaryPage(g, i) {
   const r = bands(g), p5 = ukPay(g, 5), url = ORIGIN + salarySlug(g);
   const prev = SALARIES[i - 1], next = SALARIES[i + 1];
-  const hourly = g / 52 / 37.5, netHourly = r.net / 52 / 37.5;
+  const hourly = g / 52 / 37.5, netHourly = r.net / 52 / 37.5, daily = g / 260, netDaily = r.net / 260;
+  const loans = STUDENT_LOANS.map(p => [p[0], studentLoan(g, p), p[1]]), plan2 = loans[1][1];
+  const loanRows = loans.map(([name, pay, threshold]) => `<tr><th scope="row">${name}</th><td>${k(threshold)}</td><td>${pay ? gbp(pay / 12) : "Nothing"}</td><td>${gbp((r.net - pay) / 12)}</td></tr>`).join("");
+  const scot = scotTax(g), scotNet = g - scot.tax - r.ni, scotDiff = scotNet - r.net;
+  const loanText = plan2 > 0 ? `On Plan 2, the most common plan for students from England who started university between 2012 and 2023, you repay ${gbp(plan2)} a year (${gbp(plan2 / 12)} a month), so take-home pay falls to ${gbp((r.net - plan2) / 12)} a month.` : `On Plan 2, the most common plan for students from England who started university between 2012 and 2023, you repay nothing at ${k(g)}, because it's below the ${k(29385)} threshold.`;
   const title = `${k(g)} After Tax UK ${TAX_YEAR}: ${gbp(r.net / 12)} a Month`;
   const description = `On a ${k(g)} salary you take home ${gbp(r.net)} a year, ${gbp(r.net / 12)} a month or ${gbp(r.net / 52)} a week after income tax and National Insurance in ${TAX_YEAR}.`;
   const trail = [[SITE, "./"], ["Finance tools", "./#finance"], ["Salary after tax", "salary-after-tax.html"], [`${k(g)} after tax`, salarySlug(g)]];
@@ -250,7 +267,9 @@ function salaryPage(g, i) {
     [`What tax band is a ${k(g)} salary in?`, `${k(g)} falls in the ${r.band} band. Each extra £1 earned is taxed at a combined rate of about ${pct(r.marginal)} including National Insurance.`],
     [`How much is ${k(g)} an hour?`, `At 37.5 hours a week for 52 weeks, ${k(g)} is about ${gbp(hourly)} an hour before tax and ${gbp(netHourly)} an hour after tax and National Insurance.`],
     [`How much tax do I pay on ${k(g)}?`, `${gbp(r.tax)} income tax and ${gbp(r.ni)} employee National Insurance a year: ${gbp(r.tax + r.ni)} in total, or ${pct(r.effective)} of your salary.`],
-    [`Is this right if I live in Scotland?`, `No. Scotland has its own income tax bands, so your income tax will differ. National Insurance is the same across the UK.`],
+    [`How much is ${k(g)} after tax in Scotland?`, `In ${TAX_YEAR}, ${gbp(scotNet)} a year or ${gbp(scotNet / 12)} a month, because Scotland has its own income tax bands. National Insurance is the same across the UK.`],
+    [`How much is ${k(g)} after tax with a student loan?`, plan2 > 0 ? `On Plan 2, ${gbp((r.net - plan2) / 12)} a month after repaying ${gbp(plan2 / 12)} a month. Plan 1, Plan 4, Plan 5 and postgraduate loans have different thresholds: see the table above.` : `On Plan 2 you repay nothing at ${k(g)}, so take-home stays ${gbp(r.net / 12)} a month. Plan 1, Plan 5 and postgraduate loans have lower thresholds: see the table above.`],
+    [`How much is ${k(g)} a day?`, `Over 260 working days a year, ${gbp(daily)} a day before tax and ${gbp(netDaily)} a day after income tax and National Insurance.`],
   ];
   const panel = tool("take-home-pay").ui.replace('id="sg" inputmode="decimal" value="30000"', `id="sg" inputmode="decimal" value="${g}"`)
     .replace('id="sp" inputmode="decimal" value="5"', 'id="sp" inputmode="decimal" value="0"');
@@ -291,8 +310,14 @@ ${headerFor("salary")}
     ${taper}
     ${h2("With a 5% workplace pension")}
     <p>Paying 5% of salary (${gbp(p5.pen)} a year) into a net pay pension scheme reduces income tax to ${gbp(p5.tax)} and leaves take-home pay of ${gbp(p5.net)} a year, or ${gbp(p5.net / 12)} a month. The pension costs you ${gbp(r.net - p5.net)} a year in take-home pay because tax relief makes up the rest. Salary sacrifice schemes also save National Insurance.</p>
-    ${h2("Hourly rate")}
-    <p>On a 37.5-hour week, ${k(g)} works out at about ${gbp(hourly)} an hour before tax, or ${gbp(netHourly)} an hour after tax and National Insurance.</p>
+    ${h2("Hourly and daily rate")}
+    <p>On a 37.5-hour week, ${k(g)} works out at about ${gbp(hourly)} an hour before tax, or ${gbp(netHourly)} an hour after tax and National Insurance. Over 260 working days a year, that's ${gbp(daily)} a day before tax and ${gbp(netDaily)} a day after.</p>
+    ${h2(`${k(g)} after tax with a student loan`)}
+    <p>Student loan repayments are 9% of earnings above your plan's threshold (6% for a postgraduate loan), taken through payroll. ${loanText}</p>
+    <div class="tablewrap"><table><tr><th>Plan</th><th>Threshold</th><th>Repayment a month</th><th>Take-home a month</th></tr>${loanRows}</table></div>
+    <p>If you have a postgraduate loan as well as an undergraduate plan, you repay both. Repayments are based on pay before pension contributions, unless you use salary sacrifice.</p>
+    ${h2(`${k(g)} after tax in Scotland`)}
+    <p>Scotland sets its own income tax bands, and National Insurance is the same across the UK. On ${k(g)} a Scottish taxpayer pays ${gbp(scot.tax)} income tax and takes home <strong>${gbp(scotNet)}</strong> a year, or <strong>${gbp(scotNet / 12)}</strong> a month. That's ${Math.abs(scotDiff) < 0.5 ? "about the same as" : `${gbp(Math.abs(scotDiff))} a year ${scotDiff > 0 ? "more" : "less"} than`} in England, Wales and Northern Ireland, with the top slice of income in the Scottish ${scot.band} rate band.</p>
     ${h2("Compare nearby salaries")}
     <div class="tablewrap"><table><tr><th>Salary</th><th>Take-home per year</th><th>Per month</th></tr>${nearby}</table></div>
     ${h2("Try your own figures")}
@@ -303,11 +328,12 @@ ${headerFor("salary")}
     ${h2("Frequently asked questions")}
     ${faqHtml(faqs)}
     ${ratesNote}
+    ${SALARY_SOURCES}
   </article>
   <div class="related related-bottom"><h2>Other salaries</h2><ul>${prev ? `<li><a href="${salarySlug(prev)}">← ${k(prev)} after tax</a></li>` : ""}${next ? `<li><a href="${salarySlug(next)}">${k(next)} after tax →</a></li>` : ""}<li><a href="salary-after-tax.html">All salaries</a></li><li><a href="budget-planner.html">50/30/20 budget planner</a></li></ul></div>
   </div>
   <aside class="tool-aside"><div class="tool-aside-inner">
-    ${toc([`${k(g)} salary breakdown`, "How the tax is worked out", "With a 5% workplace pension", "Hourly rate", "Compare nearby salaries", "Try your own figures", "Frequently asked questions"])}
+    ${toc([`${k(g)} salary breakdown`, "How the tax is worked out", "With a 5% workplace pension", "Hourly and daily rate", `${k(g)} after tax with a student loan`, `${k(g)} after tax in Scotland`, "Compare nearby salaries", "Try your own figures", "Frequently asked questions"])}
     ${asideLinks("Other salaries", [...(prev ? [[`← ${k(prev)} after tax`, salarySlug(prev)]] : []), ...(next ? [[`${k(next)} after tax →`, salarySlug(next)]] : []), ["All salaries", "salary-after-tax.html"], ["UK take-home pay calculator", "uk-take-home-pay-calculator.html"], ["50/30/20 budget planner", "budget-planner.html"]])}
   </div></aside>
   </div>
