@@ -371,10 +371,11 @@ ${footer(null)}
 `.replace(/(href|src)="(?!https?:|\/|#|data:)(?:\.\/)?([^"]*)"/g, '$1="/$2"'); // GitHub Pages serves 404.html at any depth, so links must be root-relative.
 
 /* ---------- About and Privacy ---------- */
-function prosePage({slug, title, description, h1, lede, html}) {
+function prosePage({slug, title, description, h1, lede, html, data}) {
   const trail = [[SITE, "./"], [h1, slug]];
   return `${head({title, description, url: ORIGIN + slug})}
 ${ld(crumbsLd(trail))}
+${data ? ld(data) : ""}
 </head>
 <body>
 ${header}
@@ -393,22 +394,27 @@ ${footer(null)}
 </html>
 `;
 }
+const OWNER = "Bisma Zainab", CONTACT = "bismaibrar@icloud.com";
 const PROSE = [
   {slug: "about.html", title: `About ${SITE} | Free, Private Online Tools`, h1: `About ${SITE}`,
     description: `Who makes ${SITE}, how its free calculators and tools work, how results are checked, and how to report a problem.`,
     lede: "Free everyday calculators, text tools, converters and developer utilities that work on phones and computers, with no account, subscription or app to install.",
-    html: `<h2>Private by design</h2><p>The tools run in your browser. What you type into a calculator, text box or converter is processed on your own device and is not uploaded to a ${SITE} server. Visitors do not need accounts to use the tools; there are no adverts or tracking cookies. Fonts and libraries are hosted on ToolsBravo itself, so your browser doesn't contact other companies to use the tools. Read the <a href="privacy.html">privacy notice</a> for details.</p>
+    data: {"@context": "https://schema.org", "@type": "AboutPage", url: ORIGIN + "about.html", name: `About ${SITE}`,
+      mainEntity: {"@type": "Organization", name: SITE, url: ORIGIN, email: CONTACT, logo: ORIGIN + "assets/icon-512.png", founder: {"@type": "Person", name: OWNER}}},
+    html: `<h2>Who runs ${SITE}</h2><p>${SITE} is built and run by ${OWNER}. It started as a set of everyday tools that should be quick, free and private: no sign-up, no adverts, and no uploading your files or figures to someone else's server.</p>
+    <h2>Private by design</h2><p>The tools run in your browser. What you type into a calculator, text box or converter is processed on your own device and is not uploaded to a ${SITE} server. Visitors do not need accounts to use the tools; there are no adverts or tracking cookies. Fonts and libraries are hosted on ToolsBravo itself, so your browser doesn't contact other companies to use the tools. Read the <a href="privacy.html">privacy notice</a> for details.</p>
     <h2>How results are checked</h2><p>The source code is public on <a href="https://github.com/abrar858/toolbench">GitHub</a>. Automated tests run on every change. They check the UK income tax and National Insurance figures against worked examples, test that every tool loads without errors, and confirm that worked examples quoted on each page match what the tool calculates.</p>
     <p>UK finance tools use the published rates for the stated tax year. Each finance page shows the date its rates were last checked against GOV.UK guidance. Rates are reviewed each spring before the new tax year starts on 6 April.</p>
     <h2>Limits of the calculators</h2><p>Finance results are estimates for guidance, not financial, tax or legal advice. UK pay estimates use stated assumptions and may not reflect your tax code, region, benefits, pension scheme, student loan or other deductions. Confirm important figures with official guidance, your payslip or a qualified professional. Health tools such as the BMI calculator are screening estimates, not a diagnosis.</p>
-    <h2>Report a problem or suggest a tool</h2><p>Found a wrong result, a broken page or a missing tool? Open an issue in the <a href="https://github.com/abrar858/toolbench/issues">${SITE} GitHub repository</a>. Please do not include personal information in public issues.</p>`},
+    <h2>Report a problem or suggest a tool</h2><p>Found a wrong result, a broken page or a missing tool? Open an issue in the <a href="https://github.com/abrar858/toolbench/issues">${SITE} GitHub repository</a>. Please do not include personal information in public issues.</p>
+    <h2>Contact</h2><p>For anything else, including privacy questions, email ${OWNER} at <a href="mailto:${CONTACT}">${CONTACT}</a>.</p>`},
   {slug: "privacy.html", title: `Privacy | ${SITE}`, h1: "Privacy",
     description: `How ${SITE} handles tool inputs and optional feedback. Tools run in your browser; feedback is sent to our secure provider.`,
     lede: `${SITE} keeps tool inputs in your browser. Optional feedback is processed separately.`,
     html: `<p>Calculations, conversions, and files you use with the tools are processed locally in your browser. We do not receive the documents, passwords or calculator values you enter into those tools.</p>
     <h2>Hosting and external services</h2><p>The website is hosted on GitHub Pages, which may process IP addresses and connection logs. If you choose to send feedback, your browser connects to Supabase (our feedback database and submission provider). The private administrator dashboard loads a JavaScript library from esm.sh when an administrator visits it. We do not use advertising trackers on tool pages.</p>
     <h2>Optional feedback</h2><p>When you submit a review, bug report or feature request, we collect the selected tool, feedback category, optional rating, message and submission time. Supabase processes your submission. The server uses a temporary hash derived from connection information to limit abuse; the hash is not intended to identify you. We do not ask for your name or email in the feedback form. Please do not include personal, medical or financial information in the message. Submissions are private until reviewed and are not published automatically.</p>
-    <h2>Purpose, retention and requests</h2><p>We use feedback to improve the tools, investigate problems and moderate reviews. We retain submissions while they are needed for those purposes, subject to periodic review; a fixed automatic deletion schedule has not yet been implemented. To request deletion or raise a privacy concern, contact us through the <a href="https://github.com/abrar858/toolbench">project's GitHub repository</a> without posting sensitive details publicly.</p>
+    <h2>Purpose, retention and requests</h2><p>We use feedback to improve the tools, investigate problems and moderate reviews. We retain submissions while they are needed for those purposes, subject to periodic review; a fixed automatic deletion schedule has not yet been implemented. To request deletion or raise a privacy concern, email <a href="mailto:${CONTACT}">${CONTACT}</a>, or contact us through the <a href="https://github.com/abrar858/toolbench">project's GitHub repository</a> without posting sensitive details publicly.</p>
     <h2>Local storage and administrator login</h2><p>On public tool pages, local storage is used only for your theme choice and locally saved automation workflows. The private feedback administrator dashboard uses Supabase Authentication to manage administrator sessions; ordinary visitors do not need an account to submit feedback.</p>
     <p class="checked">Last updated: November 2026.</p>`},
 ];

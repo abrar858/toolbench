@@ -58,6 +58,13 @@ test('privacy and about pages are linked from the home page',()=>{
  assert.match(html,/href="privacy\.html"/);
  assert.match(html,/href="about\.html"/);
 });
+test('about page names the owner and a contact address; privacy page gives it for requests',()=>{
+ const about=readFileSync(new URL('../about.html',import.meta.url),'utf8'),priv=readFileSync(new URL('../privacy.html',import.meta.url),'utf8');
+ assert.match(about,/built and run by Bisma Zainab/);
+ assert.match(about,/href="mailto:bismaibrar@icloud.com"/);
+ assert.match(about,/"@type":"AboutPage"/);
+ assert.match(priv,/href="mailto:bismaibrar@icloud.com"/);
+});
 test('financial calculators reject invalid negative rates',()=>{
  assert.match(script,/apr < 0/);
  assert.match(script,/aer <= -100/);
