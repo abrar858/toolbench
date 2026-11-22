@@ -394,29 +394,74 @@ ${footer(null)}
 </html>
 `;
 }
-const OWNER = "Bisma Zainab", CONTACT = "bismaibrar@icloud.com";
+const OWNER = "Bisma Zainab", CONTACT = "bismaibrar@icloud.com", MAILTO = `<a href="mailto:${CONTACT}">${CONTACT}</a>`;
+const PROSE_UPDATED = {text: "22 November 2026", iso: "2026-11-22"};
+const linkTo = (id, text) => { const c = byId.get(id); if (!c) throw new Error("about page: unknown tool " + id); return `<a href="${c.slug}">${text || esc(tool(id).name)}</a>`; };
+const catList = () => `<ul>${Object.entries(CATS).map(([cat, label]) => {
+  const n = TOOLS.filter(t => t.cat === cat).length + (EXTRA_CARDS[cat] || []).length;
+  return `<li><a href="./#${cat}">${esc(label)} tools</a> (${n}): ${esc(CAT_BLURB[cat])}</li>`;
+}).join("")}</ul>`;
+const ORG_LD = {"@type": "Organization", "@id": ORIGIN + "#organization", name: SITE, url: ORIGIN, logo: ORIGIN + "assets/icon-512.png", email: CONTACT,
+  founder: {"@type": "Person", name: OWNER, jobTitle: "Software developer"}};
 const PROSE = [
-  {slug: "about.html", title: `About ${SITE} | Free, Private Online Tools`, h1: `About ${SITE}`,
-    description: `Who makes ${SITE}, how its free calculators and tools work, how results are checked, and how to report a problem.`,
-    lede: "Free everyday calculators, text tools, converters and developer utilities that work on phones and computers, with no account, subscription or app to install.",
-    data: {"@context": "https://schema.org", "@type": "AboutPage", url: ORIGIN + "about.html", name: `About ${SITE}`,
-      mainEntity: {"@type": "Organization", name: SITE, url: ORIGIN, email: CONTACT, logo: ORIGIN + "assets/icon-512.png", founder: {"@type": "Person", name: OWNER}}},
-    html: `<h2>Who runs ${SITE}</h2><p>${SITE} is built and run by ${OWNER}. It started as a set of everyday tools that should be quick, free and private: no sign-up, no adverts, and no uploading your files or figures to someone else's server.</p>
-    <h2>Private by design</h2><p>The tools run in your browser. What you type into a calculator, text box or converter is processed on your own device and is not uploaded to a ${SITE} server. Visitors do not need accounts to use the tools; there are no adverts or tracking cookies. Fonts and libraries are hosted on ToolsBravo itself, so your browser doesn't contact other companies to use the tools. Read the <a href="privacy.html">privacy notice</a> for details.</p>
-    <h2>How results are checked</h2><p>The source code is public on <a href="https://github.com/abrar858/toolbench">GitHub</a>. Automated tests run on every change. They check the UK income tax and National Insurance figures against worked examples, test that every tool loads without errors, and confirm that worked examples quoted on each page match what the tool calculates.</p>
-    <p>UK finance tools use the published rates for the stated tax year. Each finance page shows the date its rates were last checked against GOV.UK guidance. Rates are reviewed each spring before the new tax year starts on 6 April.</p>
-    <h2>Limits of the calculators</h2><p>Finance results are estimates for guidance, not financial, tax or legal advice. UK pay estimates use stated assumptions and may not reflect your tax code, region, benefits, pension scheme, student loan or other deductions. Confirm important figures with official guidance, your payslip or a qualified professional. Health tools such as the BMI calculator are screening estimates, not a diagnosis.</p>
-    <h2>Report a problem or suggest a tool</h2><p>Found a wrong result, a broken page or a missing tool? Open an issue in the <a href="https://github.com/abrar858/toolbench/issues">${SITE} GitHub repository</a>. Please do not include personal information in public issues.</p>
-    <h2>Contact</h2><p>For anything else, including privacy questions, email ${OWNER} at <a href="mailto:${CONTACT}">${CONTACT}</a>.</p>`},
-  {slug: "privacy.html", title: `Privacy | ${SITE}`, h1: "Privacy",
-    description: `How ${SITE} handles tool inputs and optional feedback. Tools run in your browser; feedback is sent to our secure provider.`,
-    lede: `${SITE} keeps tool inputs in your browser. Optional feedback is processed separately.`,
-    html: `<p>Calculations, conversions, and files you use with the tools are processed locally in your browser. We do not receive the documents, passwords or calculator values you enter into those tools.</p>
-    <h2>Hosting and external services</h2><p>The website is hosted on GitHub Pages, which may process IP addresses and connection logs. If you choose to send feedback, your browser connects to Supabase (our feedback database and submission provider). The private administrator dashboard loads a JavaScript library from esm.sh when an administrator visits it. We do not use advertising trackers on tool pages.</p>
-    <h2>Optional feedback</h2><p>When you submit a review, bug report or feature request, we collect the selected tool, feedback category, optional rating, message and submission time. Supabase processes your submission. The server uses a temporary hash derived from connection information to limit abuse; the hash is not intended to identify you. We do not ask for your name or email in the feedback form. Please do not include personal, medical or financial information in the message. Submissions are private until reviewed and are not published automatically.</p>
-    <h2>Purpose, retention and requests</h2><p>We use feedback to improve the tools, investigate problems and moderate reviews. We retain submissions while they are needed for those purposes, subject to periodic review; a fixed automatic deletion schedule has not yet been implemented. To request deletion or raise a privacy concern, email <a href="mailto:${CONTACT}">${CONTACT}</a>, or contact us through the <a href="https://github.com/abrar858/toolbench">project's GitHub repository</a> without posting sensitive details publicly.</p>
-    <h2>Local storage and administrator login</h2><p>On public tool pages, local storage is used only for your theme choice and locally saved automation workflows. The private feedback administrator dashboard uses Supabase Authentication to manage administrator sessions; ordinary visitors do not need an account to submit feedback.</p>
-    <p class="checked">Last updated: November 2026.</p>`},
+  {slug: "about.html", title: `About ${SITE} – Free Private Online Tools by ${OWNER}`, h1: `About ${SITE}`,
+    description: `${TOOLS.length + Object.values(EXTRA_CARDS).flat().length} free, private online tools for PDFs, Office files, UK finance and everyday tasks, built by professional developer ${OWNER}. No sign-up or uploads.`,
+    lede: `Free, private online tools for PDFs, Office files, UK money questions and everyday tasks. Built by professional developer ${OWNER}.`,
+    data: {"@context": "https://schema.org", "@type": "AboutPage", "@id": ORIGIN + "about.html", url: ORIGIN + "about.html", name: `About ${SITE}`, inLanguage: "en-GB",
+      dateModified: PROSE_UPDATED.iso, mainEntity: ORG_LD},
+    html: `<h2>Who makes ${SITE}</h2>
+    <p>${SITE} is designed, built and maintained by <strong>${OWNER}</strong>, a professional developer. Every tool is written to do one job well: open the page, use it straight away and get a clear result, on a phone or a computer.</p>
+    <p>The idea is simple. Everyday tasks like signing a PDF, shrinking a file for an upload limit or working out take-home pay shouldn't need an account, a subscription or handing your documents to a stranger's server.</p>
+    <h2>What you can do here</h2>
+    ${catList()}
+    <p>Popular tools include ${linkTo("sign-pdf", "Sign PDF")}, ${linkTo("edit-pdf", "Edit PDF")}, ${linkTo("compress-pdf", "Compress PDF")}, ${linkTo("take-home-pay", "the UK take-home pay calculator")} and ${linkTo("mortgage-overpayment", "the mortgage overpayment calculator")}.</p>
+    <h2>Private by design</h2>
+    <ul>
+      <li><strong>Your files stay on your device.</strong> PDFs, images, spreadsheets and the figures you type are processed by your own browser. They are never uploaded to a ${SITE} server.</li>
+      <li><strong>No account or sign-up.</strong> Every tool is free to use, with no trial or watermark.</li>
+      <li><strong>No adverts, analytics or tracking cookies.</strong> Fonts and libraries are served from ${SITE} itself, so using a tool doesn't contact other companies.</li>
+    </ul>
+    <p>The <a href="privacy.html">privacy policy</a> explains exactly what is and isn't collected.</p>
+    <h2>How accuracy is checked</h2>
+    <p>Every change to the site goes through automated tests before it is published. They load every tool, check that it runs without errors, and confirm that the worked examples quoted on each page match what the tool actually calculates. Tax and National Insurance figures are tested against worked examples for the stated tax year.</p>
+    <p>Finance pages list the official sources they rely on, such as GOV.UK, legislation.gov.uk and the Bank of England, with the date they were last checked. UK rates are reviewed every spring before the new tax year starts on 6 April.</p>
+    <h2>Limits of the calculators</h2>
+    <p>Finance results are estimates for guidance, not financial, tax or legal advice. Pay estimates use stated assumptions and may not reflect your tax code, region, pension, student loan or other deductions. Check important figures against official guidance, your payslip or a qualified professional. Health tools such as the BMI calculator are screening estimates, not a diagnosis.</p>
+    <h2>Contact and feedback</h2>
+    <p>Found a wrong result, a broken page or a missing tool? Use the <em>Help improve this tool</em> form at the bottom of any tool page, or email ${OWNER} at ${MAILTO}.</p>
+    <p class="checked">Last updated: ${PROSE_UPDATED.text}.</p>`},
+  {slug: "privacy.html", title: `Privacy Policy | ${SITE} – Your Files Stay in Your Browser`, h1: "Privacy policy",
+    description: `How ${SITE} protects your privacy: files and tool inputs are processed in your browser and never uploaded. No accounts, adverts or tracking cookies.`,
+    lede: `Your files and the figures you type stay in your browser. This policy explains the little that ${SITE} does process, and why.`,
+    data: {"@context": "https://schema.org", "@type": "WebPage", "@id": ORIGIN + "privacy.html", url: ORIGIN + "privacy.html", name: `Privacy policy | ${SITE}`, inLanguage: "en-GB",
+      dateModified: PROSE_UPDATED.iso, publisher: ORG_LD},
+    html: `<h2>The short version</h2>
+    <ul>
+      <li>Files you open and values you enter in the tools are processed on your device and are <strong>not uploaded</strong>.</li>
+      <li>There are <strong>no accounts, adverts, analytics or tracking cookies</strong>.</li>
+      <li>The only information sent to ${SITE} is feedback you choose to submit.</li>
+      <li>Your data is never sold or shared for marketing.</li>
+    </ul>
+    <h2>Who is responsible</h2>
+    <p>${SITE} is run by ${OWNER}, who is responsible for how personal information is handled on this site. Contact: ${MAILTO}.</p>
+    <h2>Files and tool inputs</h2>
+    <p>PDFs, images, Word and Excel files, text and calculator values are read and processed by your own browser. They are not sent to ${SITE} or anyone else, and nothing is kept once you close the page, apart from the optional settings described under <em>Storage on your device</em>. The PDF and spreadsheet libraries the tools use are served from ${SITE} itself.</p>
+    <h2>Optional feedback</h2>
+    <p>If you submit a review, bug report or feature request, we receive the tool it is about, the category, an optional rating, your message and the time it was sent. The feedback form does not ask for your name or email. To limit abuse, a temporary hash derived from connection information is used; it is not intended to identify you. Please don't include personal, medical or financial details in your message. Submissions are private and are not published automatically.</p>
+    <p>Feedback is used to fix problems, improve the tools and moderate reviews, on the basis of our legitimate interest in running a reliable service. It is kept while it is needed for those purposes and reviewed periodically; a fixed automatic deletion schedule is not yet in place.</p>
+    <h2>Service providers</h2>
+    <ul>
+      <li><strong>Hosting:</strong> the website is hosted on GitHub Pages, which, like any web host, may process IP addresses and connection logs to deliver pages and keep them secure.</li>
+      <li><strong>Feedback:</strong> submitted feedback is stored with Supabase, our database provider. Your browser contacts Supabase only if you send feedback.</li>
+      <li><strong>Administration:</strong> the private feedback dashboard, used only by the site administrator, signs in with Supabase Authentication and loads a script from esm.sh. Visitors never need an account.</li>
+    </ul>
+    <h2>Storage on your device</h2>
+    <p>${SITE} does not set cookies on its public pages. Your browser's local storage is used only to remember your light or dark theme choice and any workflows you save in the <a href="automation-builder.html">Automation builder</a>. You can clear these at any time in your browser settings.</p>
+    <h2>Your rights</h2>
+    <p>Under UK data protection law you can ask to access, correct or delete personal information, or object to how it is used. Because feedback is not linked to your name or email, tell us roughly when you sent it and what it said so we can find it. Email ${MAILTO} and please don't post sensitive details publicly. You can also complain to the <a href="https://ico.org.uk/make-a-complaint/">Information Commissioner's Office</a>.</p>
+    <h2>Changes to this policy</h2>
+    <p>If how ${SITE} handles information changes, this page will be updated and the date below revised.</p>
+    <p class="checked">Last updated: ${PROSE_UPDATED.text}.</p>`},
 ];
 
 /* ---------- Automation builder (its app lives in assets/automation.js and assets/automation.css) ---------- */
