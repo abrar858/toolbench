@@ -15,7 +15,7 @@ const fields = {
 const elements = Object.fromEntries(Object.entries(fields).map(([id, value]) => [id, {value}]));
 elements['mo-out'] = {innerHTML: ''};
 const context = {
-  num: v => parseFloat(String(v).replace(/[,£\\s]/g, '')),
+  num: v => parseFloat(String(v).replace(/[,£\s]/g, '')),
   gbp: n => n.toLocaleString('en-GB', {style: 'currency', currency: 'GBP'}),
   dur: m => m === 1 ? '1 month' : m + ' months',
   plural: (n, w) => n + ' ' + w + (n === 1 ? '' : 's'),
@@ -34,15 +34,15 @@ const render = changes => {
 };
 test('lump sum scheduled after mortgage payoff is not counted', () => {
   const html = render({'mo-bal':1000,'mo-x':1000,'mo-l':500,'mo-lm':12});
-  assert.match(html, /First-year overpayments: £916\\.67/);
-  assert.doesNotMatch(html, /£1,500\\.00/);
+  assert.match(html, /(?:First-year overpayments:|You'd overpay) £916\.67/);
+  assert.doesNotMatch(html, /£1,500\.00/);
 });
 test('lump sum actually paid is counted, capped by remaining balance', () => {
   const html = render({'mo-bal':1000,'mo-x':0,'mo-l':2000,'mo-lm':1});
-  assert.match(html, /First-year overpayments: £916\\.67/);
+  assert.match(html, /(?:First-year overpayments:|You'd overpay) £916\.67/);
 });
 test('monthly overpayments are capped at outstanding balance', () => {
   const html = render({'mo-bal':1000,'mo-x':2000,'mo-l':0,'mo-lm':12});
-  assert.match(html, /First-year overpayments: £916\\.67/);
-  assert.doesNotMatch(html, /£2,000\\.00/);
+  assert.match(html, /(?:First-year overpayments:|You'd overpay) £916\.67/);
+  assert.doesNotMatch(html, /£2,000\.00/);
 });
