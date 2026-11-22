@@ -1275,12 +1275,12 @@ const sheet=()=>{
   if(!Number.isFinite(b)||b<0||b>=len){cell.textContent="Check break";bad.push(i);continue;}
   cell.textContent=hm(len-b);mins+=len-b;days++;}
  const rate=num($("#ts-rate",el).value),otAfter=Number($("#ts-ot",el).value),otx=Number($("#ts-otx",el).value),o=$("#ts-out",el);
- const hours=mins/60,otHours=Number.isFinite(otAfter)&&$("#ts-ot",el).value!==""&&hours>otAfter?hours-otAfter:0,basic=hours-otHours;
- const pay=rate>0?basic*rate+otHours*rate*otx:null;
+ const hours=mins/60,otRaw=$("#ts-ot",el).value.trim(),otValid=otRaw===""||(Number.isFinite(otAfter)&&otAfter>=0),otHours=otValid&&otRaw!==""&&hours>otAfter?hours-otAfter:0,basic=hours-otHours;
+ const pay=otValid&&rate>0?basic*rate+otHours*rate*otx:null;
  const items=[[hm(mins),"Total hours"],[hours.toFixed(2),"Decimal hours"],[plural(days,"day"),"Days worked"]];
  if(otHours)items.push([otHours.toFixed(2),"Overtime hours"]);
  if(pay!=null)items.push([gbp(pay),"Gross pay before tax"]);
- o.innerHTML=`<div class="stats">${stats(items)}</div>`+(bad.length?`<p class="err">Check the break on ${bad.map(i=>["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"][i]).join(", ")}: it must be shorter than the shift.</p>`:"")+(pay!=null?`<p class="note">Pay is before tax and National Insurance. See take-home pay with the <a href="uk-take-home-pay-calculator.html">UK take-home pay calculator</a>.</p>`:"");
+ o.innerHTML=`<div class="stats">${stats(items)}</div>`+(!otValid?`<p class="err">Enter an overtime threshold of zero or more hours.</p>`:"")+(bad.length?`<p class="err">Check the break on ${bad.map(i=>["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"][i]).join(", ")}: it must be shorter than the shift.</p>`:"")+(pay!=null?`<p class="note">Pay is before tax and National Insurance. See take-home pay with the <a href="uk-take-home-pay-calculator.html">UK take-home pay calculator</a>.</p>`:"");
  summary=`Total ${hm(mins)} (${hours.toFixed(2)} hours) over ${plural(days,"day")}`+(otHours?`, including ${otHours.toFixed(2)} overtime hours`:"")+(pay!=null?`. Gross pay ${gbp(pay)}.`:".");
 };
 $("#ts-clear",el).onclick=()=>{for(let i=0;i<7;i++){$(`#ts-s${i}`,el).value="";$(`#ts-e${i}`,el).value="";$(`#ts-b${i}`,el).value=0;}sheet();};
