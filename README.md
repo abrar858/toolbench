@@ -2,7 +2,7 @@
 
 **Free online tools that run entirely in your browser: [toolsbravo.com](https://toolsbravo.com)**
 
-51 tools for PDFs, images, Word and Excel files, UK money questions, everyday calculations and developer tasks. No account, no watermark, no upload: files and text you add are processed on your own device and never sent to a server.
+52 tools for PDFs, images, Word and Excel files, UK money questions, everyday calculations and developer tasks. No account, no watermark, no upload: files and text you add are processed on your own device and never sent to a server.
 
 ## Tools
 

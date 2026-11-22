@@ -25,7 +25,7 @@ test('popular homepage links are unique and supplemental pages do not inflate co
  assert.equal(new Set(links).size,links.length,'Duplicate links in Popular tools navigation');
  const core=[...script.matchAll(/\{id:\s*"([^"]+)"\s*,\s*cat:\s*"([^"]+)"/g)];
  const cards=[...html.matchAll(/class="tcard tcard-/g)];
- assert.equal(core.length,49,'Update the published core tool count deliberately if the catalog changes');
+ assert.equal(core.length,50,'Update the published core tool count deliberately if the catalog changes');
  assert.equal(cards.length,core.length+2,'Homepage should show the core tools plus the salary table and automation builder');
  // The counts people read must match the cards they can see.
  assert.match(html,new RegExp(`<p class="lede">${cards.length} fast, simple tools`),'hero count matches the cards');

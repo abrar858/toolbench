@@ -26,10 +26,10 @@ After the PR is merged, IndexNow runs automatically on every deploy. To submit e
 **Tagline (60 characters):** Free PDF, Office and UK money tools that never upload files
 
 **Short (160 characters):**
-51 free browser tools: edit, sign, merge and compress PDFs, convert Word and Excel, UK salary and VAT calculators. Files stay on your device. No account.
+52 free browser tools: edit, sign, merge and compress PDFs, convert Word and Excel, UK salary and VAT calculators. Files stay on your device. No account.
 
 **Long:**
-ToolsBravo is a free collection of 51 everyday tools that run entirely in your web browser. Edit PDFs (change or remove text, white out, redact for real, fill in forms), sign, merge, split and compress them (including to a size limit such as 200 KB for upload forms), convert between PDF, Word, Excel, CSV and images, work out UK take-home pay and VAT, and use developer tools such as a JSON formatter and UUID generator.
+ToolsBravo is a free collection of 52 everyday tools that run entirely in your web browser. Edit PDFs (change or remove text, white out, redact for real, fill in forms), sign, merge, split and compress them (including to a size limit such as 200 KB for upload forms), convert between PDF, Word, Excel, CSV and images, work out UK take-home pay and VAT, and use developer tools such as a JSON formatter and UUID generator.
 
 Unlike most online PDF sites, nothing is uploaded: files are processed on your own device with open-source libraries, so private documents never leave your computer or phone. There's no account and no watermark. It works on Windows, Mac, Chromebook, iPhone and Android.
 
@@ -59,7 +59,7 @@ Same text as AlternativeTo. Category: PDF tools / File conversion. Pricing: Free
 
 **Name:** ToolsBravo
 **Tagline:** PDF and Office tools that never upload your files
-**Description (260 characters):** Sign, merge and compress PDFs, convert Word, Excel and images, and work out UK pay, all inside your browser. Your files never leave your device. 51 free tools, no account, no watermark.
+**Description (260 characters):** Sign, merge and compress PDFs, convert Word, Excel and images, and work out UK pay, all inside your browser. Your files never leave your device. 52 free tools, no account, no watermark.
 **Topics:** Productivity, Privacy, Developer Tools
 **First comment (from the maker):**
 > I built ToolsBravo because most "free PDF" sites upload your documents to their servers, which isn't great for contracts, payslips or ID scans. Everything here runs in your browser using open-source libraries (pdf-lib, pdf.js), so files stay on your device. My favourite bits: compress a PDF to a specific size for upload forms, and sign a PDF on your phone. It's free with no account. I'd love feedback on what's missing.
@@ -68,7 +68,7 @@ Same text as AlternativeTo. Category: PDF tools / File conversion. Pricing: Free
 
 **Title:** Show HN: Browser-only PDF tools – sign, merge, compress without uploading
 **Text:**
-> ToolsBravo (https://toolsbravo.com) is a set of 51 tools that run client-side: PDF editing (including redaction that rasterises affected pages so the text is really gone), signing, merging, splitting and compression (including binary-searching render settings to hit a size limit like 200 KB), PDF/Word/Excel/image conversion, and some UK finance calculators.
+> ToolsBravo (https://toolsbravo.com) is a set of 52 tools that run client-side: PDF editing (including redaction that rasterises affected pages so the text is really gone), signing, merging, splitting and compression (including binary-searching render settings to hit a size limit like 200 KB), PDF/Word/Excel/image conversion, and some UK finance calculators.
 >
 > It's a static site on GitHub Pages. PDF work uses pdf-lib and pdf.js; Word uses mammoth; spreadsheets use SheetJS. No server, no analytics, no accounts. Source: https://github.com/abrar858/toolbench
 >

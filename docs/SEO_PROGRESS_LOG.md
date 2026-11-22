@@ -2,6 +2,19 @@
 
 Newest first. Record what changed, how it was tested, and what Search Console showed — including "no data yet".
 
+## 2026-11-22 — Pages near page 1, and an early loan settlement calculator
+
+**Search Console (16–21 Nov, per page):** hours calculator position 16.3 ("labor time calculator", "time calculator timesheet", "calculate payroll time", "work hours calculator with break" 7–9); Excel to CSV 19.3 ("excel to csv converter" 10.8, "xls to csv", "convert xlsx to csv"); budget planner 24.9 ("budget calculator", "budget calculator monthly", "20 30 50 calculator", "monthly bills calculator"); Word to PDF 25.5 (all "docx to pdf" variants). Loan page: 680 of 1,290 impressions at 57.1, with "early loan settlement calculator" at 21.8 and "loan early repayment calculator" at 79.2.
+
+**Changed:**
+- New `/early-loan-settlement-calculator.html`: settlement figure by the statutory method (remaining payments discounted at the APR to a settlement date 28 days after the request), the one-month deferral when more than a year is left, and section 95A compensation (1% / 0.5%, over £8,000, agreements from 1 Feb 2011, capped at the interest saved). Works from the loan details or from a statement (payment and payments left). Rules checked against legislation.gov.uk (SI 2004/1483 regs 4–6; CCA 1974 s95A). Figures asserted against an independent calculation.
+- Hours calculator: payroll rounding (5, 6 or 15 minutes per day), timesheet CSV download, "Work hours" in title and H1, payroll/labour-time FAQs.
+- Budget planner: compare real spending with the 50/30/20 targets (over/under, unallocated money); title leads with "Budget Calculator UK"; 20/30/50 and monthly-budget FAQs.
+- Excel to CSV: XLS/XLSX/ODS section and FAQs; H1 names XLSX and XLS.
+- Word to PDF: H1 and description lead with DOCX to PDF; other ways (Word, Google Docs, Pages, phones); watermark FAQ.
+
+**Measure:** positions for these queries in the 28-day review (mid-December), against the figures above.
+
 ## 2026-11-22 — Phase A: Extract PDF pages, mortgage overpayments, embeds, sources
 
 **Search Console (16–21 Nov, first export):** 1,212 impressions, 0 clicks, average position 52–59; 92% of impressions at position > 20, 13 on page 1. Zero clicks is expected at these positions.
