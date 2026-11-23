@@ -1706,6 +1706,9 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   tick(); const iv = setInterval(tick, 1000); cleanup = () => clearInterval(iv);
   $("#tu", el).value = Math.floor(Date.now() / 1000);
   const fromU = () => {
+    const box = $("#tdc", el);
+    box.hidden = true;
+    $("tbody", box).innerHTML = "";
 
     const raw = $("#tu", el).value.trim(), o = $("#tuo", el), unit = $("#tu-unit", el).value;
     if (!/^[+-]?[0-9]+$/.test(raw)) { o.textContent = "Enter a whole timestamp without letters or decimals."; return; }
