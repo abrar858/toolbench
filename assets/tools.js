@@ -1955,7 +1955,7 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
       o.innerHTML = `<p class="big">${pct(gross)} gross</p><p class="sub">paid ${freq}, for ${pct(rate)} AER. £10,000 earns about ${gbp(10000 * rate / 100)} in a year.</p>`;
     }
   };
-  el.addEventListener("input", e => (e.target.closest(".aer-conv") ? conv : run)()); el.addEventListener("change", conv); run(); conv();
+  el.addEventListener("input", e => (e.target.closest(".aer-conv") ? conv : run)()); el.addEventListener("change", e => (e.target.closest(".aer-conv") ? conv : run)()); run(); conv();
  }},
 {id: "debt-payoff", cat: "finance", name: "Debt payoff calculator", desc: "How long until a card or loan is cleared, and the interest cost.",
  ui: `<div class="row"><div><label for="db">Balance owed (£)</label><input id="db" inputmode="decimal" value="3000"></div><div><label for="dr">Interest rate (APR %)</label><input id="dr" inputmode="decimal" value="24.9"></div><div><label for="dp">Monthly payment (£)</label><input id="dp" inputmode="decimal" value="150"></div></div><div class="out" id="do"></div>`,
