@@ -1,0 +1,41 @@
+name: Live site HTTP and Lighthouse audit
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/live-audit.yml'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify live HTTP responses and security headers
+        shell: bash
+        run: |
+          for path in / /sign-pdf.html /sitemap.xml /robots.txt /assets/tools.js /assets/site.css; do
+            echo "==== https://toolsbravo.com$path ===="
+            curl -sSL --retry 2 --max-time 25 -o /tmp/page -D /tmp/headers -w 'status=%{http_code} effective_url=%{url_effective} dns=%{time_namelookup} connect=%{time_connect} ttfb=%{time_starttransfer} total=%{time_total} bytes=%{size_download}\n' "https://toolsbravo.com$path"
+            grep -iE '^(content-type|cache-control|strict-transport-security|content-security-policy|x-content-type-options|referrer-policy|location):' /tmp/headers || true
+            wc -c /tmp/page
+          done
+      - name: Install Lighthouse
+        run: npm install --no-save lighthouse@12
+      - name: Audit live homepage mobile
+        run: npx lighthouse https://toolsbravo.com/ --chrome-flags="--headless --no-sandbox" --preset=perf --form-factor=mobile --screenEmulation.mobile --output=json --output-path=./lighthouse-home-mobile.json --quiet
+      - name: Audit live Sign PDF mobile
+        run: npx lighthouse https://toolsbravo.com/sign-pdf.html --chrome-flags="--headless --no-sandbox" --form-factor=mobile --screenEmulation.mobile --output=json --output-path=./lighthouse-sign-mobile.json --quiet
+      - name: Print Lighthouse results
+        if: always()
+        run: |
+          node -e 'for(const f of ["lighthouse-home-mobile.json","lighthouse-sign-mobile.json"]){try{const x=require("./"+f);console.log(f, x.finalUrl, x.fetchTime, Object.fromEntries(Object.entries(x.categories).map(([k,v])=>[k,Math.round(v.score*100)])), Object.fromEntries(["first-contentful-paint","largest-contentful-paint","speed-index","total-blocking-time","cumulative-layout-shift"].map(k=>[k,x.audits[k]?.displayValue])))}catch(e){console.log(f,e.message)}}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-lighthouse-json
+          path: lighthouse-*.json
+          if-no-files-found: ignore
