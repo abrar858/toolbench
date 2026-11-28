@@ -150,6 +150,10 @@ const faqLd = faqs => ({"@context": "https://schema.org", "@type": "FAQPage", ma
 const faqHtml = faqs => `<div class="faq">${faqs.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${a}</p></details>`).join("")}</div>`;
 // Sources for a finance page, with when the figures and rules were last reviewed.
 const REVIEWED = "22 November 2026";
+// Who wrote and checks the money pages (named on the About page).
+const AUTHOR_NAME = "Bisma Zainab";
+const AUTHOR_LD = {"@type": "Person", name: AUTHOR_NAME, url: "https://toolsbravo.com/about.html", jobTitle: "Software developer"};
+const byline = (date = "2026-11-22", text = REVIEWED) => `<p class="byline">By <a href="about.html" rel="author">${AUTHOR_NAME}</a>, developer of ToolsBravo · Figures checked against official sources · Reviewed <time datetime="${date}">${text}</time></p>`;
 const sourcesNote = c => `<p class="checked">${c.id === "take-home-pay" ? `Rates last checked against HMRC guidance on <time datetime="2026-11-15">${RATES_CHECKED}</time> for the ${TAX_YEAR} tax year.` : `Formulas and rules last reviewed on <time datetime="2026-11-22">${REVIEWED}</time>. Results are estimates, not financial advice.`} Sources: ${c.sources.map(([n, u]) => `<a href="${u}" rel="noopener">${esc(n)}</a>`).join(", ")}.</p>`;
 const EMBEDS = {"take-home-pay": 740, "vat-calculator": 400, "loan-calculator": 700, "mortgage-overpayment": 860, "savings-calculator": 1040, "budget-planner": 520, "percentage-calculator": 420};
 const embedCode = (t, c) => `<iframe src="${ORIGIN}embed/${c.slug}" title="${t.name}" width="100%" height="${EMBEDS[t.id]}" style="border:0;max-width:680px" loading="lazy"></iframe>\n<p><a href="${ORIGIN}${c.slug}">${t.name}</a> by ToolsBravo</p>`;
@@ -181,7 +185,8 @@ function toolPage(c) {
 ${ld({"@context": "https://schema.org", "@type": "WebApplication", name: tool(c.id).name, url, description: c.description,
     applicationCategory: t.cat === "finance" ? "FinanceApplication" : t.cat === "advanced" ? "DeveloperApplication" : "UtilitiesApplication",
     operatingSystem: "Any modern web browser", isAccessibleForFree: true, inLanguage: "en-GB",
-    offers: {"@type": "Offer", price: "0", priceCurrency: "GBP"}, publisher: {"@type": "Organization", name: SITE, url: ORIGIN}})}
+    offers: {"@type": "Offer", price: "0", priceCurrency: "GBP"}, publisher: {"@type": "Organization", name: SITE, url: ORIGIN},
+    ...(t.cat === "finance" ? {author: AUTHOR_LD, dateModified: "2026-11-22"} : {})})}
 ${ld(crumbsLd(trail))}
 ${ld(faqLd(c.faqs.map(([q, a]) => [q, esc(a)])))}
 </head>
@@ -192,6 +197,7 @@ ${headerFor(c.id)}
   ${crumbs(trail)}
   ${toolHead({eyebrow: `${cat.toUpperCase()} TOOLS`, h1: esc(c.h1), lede: esc(c.lede),
     meta: ["Free, no sign-up", "Runs privately in your browser", t.cat === "finance" ? `Updated for ${TAX_YEAR}` : "Instant results"]})}
+  ${t.cat === "finance" ? byline() : ""}
   <div class="tool-cols">
   <div class="tool-main">
   <section class="panel" aria-label="${esc(t.name)}">${t.ui}</section>
@@ -284,6 +290,7 @@ ${headerFor("salary")}
   ${crumbs(trail)}
   ${toolHead({eyebrow: `SALARY AFTER TAX ${TAX_YEAR}`, h1: `${k(g)} after tax in the UK`,
     lede: `On a ${k(g)} salary you take home <strong>${gbp(r.net)}</strong> a year, <strong>${gbp(r.net / 12)}</strong> a month or <strong>${gbp(r.net / 52)}</strong> a week in the ${TAX_YEAR} tax year.`})}
+  ${byline()}
   <div class="kpis">
     <div class="kpi kpi-main"><span>Take-home per month</span><b>${gbp(r.net / 12)}</b></div>
     <div class="kpi"><span>Per year</span><b>${gbp(r.net)}</b></div>
@@ -557,7 +564,7 @@ function guidePage(g) {
   return `${head({title: g.title, description: g.description, url})}
 ${ld(crumbsLd(trail))}
 ${ld({"@context": "https://schema.org", "@type": "Article", headline: g.h1, description: g.description, url, inLanguage: "en-GB", dateModified: g.updated, datePublished: g.updated,
-  author: {"@type": "Organization", name: SITE, url: ORIGIN}, publisher: {"@type": "Organization", name: SITE, url: ORIGIN, logo: {"@type": "ImageObject", url: ORIGIN + "assets/icon-512.png"}}, image: ORIGIN + "assets/og.png"})}
+  author: AUTHOR_LD, publisher: {"@type": "Organization", name: SITE, url: ORIGIN, logo: {"@type": "ImageObject", url: ORIGIN + "assets/icon-512.png"}}, image: ORIGIN + "assets/og.png"})}
 ${ld(faqLd(g.faqs.map(([q, a]) => [q, esc(a)])))}
 </head>
 <body>

@@ -895,9 +895,9 @@ const TOOLS = [
    <div class="btns"><button type="button" class="primary" id="ep-reset-yes">Start over</button><button type="button" id="ep-reset-no">Keep editing</button></div>
   </dialog>`,
  init(el) { /* Behaviour lives in assets/edit-pdf.js, which is loaded only on this page. */ }},
-{id: "split-pdf", cat: "files", name: "Split PDF", desc: "Extract pages or split a PDF into separate files.",
+{id: "split-pdf", cat: "files", name: "Split PDF", desc: "Split a PDF into several files by page range, or one per page.",
  ui: `${dropUI("sp-in", "application/pdf,.pdf", "Choose a PDF file", false)}<p id="sp-file" class="file-picked" hidden></p>
-  <div class="row"><div><label for="sp-mode">How to split</label><select id="sp-mode"><option value="extract">Extract chosen pages into one PDF</option><option value="ranges">Make one PDF for each range</option><option value="every">Make one PDF for every page</option></select></div>
+  <div class="row"><div><label for="sp-mode">How to split</label><select id="sp-mode"><option value="extract">Chosen pages into one PDF</option><option value="ranges">Make one PDF for each range</option><option value="every">Make one PDF for every page</option></select></div>
   <div><label for="sp-pages">Pages</label><input id="sp-pages" placeholder="e.g. 1-3, 5, 8-" autocomplete="off"></div></div>
   <div class="btns"><button class="primary" id="sp-go" disabled>Split PDF</button></div><p id="sp-msg" class="note" aria-live="polite">Choose a PDF to start.</p><div id="sp-out"></div>`,
  init(el) {
