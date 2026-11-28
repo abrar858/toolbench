@@ -706,6 +706,8 @@ const TOOLS = [
     say(msg, `${plural(data.length, objects ? "record" : "row")} · ${fsize(new Blob([text]).size)}.${objects ? " Keys come from the first row; empty cells become null." : ""}`);
   };
   pickOneFile(el, "xj", async f => {
+    wb = null; name = ""; sel.disabled = true; sel.innerHTML = "<option>Choose a file first</option>";
+    $("#xj-file", el).hidden = true; $("#xj-out", el).hidden = true; $("#xj-text", el).value = "";
     try { X = await sheetLib(); wb = await readBook(f); name = baseName(f); fillSheets(sel, wb); sel.disabled = false; const p = $("#xj-file", el); p.hidden = false; p.textContent = `${f.name} · ${fsize(f.size)} · ${plural(wb.SheetNames.length, "sheet")}`; render(); }
     catch (e) { say(msg, e.message, true); }
   });
@@ -728,6 +730,8 @@ const TOOLS = [
     $("#rd-cols", el).hidden = !width;
   };
   pickOneFile(el, "rd", async f => {
+    wb = null; file = null; go.disabled = true; sel.disabled = true; sel.innerHTML = "<option>Choose a file first</option>";
+    $("#rd-file", el).hidden = true; $("#rd-cols", el).hidden = true; $("#rd-col-list", el).innerHTML = ""; $("#rd-out", el).innerHTML = "";
     try { X = await sheetLib(); wb = await readBook(f); file = f; fillSheets(sel, wb); sel.disabled = false; go.disabled = false; cols(); const p = $("#rd-file", el); p.hidden = false; p.textContent = `${f.name} · ${fsize(f.size)} · ${plural(wb.SheetNames.length, "sheet")}`; $("#rd-out", el).innerHTML = ""; say(msg, "Choose the columns that must match, then remove duplicates."); }
     catch (e) { say(msg, e.message, true); }
   });
@@ -765,6 +769,8 @@ const TOOLS = [
     say(msg, term ? `${plural(body.length, "matching row")} in “${wb.SheetNames[cur]}”.` : `“${wb.SheetNames[cur]}”: ${plural(Math.max(0, rows.length - 1), "row")} below the first row.`);
   };
   pickOneFile(el, "ev", async f => {
+    wb = null; cur = 0; q.value = ""; $("#ev-file", el).hidden = true;
+    $("#ev-tools", el).hidden = true; $("#ev-tabs", el).innerHTML = ""; $("#ev-out", el).innerHTML = "";
     try {
       X = await sheetLib(); wb = await readBook(f); cur = 0; q.value = "";
       $("#ev-tabs", el).innerHTML = wb.SheetNames.map((n, i) => `<button type="button" role="tab" data-i="${i}">${esc(n)}</button>`).join("");
