@@ -251,7 +251,11 @@ function scotTax(g) {
   for (const [hi, rate, name] of SCOT_BANDS) { if (ti > lo) { tax += (Math.min(ti, hi) - lo) * rate; band = name; } lo = hi; }
   return {tax, band};
 }
-const SALARY_SOURCES = `<p class="checked">Student loan thresholds from <a href="https://www.gov.uk/repaying-your-student-loan/what-you-pay" rel="noopener">GOV.UK: what you pay</a>. Scottish rates from <a href="https://www.gov.scot/publications/scottish-income-tax-rates-and-bands/pages/2026-to-2027/" rel="noopener">gov.scot: Scottish income tax 2026 to 2027</a>.</p>`;
+// ONS ASHE (April 2025, provisional): median gross annual pay for full-time employees. National Living Wage from 1 April 2026.
+const UK_MEDIAN_FT = 39039, NLW = 12.71;
+// Employer costs 2026/27 (GOV.UK): 15% employer NI above £5,000; workplace pension at least 3% of earnings between £6,240 and £50,270.
+const employerCost = g => { const ni = 0.15 * Math.max(0, g - 5000), pen = 0.03 * Math.max(0, Math.min(g, 50270) - 6240); return {ni, pen, total: g + ni + pen}; };
+const SALARY_SOURCES = `<p class="checked">Student loan thresholds from <a href="https://www.gov.uk/repaying-your-student-loan/what-you-pay" rel="noopener">GOV.UK: what you pay</a>. Scottish rates from <a href="https://www.gov.scot/publications/scottish-income-tax-rates-and-bands/pages/2026-to-2027/" rel="noopener">gov.scot: Scottish income tax 2026 to 2027</a>. Average pay from <a href="https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/bulletins/annualsurveyofhoursandearnings/2025" rel="noopener">ONS: Employee earnings in the UK 2025</a>. Employer costs from <a href="https://www.gov.uk/guidance/rates-and-thresholds-for-employers-2026-to-2027" rel="noopener">GOV.UK: rates and thresholds for employers 2026 to 2027</a> and <a href="https://www.gov.uk/workplace-pensions/what-you-your-employer-and-the-government-pay" rel="noopener">workplace pensions</a>.</p>`;
 
 function salaryPage(g, i) {
   const r = bands(g), p5 = ukPay(g, 5), url = ORIGIN + salarySlug(g);
@@ -260,6 +264,10 @@ function salaryPage(g, i) {
   const loans = STUDENT_LOANS.map(p => [p[0], studentLoan(g, p), p[1]]), plan2 = loans[1][1];
   const loanRows = loans.map(([name, pay, threshold]) => `<tr><th scope="row">${name}</th><td>${k(threshold)}</td><td>${pay ? gbp(pay / 12) : "Nothing"}</td><td>${gbp((r.net - pay) / 12)}</td></tr>`).join("");
   const scot = scotTax(g), scotNet = g - scot.tax - r.ni, scotDiff = scotNet - r.net;
+  const vsMedian = (g - UK_MEDIAN_FT) / UK_MEDIAN_FT, emp = employerCost(g);
+  const rise1k = ukPay(g + 1000, 0).net - r.net, rise5 = ukPay(g * 1.05, 0).net - r.net;
+  const goodText = Math.abs(vsMedian) < 0.03 ? `about the same as` : `${pct(Math.abs(vsMedian))} ${vsMedian > 0 ? "more" : "less"} than`;
+  const nlwNote = hourly < NLW ? ` At 37.5 hours a week that's ${gbp(hourly)} an hour, below the £12.71 National Living Wage for workers aged 21 and over, so a full-time adult job can't legally pay this; it fits part-time hours or younger workers.` : "";
   const loanText = plan2 > 0 ? `On Plan 2, the most common plan for students from England who started university between 2012 and 2023, you repay ${gbp(plan2)} a year (${gbp(plan2 / 12)} a month), so take-home pay falls to ${gbp((r.net - plan2) / 12)} a month.` : `On Plan 2, the most common plan for students from England who started university between 2012 and 2023, you repay nothing at ${k(g)}, because it's below the ${k(29385)} threshold.`;
   const title = `${k(g)} After Tax UK ${TAX_YEAR}: ${gbp(r.net / 12)} a Month`;
   const description = `On a ${k(g)} salary you take home ${gbp(r.net)} a year, ${gbp(r.net / 12)} a month or ${gbp(r.net / 52)} a week after income tax and National Insurance in ${TAX_YEAR}.`;
@@ -275,6 +283,8 @@ function salaryPage(g, i) {
     [`How much tax do I pay on ${k(g)}?`, `${gbp(r.tax)} income tax and ${gbp(r.ni)} employee National Insurance a year: ${gbp(r.tax + r.ni)} in total, or ${pct(r.effective)} of your salary.`],
     [`How much is ${k(g)} after tax in Scotland?`, `In ${TAX_YEAR}, ${gbp(scotNet)} a year or ${gbp(scotNet / 12)} a month, because Scotland has its own income tax bands. National Insurance is the same across the UK.`],
     [`How much is ${k(g)} after tax with a student loan?`, plan2 > 0 ? `On Plan 2, ${gbp((r.net - plan2) / 12)} a month after repaying ${gbp(plan2 / 12)} a month. Plan 1, Plan 4, Plan 5 and postgraduate loans have different thresholds: see the table above.` : `On Plan 2 you repay nothing at ${k(g)}, so take-home stays ${gbp(r.net / 12)} a month. Plan 1, Plan 5 and postgraduate loans have lower thresholds: see the table above.`],
+    [`Is ${k(g)} a good salary in the UK?`, `${k(g)} is ${goodText} the UK median of ${k(UK_MEDIAN_FT)} for full-time employees (ONS, April 2025). Whether it's enough depends mostly on your housing costs and where you live.`],
+    [`How much does a ${k(g)} employee cost an employer?`, `At least ${gbp(emp.total)} a year in 2026/27: the salary, plus ${gbp(emp.ni)} employer National Insurance and ${gbp(emp.pen)} minimum workplace pension.`],
     [`How much is ${k(g)} a day?`, `Over 260 working days a year, ${gbp(daily)} a day before tax and ${gbp(netDaily)} a day after income tax and National Insurance.`],
   ];
   const panel = tool("take-home-pay").ui.replace('id="sg" inputmode="decimal" value="30000"', `id="sg" inputmode="decimal" value="${g}"`)
@@ -325,6 +335,14 @@ ${headerFor("salary")}
     <p>If you have a postgraduate loan as well as an undergraduate plan, you repay both. Repayments are based on pay before pension contributions, unless you use salary sacrifice.</p>
     ${h2(`${k(g)} after tax in Scotland`)}
     <p>Scotland sets its own income tax bands, and National Insurance is the same across the UK. On ${k(g)} a Scottish taxpayer pays ${gbp(scot.tax)} income tax and takes home <strong>${gbp(scotNet)}</strong> a year, or <strong>${gbp(scotNet / 12)}</strong> a month. That's ${Math.abs(scotDiff) < 0.5 ? "about the same as" : `${gbp(Math.abs(scotDiff))} a year ${scotDiff > 0 ? "more" : "less"} than`} in England, Wales and Northern Ireland, with the top slice of income in the Scottish ${scot.band} rate band.</p>
+    ${h2(`Is ${k(g)} a good salary?`)}
+    <p>${k(g)} is ${goodText} the UK median of ${k(UK_MEDIAN_FT)} for full-time employees (ONS, April 2025). Half of full-time employees earn more than the median and half earn less.${nlwNote} Whether it's enough depends most on where you live, your housing costs and who depends on your income: rent in London takes a much bigger share than in most of the UK.</p>
+    ${h2(`What a ${k(g)} employee costs an employer`)}
+    <p>On top of the salary, an employer pays 15% National Insurance on earnings above £5,000 (${gbp(emp.ni)} a year) and, under automatic enrolment, at least 3% pension on earnings between £6,240 and £50,270 (${gbp(emp.pen)} a year). The minimum total cost is about <strong>${gbp(emp.total)}</strong> a year. Many employers pay more pension, and smaller employers may reduce their National Insurance with the Employment Allowance.</p>
+    ${h2(`A pay rise on ${k(g)}`)}
+    <p>A £1,000 pay rise would add about ${gbp(rise1k)} a year to your take-home pay (${gbp(rise1k / 12)} a month). A 5% rise, to ${k(Math.round(g * 1.05))}, would add about ${gbp(rise5)} a year (${gbp(rise5 / 12)} a month).</p>
+    ${h2("Check your tax code")}
+    <p>These figures assume the standard 1257L tax code. Your take-home pay will be different if your payslip shows another code: a lower number or a K code (for example for a company car or unpaid tax), BR or D0 (for a second job), or an emergency code ending in W1, M1 or X. You can check and correct your tax code in the HMRC app or your personal tax account on GOV.UK.</p>
     ${h2("Compare nearby salaries")}
     <div class="tablewrap"><table><tr><th>Salary</th><th>Take-home per year</th><th>Per month</th></tr>${nearby}</table></div>
     ${h2("Try your own figures")}
@@ -340,7 +358,7 @@ ${headerFor("salary")}
   <div class="related related-bottom"><h2>Other salaries</h2><ul>${prev ? `<li><a href="${salarySlug(prev)}">← ${k(prev)} after tax</a></li>` : ""}${next ? `<li><a href="${salarySlug(next)}">${k(next)} after tax →</a></li>` : ""}<li><a href="salary-after-tax.html">All salaries</a></li><li><a href="budget-planner.html">50/30/20 budget planner</a></li></ul></div>
   </div>
   <aside class="tool-aside"><div class="tool-aside-inner">
-    ${toc([`${k(g)} salary breakdown`, "How the tax is worked out", "With a 5% workplace pension", "Hourly and daily rate", `${k(g)} after tax with a student loan`, `${k(g)} after tax in Scotland`, "Compare nearby salaries", "Try your own figures", "Frequently asked questions"])}
+    ${toc([`${k(g)} salary breakdown`, "How the tax is worked out", "With a 5% workplace pension", "Hourly and daily rate", `${k(g)} after tax with a student loan`, `${k(g)} after tax in Scotland`, `Is ${k(g)} a good salary?`, `What a ${k(g)} employee costs an employer`, `A pay rise on ${k(g)}`, "Check your tax code", "Compare nearby salaries", "Try your own figures", "Frequently asked questions"])}
     ${asideLinks("Other salaries", [...(prev ? [[`← ${k(prev)} after tax`, salarySlug(prev)]] : []), ...(next ? [[`${k(next)} after tax →`, salarySlug(next)]] : []), ["All salaries", "salary-after-tax.html"], ["UK take-home pay calculator", "uk-take-home-pay-calculator.html"], ["50/30/20 budget planner", "budget-planner.html"]])}
   </div></aside>
   </div>
@@ -559,6 +577,75 @@ const GUIDES = [{
     ["Do I need a witness?", "Only if the document itself requires one, for example a deed or a will. Check with whoever asked you to sign."],
   ],
 }];
+GUIDES.push({
+  slug: "how-early-settlement-figures-work.html",
+  title: "How Early Settlement Figures Work (UK Loans & Car Finance)",
+  description: "How UK lenders work out an early settlement figure for a loan or car finance: the 28-day rule, the rebate, the extra month's interest and early repayment fees.",
+  h1: "How early settlement figures work",
+  lede: "When you pay off a loan or car finance early in the UK, you don't pay the interest for the time you no longer need the money. The rules for working out what you owe are set by law. Here's how the figure is calculated, what lenders can add, and how to get yours.",
+  updated: "2026-11-28", updatedText: "28 November 2026",
+  trail: [["Early loan settlement calculator", "early-loan-settlement-calculator.html"]],
+  related: ["loan-settlement", "loan-calculator", "debt-payoff"],
+  cta: ["Estimate your settlement figure", "early-loan-settlement-calculator.html"],
+  sections: [
+    ["The short version", `<ul><li>You can repay a regulated loan, hire purchase or PCP agreement early, in full or in part, at any time.</li><li>Ask the lender for a <strong>settlement statement</strong>. They must send it within 7 days.</li><li>The figure is what you owe on a date 28 days after they receive your request: your remaining payments, minus a rebate of the interest you won't now be charged.</li><li>With more than a year left, the lender can work out the rebate as if you settled one month later, which adds about a month's interest.</li><li>On agreements from 1 February 2011, they may also charge up to 1% (0.5% with a year or less left) if you repay more than £8,000 early in a year.</li></ul>`],
+    ["How the rebate is calculated", `<p>Under the <a href="https://www.legislation.gov.uk/uksi/2004/1483">Consumer Credit (Early Settlement) Regulations 2004</a>, the lender values each payment you still owe at the settlement date, discounting it at the agreement's APR. Payments due soon are worth almost their full amount; payments due years away are worth much less. The total is your settlement figure, and the difference from your remaining payments is your rebate.</p><p>This is the same as the balance you'd owe now if interest were charged at the APR, plus interest up to the settlement date. It's why settling early saves most at the start of a loan, when most of your payments are still interest.</p>`],
+    ["Worked example", `<p>You borrowed <strong>£15,000 at 9.9% APR over 5 years</strong> and have made 24 payments of £314.86. You still owe 36 payments, £11,335.01 in total.</p><ul><li>Settling 28 days after you ask: about <strong>£9,904.02</strong>, so you save £1,430.99.</li><li>With the one-month deferral: about £9,979.95.</li><li>Plus the maximum 1% compensation, because over £8,000 is repaid with more than a year left: about £99.04.</li><li>Worst case: about £10,078.99, still saving £1,256.02.</li></ul>`],
+    ["The extra month's interest (the “58 days”)", `<p>Regulation 6 lets the lender defer the settlement date used for the rebate by one month (or 30 days) when more than a year of the agreement is left. Combined with the 28-day notice period, this is why people talk about lenders charging “up to 58 days' interest”. With a year or less left, there's no deferral.</p>`],
+    ["Early repayment compensation", `<p>For agreements made on or after 1 February 2011, <a href="https://www.legislation.gov.uk/ukpga/1974/39/section/95A">section 95A of the Consumer Credit Act 1974</a> allows the lender to claim a fair, objectively justified cost of early repayment, only when more than £8,000 is repaid early in any 12 months. It's capped at 1% of the amount repaid if more than a year is left, 0.5% if a year or less is left, and never more than the interest you would have paid. Many lenders don't charge it. Mortgages and overdrafts have different rules.</p>`],
+    ["Part repayments", `<p>You can also repay part of the loan early. The lender should either shorten the term or lower your payments; ask which. Overpaying regularly saves interest too: see the <a href="loan-repayment-calculator.html">loan repayment calculator</a>.</p>`],
+  ],
+  faqs: [
+    ["How long is an early settlement figure valid?", "The statement gives the amount to pay to settle on a date 28 days after the lender received your request. Pay by that date to clear the agreement for the amount shown."],
+    ["Can a lender refuse early settlement?", "No. For regulated consumer credit, you have a legal right to repay early, in full or in part."],
+    ["Why is my settlement figure more than the balance on my statement?", "It includes interest up to the settlement date, and sometimes an extra month's interest or early repayment compensation."],
+    ["Does settling early affect my credit score?", "Settling in full is recorded as a settled account, not a default. Closing the account can change your credit mix slightly."],
+  ],
+}, {
+  slug: "pcp-voluntary-termination.html",
+  title: "PCP Voluntary Termination: Handing Back Your Car Early (UK)",
+  description: "How voluntary termination works for PCP and hire purchase car finance in the UK: the half-way rule, what you pay, condition, and when settling is better.",
+  h1: "Handing back a PCP car early: voluntary termination",
+  lede: "If you have car finance on PCP or hire purchase and want out early, you don't always have to settle it. The Consumer Credit Act gives you the right to hand the car back once you've paid half of what the agreement costs. Here's how it works and when it makes sense.",
+  updated: "2026-11-28", updatedText: "28 November 2026",
+  trail: [["Early loan settlement calculator", "early-loan-settlement-calculator.html"]],
+  related: ["loan-settlement", "loan-calculator", "budget-planner"],
+  cta: ["Compare with settling early", "early-loan-settlement-calculator.html"],
+  sections: [
+    ["What voluntary termination is", `<p>Under <a href="https://www.legislation.gov.uk/ukpga/1974/39/section/99">sections 99 and 100 of the Consumer Credit Act 1974</a>, you can end a regulated hire purchase or conditional sale agreement, which includes most PCP deals, by telling the finance company in writing. You return the car and owe nothing more once you've paid half of the <strong>total amount payable</strong>, as long as the car has been looked after.</p>`],
+    ["The half-way point", `<p>The total amount payable is everything the agreement costs: deposit, all monthly payments, the final balloon payment and any fees. It's shown on your agreement and often on your annual statement. Half of it is the point at which you can hand the car back without paying more.</p><p><strong>Example:</strong> a PCP with a £2,000 deposit, 47 payments of £300 and a £9,000 final payment has a total amount payable of £25,100, so the half-way point is £12,550. After the deposit and 35 payments (£12,500), you'd need to pay another £50 to reach it. With PCP, the large balloon at the end means half-way usually comes well before the end of the agreement.</p>`],
+    ["What you might still pay", `<ul><li><strong>Top-up to half:</strong> if you haven't reached half yet, you pay the difference when you terminate.</li><li><strong>Damage:</strong> if the car hasn't been kept in reasonable condition, the finance company can charge for damage beyond fair wear and tear. Read the condition guide that came with your agreement and fix obvious damage first.</li><li><strong>Arrears:</strong> any missed payments are still owed.</li></ul>`],
+    ["Voluntary termination or settlement?", `<p><strong>Settle</strong> if you want to keep the car, or if it's worth more than the settlement figure: you can then sell it and keep the difference. <strong>Hand it back</strong> if the car is worth less than you owe (negative equity), you've passed the half-way point and you don't want to keep it. Check what the car is worth before deciding, and get a settlement figure to compare.</p>`],
+    ["How to do it", `<ol><li>Find the total amount payable on your agreement and add up what you've paid, including the deposit.</li><li>Write to the finance company saying you're ending the agreement under section 99 of the Consumer Credit Act.</li><li>Agree a collection date, and check the car against the condition guide.</li><li>Keep copies of your letter, photos of the car and the collection paperwork.</li></ol><p>If the company won't accept a valid termination, complain to them, then to the <a href="https://www.financial-ombudsman.org.uk/">Financial Ombudsman Service</a>.</p>`],
+  ],
+  faqs: [
+    ["Can I hand my car back before I've paid half?", "Yes, but you'll have to pay the difference up to half of the total amount payable when you do."],
+    ["Does voluntary termination affect my credit score?", "It's a legal right, not a default, so it shouldn't be recorded as one. Your credit file will show the agreement as ended."],
+    ["Does voluntary termination work for personal loans?", "No. It applies to hire purchase and conditional sale agreements, including most PCP deals. A personal loan used to buy a car can only be settled."],
+  ],
+}, {
+  slug: "save-excel-as-csv-utf8.html",
+  title: "How to Save Excel as CSV UTF-8 (and Fix £ Signs and Zeros)",
+  description: "Save an Excel file as CSV UTF-8 on Windows, Mac and Google Sheets, and fix common problems: garbled £ signs, lost leading zeros, dates and semicolons.",
+  h1: "How to save Excel as CSV UTF-8",
+  lede: "CSV files are plain text, so the way they're saved matters. Saving as CSV UTF-8 keeps £ signs, accents and other characters intact when the file is imported elsewhere. Here's how to do it, and how to fix the problems people run into most.",
+  updated: "2026-11-28", updatedText: "28 November 2026",
+  trail: [["Excel to CSV converter", "excel-to-csv.html"]],
+  related: ["excel-to-csv", "csv-to-excel", "remove-duplicate-rows"],
+  cta: ["Convert Excel to CSV now", "excel-to-csv.html"],
+  sections: [
+    ["In Excel on Windows", `<ol><li>Open the workbook and select the sheet you want to save.</li><li>Choose <strong>File › Save As</strong> (or <strong>Save a Copy</strong>), then <strong>Browse</strong>.</li><li>In <em>Save as type</em>, choose <strong>CSV UTF-8 (Comma delimited) (*.csv)</strong>.</li><li>Save, and confirm when Excel warns that only the active sheet is saved.</li></ol>`],
+    ["In Excel on a Mac", `<ol><li>Open the workbook and select the sheet.</li><li>Choose <strong>File › Save As</strong>.</li><li>In <em>File Format</em>, choose <strong>CSV UTF-8 (Comma-delimited) (.csv)</strong> and save.</li></ol>`],
+    ["In Google Sheets", `<p>Choose <strong>File › Download › Comma-separated values (.csv)</strong>. Google Sheets always saves CSV as UTF-8, one sheet at a time.</p>`],
+    ["Without Excel, or every sheet at once", `<p>The <a href="excel-to-csv.html">Excel to CSV converter</a> saves any sheet, or every sheet in a ZIP, as UTF-8 CSV in your browser, with a choice of comma, semicolon or tab. Nothing is uploaded.</p>`],
+    ["Fixing common problems", `<ul><li><strong>£ shows as Â£ or other odd characters:</strong> the file is UTF-8 but was opened as an older encoding. In Excel, use <strong>Data › From Text/CSV</strong> and choose <em>65001: Unicode (UTF-8)</em> as the file origin. Saving with a UTF-8 marker (byte order mark) helps Excel detect it automatically.</li><li><strong>Leading zeros disappear</strong> (phone numbers, postcodes, account numbers): Excel turns them into numbers when it opens the CSV. Import with <em>Data › From Text/CSV</em> and set those columns to Text. The CSV itself still contains the zeros.</li><li><strong>Dates change format:</strong> Excel reformats dates on opening. Check them in a text editor; the CSV holds whatever was saved.</li><li><strong>Everything is in one column:</strong> the software expects a semicolon, common where the comma is the decimal mark. Save with a semicolon separator instead.</li><li><strong>Formulas are gone:</strong> CSV stores values only. Keep the original workbook for the formulas.</li></ul>`],
+  ],
+  faqs: [
+    ["What's the difference between CSV and CSV UTF-8?", "Both are comma-separated text. CSV UTF-8 uses the UTF-8 encoding, which can store any character, including £, € and accents. Plain CSV in Excel uses an older encoding that can garble them."],
+    ["Can I save every sheet as CSV at once in Excel?", "No. Excel saves only the active sheet. Use the Excel to CSV converter to export every sheet at once."],
+    ["Why does my CSV open in one column?", "The program is expecting a different separator. Try saving with semicolons, or import the file and choose comma as the delimiter."],
+  ],
+});
 function guidePage(g) {
   const url = ORIGIN + g.slug, trail = [[SITE, "./"], ...g.trail, [g.h1, g.slug]], titles = g.sections.map(([t]) => t).concat("Frequently asked questions");
   return `${head({title: g.title, description: g.description, url})}
@@ -578,7 +665,7 @@ ${header}
       ${g.sections.map(([t, body]) => h2(t) + body).join("\n      ")}
       ${h2("Frequently asked questions")}
       <div class="faq">${g.faqs.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("")}</div>
-      <p class="guide-cta"><a class="btn-primary" href="sign-pdf.html">Sign a PDF now →</a></p>
+      <p class="guide-cta"><a class="btn-primary" href="${(g.cta || ["Sign a PDF now", "sign-pdf.html"])[1]}">${esc((g.cta || ["Sign a PDF now"])[0])} →</a></p>
     </article>
     <aside class="tool-aside">${toc(titles)}${asideLinks("Related tools", g.related.map(id => [tool(id).name, byId.get(id).slug]))}</aside>
   </div>

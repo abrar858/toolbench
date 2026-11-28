@@ -1376,3 +1376,37 @@ test('settlement calculator handles PCP car finance with a balloon payment', asy
  await expect(out.locator('.big')).toHaveText('£9,904.02 to settle');
  expect(errors).toEqual([]);
 });
+
+test('hours timesheet flags UK working time rules', async ({page}) => {
+ await page.goto('/time-duration-calculator.html');
+ const out = page.locator('#ts-out');
+ // Default week: 5 × 9:00–17:30 with 30-minute breaks = 40 hours, no checks.
+ await expect(out).toContainText('40.00');
+ await expect(page.locator('.wt-checks')).toHaveCount(0);
+ // Long days: 5 × 07:00–19:00 with 15-minute breaks = 58h 45m, short breaks.
+ for (let i = 0; i < 5; i++) { await page.locator(`#ts-s${i}`).fill('07:00'); await page.locator(`#ts-e${i}`).fill('19:00'); await page.locator(`#ts-b${i}`).fill('15'); }
+ await expect(page.locator('.wt-checks')).toContainText('more than 48 hours');
+ await expect(page.locator('.wt-checks')).toContainText('Monday, Tuesday, Wednesday, Thursday, Friday: more than 6 hours with a break under 20 minutes');
+ // A late finish followed by an early start: Monday ends 23:00, Tuesday starts 07:00 = 8 hours' rest.
+ await page.locator('#ts-e0').fill('23:00');
+ await expect(page.locator('.wt-checks')).toContainText("Less than 11 hours' rest between Monday to Tuesday (8h 00m)");
+ // Pay below the National Living Wage.
+ await page.locator('#ts-rate').fill('11.50');
+ await expect(page.locator('.wt-checks')).toContainText('below the £12.71 National Living Wage');
+});
+
+test('salary pages answer good-salary, employer cost and pay-rise questions; new guides link to their tools', async ({page}) => {
+ await page.goto('/35000-after-tax.html');
+ await expect(page.locator('main')).toContainText('£35,000 is 10.3% less than the UK median of £39,039');
+ await expect(page.locator('main')).toContainText('about £40,362.80 a year');
+ await expect(page.locator('main')).toContainText('A £1,000 pay rise would add about £720.00 a year');
+ for (const [slug, cta] of [['how-early-settlement-figures-work.html', 'early-loan-settlement-calculator.html'], ['pcp-voluntary-termination.html', 'early-loan-settlement-calculator.html'], ['save-excel-as-csv-utf8.html', 'excel-to-csv.html']]) {
+  await page.goto('/' + slug);
+  await expect(page.locator('main h1')).toBeVisible();
+  await expect(page.locator(`.guide-cta a[href="${cta}"]`)).toHaveCount(1);
+ }
+ await page.goto('/early-loan-settlement-calculator.html');
+ await expect(page.locator('article a[href="how-early-settlement-figures-work.html"]')).toHaveCount(1);
+ await page.goto('/excel-to-csv.html');
+ await expect(page.locator('article a[href="save-excel-as-csv-utf8.html"]')).toHaveCount(1);
+});
