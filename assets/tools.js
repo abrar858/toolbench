@@ -1270,11 +1270,12 @@ const hm=m=>`${Math.floor(m/60)}h ${String(m%60).padStart(2,"0")}m`;
 let summary="",rowsOut=[];
 const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const sheet=()=>{
- let mins=0,days=0,bad=[];rowsOut=[];const rnd=Number($("#ts-round",el).value)||0;
+ let mins=0,days=0,bad=[];rowsOut=[];const rnd=Number($("#ts-round",el).value)||0,shifts=[];
  for(let i=0;i<7;i++){const s=parse($(`#ts-s${i}`,el).value),e=parse($(`#ts-e${i}`,el).value),b=Number($(`#ts-b${i}`,el).value||0),cell=$(`#ts-h${i}`,el);
   if(!Number.isFinite(s)||!Number.isFinite(e)){cell.textContent="–";continue;}
   const len=e-s+(e<=s?1440:0);
   if(!Number.isFinite(b)||b<0||b>=len){cell.textContent="Check break";bad.push(i);continue;}
+  shifts.push({i,start:i*1440+s,end:i*1440+s+len,worked:len-b,b});
   const w=rnd?Math.round((len-b)/rnd)*rnd:len-b;cell.textContent=hm(w);mins+=w;days++;rowsOut.push([DAYS[i],$(`#ts-s${i}`,el).value,$(`#ts-e${i}`,el).value,b,hm(w),(w/60).toFixed(2)]);}
  const rate=num($("#ts-rate",el).value),otAfter=Number($("#ts-ot",el).value),otx=Number($("#ts-otx",el).value),o=$("#ts-out",el);
  const hours=mins/60,otHours=Number.isFinite(otAfter)&&$("#ts-ot",el).value!==""&&hours>otAfter?hours-otAfter:0,basic=hours-otHours;
@@ -1283,6 +1284,15 @@ const sheet=()=>{
  if(otHours)items.push([otHours.toFixed(2),"Overtime hours"]);
  if(pay!=null)items.push([gbp(pay),"Gross pay before tax"]);
  o.innerHTML=`<div class="stats">${stats(items)}</div>`+(bad.length?`<p class="err">Check the break on ${bad.map(i=>["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"][i]).join(", ")}: it must be shorter than the shift.</p>`:"")+(pay!=null?`<p class="note">Pay is before tax and National Insurance. See take-home pay with the <a href="uk-take-home-pay-calculator.html">UK take-home pay calculator</a>.</p>`:"");
+ // UK working time checks (Working Time Regulations 1998): 48-hour average week, 20-minute break over 6 hours, 11 hours' rest between days, minimum wage.
+ const checks=[];
+ if(hours>48)checks.push(`${hm(mins)} is more than 48 hours. The UK limit is an average of 48 hours a week, normally over 17 weeks, so a single long week can be allowed. Adults can opt out in writing; under-18s are limited to 8 hours a day and 40 a week.`);
+ const short=shifts.filter(x=>x.worked>360&&x.b<20).map(x=>DAYS[x.i]);
+ if(short.length)checks.push(`${short.join(", ")}: more than 6 hours with a break under 20 minutes. Workers are entitled to one uninterrupted 20-minute rest break when they work more than 6 hours a day.`);
+ const rest=[];for(let k=1;k<shifts.length;k++){const a=shifts[k-1],c=shifts[k];if(c.i===a.i+1&&c.start-a.end<660)rest.push(`${DAYS[a.i]} to ${DAYS[c.i]} (${hm(Math.max(0,c.start-a.end))})`);}
+ if(rest.length)checks.push(`Less than 11 hours' rest between ${rest.join(", ")}. Workers are normally entitled to 11 hours' rest between working days.`);
+ if(rate>0&&rate<12.71)checks.push(`${gbp(rate)} an hour is below the £12.71 National Living Wage for workers aged 21 and over (from 1 April 2026). Lower minimum rates apply under 21 and for apprentices.`);
+ if(checks.length)o.innerHTML+=`<div class="wt-checks"><p class="sub" style="margin:12px 0 4px"><strong>UK working time checks</strong></p><ul class="note">${checks.map(c=>`<li>${c}</li>`).join("")}</ul></div>`;
  summary=`Total ${hm(mins)} (${hours.toFixed(2)} hours) over ${plural(days,"day")}`+(otHours?`, including ${otHours.toFixed(2)} overtime hours`:"")+(pay!=null?`. Gross pay ${gbp(pay)}.`:".");
 };
 $("#ts-clear",el).onclick=()=>{for(let i=0;i<7;i++){$(`#ts-s${i}`,el).value="";$(`#ts-e${i}`,el).value="";$(`#ts-b${i}`,el).value=0;}sheet();};
