@@ -132,6 +132,12 @@ test('finance worked examples match the calculators',()=>{
  assert.ok(readPage('savings-calculator.html').includes('£'+money(bal)));
 });
 
+test('savings calculator reruns the main calculation on committed main-field changes',()=>{
+ const savings=script.match(/\{id: "savings-calculator"[\\s\\S]*?\n \}\},/)[0];
+ assert.match(savings,/addEventListener\("change", e => \(e\.target\.closest\("\.aer-conv"\) \? conv : run\)\)/);
+ assert.doesNotMatch(savings,/addEventListener\("change", conv\)/);
+});
+
 test('automation builder is linked and motion respects user preferences',()=>{
  assert.ok(script.includes('href="automation-builder.html"'));
  assert.ok(html.includes('href="automation-builder.html"'));
