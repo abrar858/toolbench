@@ -1350,3 +1350,29 @@ test('near-page-1 pages answer their searches', async ({page}) => {
  await page.goto('/budget-planner.html');
  await expect(page.locator('article')).toContainText('Is it the 50/30/20 or the 20/30/50 rule?');
 });
+
+test('settlement calculator handles PCP car finance with a balloon payment', async ({page}) => {
+ const errors = []; page.on('pageerror', e => errors.push(e.message));
+ await page.goto('/early-loan-settlement-calculator.html');
+ const out = page.locator('#es-out');
+ // £20,000 PCP at 7.9% APR over 48 months, £8,000 balloon, 24 paid (independent figures).
+ await page.locator('#es-amt').fill('20000'); await page.locator('#es-apr').fill('7.9');
+ await page.locator('#es-term').fill('48'); await page.locator('#es-made').fill('24'); await page.locator('#es-bal').fill('8000');
+ await expect(out.locator('.big')).toHaveText('£14,539.89 to settle');
+ await expect(out).toContainText('24 more payments of £341.71 and a final payment of £8,000.00 (£16,201.10)');
+ await expect(out).toContainText('£1,661.21');
+ await expect(out).toContainText('£14,775.71');
+ await expect(out).toContainText('£1,425.39');
+ await expect(out).toContainText('voluntary termination');
+ // Statement mode with the same balloon gives the same figure.
+ await page.locator('#es-mode').selectOption('stmt');
+ await page.locator('#es-pay').fill('341.71'); await page.locator('#es-left').fill('24');
+ await expect(out.locator('.big')).toHaveText(/£14,539\.\d\d to settle/);
+ // A balloon larger than the loan can grow to is rejected.
+ await page.locator('#es-mode').selectOption('loan'); await page.locator('#es-bal').fill('50000');
+ await expect(out.locator('.err')).toContainText('final payment is too large');
+ await page.locator('#es-bal').fill('0');
+ await page.locator('#es-amt').fill('15000'); await page.locator('#es-apr').fill('9.9'); await page.locator('#es-term').fill('60');
+ await expect(out.locator('.big')).toHaveText('£9,904.02 to settle');
+ expect(errors).toEqual([]);
+});

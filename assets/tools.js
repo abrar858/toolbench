@@ -1831,10 +1831,11 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
   };
   el.addEventListener("input", run); run();
  }},
-{id: "loan-settlement", cat: "finance", name: "Early loan settlement calculator", desc: "Estimate your settlement figure and the interest saved by paying a loan off early.",
+{id: "loan-settlement", cat: "finance", name: "Early loan settlement calculator", desc: "Settlement figure and interest saved for a loan or car finance (PCP or HP).",
  ui: `<div class="row"><div><label for="es-mode">I know</label><select id="es-mode"><option value="loan">The amount borrowed and the term</option><option value="stmt">My monthly payment and payments left</option></select></div><div><label for="es-apr">APR (%)</label><input id="es-apr" inputmode="decimal" value="9.9"></div></div>
   <div class="row es-loan"><div><label for="es-amt">Amount borrowed (£)</label><input id="es-amt" inputmode="decimal" value="15000"></div><div><label for="es-term">Term (months)</label><input id="es-term" type="number" min="2" max="600" value="60"></div><div><label for="es-made">Payments made so far</label><input id="es-made" type="number" min="0" value="24"></div></div>
   <div class="row es-stmt" style="display:none"><div><label for="es-pay">Monthly payment (£)</label><input id="es-pay" inputmode="decimal" value="314.86"></div><div><label for="es-left">Payments left</label><input id="es-left" type="number" min="1" max="600" value="36"></div></div>
+  <div class="row"><div><label for="es-bal">Final balloon payment (£, PCP car finance; 0 if none)</label><input id="es-bal" inputmode="decimal" value="0"></div></div>
   <div class="row"><div><label for="es-days">Days until settlement (0–30)</label><input id="es-days" type="number" min="0" max="30" value="28"></div><div><label for="es-when">Agreement taken out</label><select id="es-when"><option value="new">On or after 1 February 2011</option><option value="old">Before 1 February 2011</option></select></div></div>
   <div class="out" id="es-out" aria-live="polite"></div>
   <p class="note">Assumes you ask just after a monthly payment, so no other payment falls due before you settle. Your lender's settlement statement gives the exact figure.</p>`,
@@ -1846,6 +1847,8 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     if (!(Number.isInteger(days) && days >= 0 && days <= 30)) return o.innerHTML = `<p class="err">Enter the days until settlement as a whole number from 0 to 30. Lenders use 28 days after they receive your request.</p>`;
     // Statutory method: the APR is an annual effective rate; the monthly rate is its 12th root.
     const A = apr / 100, i = Math.pow(1 + A, 1 / 12) - 1, pv = (p, n) => i ? p * (1 - Math.pow(1 + i, -n)) / i : p * n;
+    const B = num($("#es-bal", el).value || "0");
+    if (!(Number.isFinite(B) && B >= 0)) return o.innerHTML = `<p class="err">The final balloon payment must be £0 or more.</p>`;
     let pay, left;
     if (stmt) {
       pay = num($("#es-pay", el).value); left = Number($("#es-left", el).value);
@@ -1854,25 +1857,29 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
       const P = num($("#es-amt", el).value), N = Number($("#es-term", el).value), made = Number($("#es-made", el).value);
       if (!(P > 0) || !(Number.isInteger(N) && N >= 2 && N <= 600)) return o.innerHTML = `<p class="err">Enter the amount borrowed and a term of 2 to 600 months.</p>`;
       if (!(Number.isInteger(made) && made >= 0 && made < N)) return o.innerHTML = `<p class="err">Payments made must be a whole number from 0 to ${N - 1}.</p>`;
-      pay = i ? P * i / (1 - Math.pow(1 + i, -N)) : P / N; left = N - made;
+      if (B >= P * Math.pow(1 + i, N)) return o.innerHTML = `<p class="err">The final payment is too large for that amount, rate and term.</p>`;
+      // With a balloon (PCP), the monthly payments repay the amount borrowed less the present value of the final payment.
+      const vN = Math.pow(1 + i, -N); pay = i ? (P - B * vN) * i / (1 - vN) : (P - B) / N; left = N - made;
+      if (!(pay > 0)) return o.innerHTML = `<p class="err">The final payment is too large for that amount, rate and term.</p>`;
     }
     // Amount to settle d days after the last payment, the most a lender could ask if it defers the settlement
     // date by a month (more than a year left), and the compensation allowed on newer agreements over £8,000.
-    const at = (n, d) => pv(pay, n) * Math.pow(1 + A, d / 365);
+    const at = (n, d) => (pv(pay, n) + B * Math.pow(1 + i, -n)) * Math.pow(1 + A, d / 365);
     const figure = at(left, days), t = days / 365;
-    const deferred = left > 12 ? pv(pay, left) * Math.pow(1 + A, t + 1 / 12) + pay * (1 - Math.pow(1 + A, t)) : figure;
-    const remaining = pay * left, comp = isNew && figure > 8000 ? Math.min((left > 12 ? 0.01 : 0.005) * figure, remaining - figure) : 0;
+    const deferred = left > 12 ? (pv(pay, left) + B * Math.pow(1 + i, -left)) * Math.pow(1 + A, t + 1 / 12) + pay * (1 - Math.pow(1 + A, t)) : figure;
+    const remaining = pay * left + B, comp = isNew && figure > 8000 ? Math.min((left > 12 ? 0.01 : 0.005) * figure, remaining - figure) : 0;
     const worst = deferred + comp, savedMin = Math.max(0, remaining - worst), savedMax = Math.max(0, remaining - figure);
-    let html = `<p class="big">${gbp(figure)} to settle</p><p class="sub">in ${plural(days, "day")}, instead of ${plural(left, "more payment")} of ${gbp(pay)} (${gbp(remaining)})</p>
+    let html = `<p class="big">${gbp(figure)} to settle</p><p class="sub">in ${plural(days, "day")}, instead of ${plural(left, "more payment")} of ${gbp(pay)}${B > 0 ? ` and a final payment of ${gbp(B)}` : ""} (${gbp(remaining)})</p>
       <div class="stats" style="margin-top:14px">${stats([[gbp(savedMax), "Interest saved"], [gbp(worst), "Highest likely figure"], [gbp(savedMin), "Saved, at the least"]])}</div>`;
     const why = [];
     if (deferred > figure) why.push(`up to ${gbp(deferred - figure)} more if your lender works out the rebate one month later, which the rules allow when more than a year is left`);
     if (comp > 0) why.push(`up to ${gbp(comp)} early repayment compensation (${left > 12 ? "1%" : "0.5%"} of the amount repaid), allowed because more than £8,000 is being repaid early`);
     html += why.length ? `<p class="note">The highest likely figure adds ${why.join(", and ")}. Many lenders charge less, or nothing.</p>` : `<p class="note">With a year or less left and no more than £8,000 repaid early, the lender can't add a deferral or compensation, so the figure should be close.</p>`;
+    if (B > 0) html += `<p class="note">Car finance: settling includes the ${gbp(B)} final payment, so you own the car. If you'd rather hand it back, PCP and hire purchase let you end the agreement once you've paid half the total amount payable (voluntary termination), or return the car at the end instead of paying the final payment.</p>`;
     if (isNew && figure <= 8000 && left > 0) html += `<p class="note ok-msg">No early repayment compensation: you're repaying ${gbp(figure)}, below the £8,000 a year threshold.</p>`;
     // Settling later: the figure and the interest still saved after more payments.
     const rows = [];
-    for (let k = 6; k < left; k += k < 24 ? 6 : 12) { const f = at(left - k, days); rows.push(`<tr><th scope="row">${plural(k, "more payment")}</th><td>${gbp(f)}</td><td>${gbp(pay * (left - k) - f)}</td></tr>`); if (rows.length >= 8) break; }
+    for (let k = 6; k < left; k += k < 24 ? 6 : 12) { const f = at(left - k, days); rows.push(`<tr><th scope="row">${plural(k, "more payment")}</th><td>${gbp(f)}</td><td>${gbp(pay * (left - k) + B - f)}</td></tr>`); if (rows.length >= 8) break; }
     if (rows.length) html += `<details class="schedule"><summary>If you settle later</summary><div class="tablewrap"><table><tr><th>After</th><th>Settlement figure</th><th>Interest saved</th></tr><tr><th scope="row">Now</th><td>${gbp(figure)}</td><td>${gbp(savedMax)}</td></tr>${rows.join("")}</table></div><p class="note">Before any deferral or compensation. Settling sooner always saves more interest.</p></details>`;
     o.innerHTML = html;
   };

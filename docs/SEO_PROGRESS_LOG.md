@@ -2,6 +2,12 @@
 
 Newest first. Record what changed, how it was tested, and what Search Console showed — including "no data yet".
 
+## 2026-11-28 — Indexing jump; car finance settlement
+
+**Search Console:** page indexing (report of 23 Nov) 80 indexed, up from 39; crawled-not-indexed 17 → 0; 5 discovered-not-indexed (£45k, £48k, £125k, £150k, URL encoder; £45k since indexed). 23–27 Nov: about 470 impressions a day (from about 300), 528 queries, 0 clicks, average position 59.6. New pages: mortgage overpayment 498 impressions (51.8), early loan settlement 466 (54.5). New query cluster: car finance settlement ("car finance settlement calculator" 65.3, "paying off car finance early calculator uk" 66.5, "pcp early settlement calculator" 84.5, "personal loan settlement calculator" 31.7). Indexing requested: £125k, £48k, £150k, URL encoder, budget planner, hours calculator.
+
+**Changed:** settlement calculator takes a PCP final (balloon) payment in both modes, includes it in the settlement figure, deferral, compensation and "settle later" table, and explains voluntary termination. Page retitled "Loan & Car Finance Settlement Calculator UK" with a PCP/HP section, worked example (£20,000, 7.9%, 48 months, £8,000 balloon, settle after 24: £14,539.89) and FAQs. CCA ss99–100 cited.
+
 ## 2026-11-22 — Pages near page 1, and an early loan settlement calculator
 
 **Search Console (16–21 Nov, per page):** hours calculator position 16.3 ("labor time calculator", "time calculator timesheet", "calculate payroll time", "work hours calculator with break" 7–9); Excel to CSV 19.3 ("excel to csv converter" 10.8, "xls to csv", "convert xlsx to csv"); budget planner 24.9 ("budget calculator", "budget calculator monthly", "20 30 50 calculator", "monthly bills calculator"); Word to PDF 25.5 (all "docx to pdf" variants). Loan page: 680 of 1,290 impressions at 57.1, with "early loan settlement calculator" at 21.8 and "loan early repayment calculator" at 79.2.
