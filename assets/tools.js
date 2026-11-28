@@ -1911,17 +1911,19 @@ el.addEventListener("input",run);el.addEventListener("change",run);$("#ls-copy",
     if (lump > 0 && !(Number.isInteger(lumpAt) && lumpAt >= 1 && lumpAt <= n)) return o.innerHTML = `<p class="err">Enter the lump sum month as a whole number from 1 to ${n}.</p>`;
     const pmt = (P, m) => r ? P * r / (1 - Math.pow(1 + r, -m)) : P / m, base = pmt(B, n), baseInterest = base * n - B;
     // Month by month with overpayments. A lump sum either shortens the term or, if chosen, lowers the payment for the remaining term.
-    let bal = B, pay = base, interest = 0, months = 0, newPay = null; const yearBal = [];
+    let bal = B, pay = base, interest = 0, months = 0, newPay = null, overYear1 = 0; const yearBal = [];
     for (let m = 1; bal > 0.005 && m <= n; m++) {
       const i = bal * r; interest += i;
+      const contractual = Math.min(bal + i, pay);
       let out = Math.min(bal + i, pay + extra);
       if (lump > 0 && m === lumpAt) out = Math.min(bal + i, out + lump);
+      if (m <= 12) overYear1 += Math.max(0, out - contractual);
       bal = bal + i - out; months = m;
       if (lump > 0 && m === lumpAt && lower && bal > 0.005) { pay = pmt(bal, n - m); newPay = pay; }
       if (m % 12 === 0) yearBal.push(Math.max(0, bal));
     }
     if (months % 12) yearBal.push(0);
-    const saved = baseInterest - interest, sooner = n - months, overYear1 = extra * Math.min(12, months) + (lump > 0 && lumpAt <= 12 ? lump : 0);
+    const saved = baseInterest - interest, sooner = n - months;
     let html = `<p class="big">${gbp(base)} a month</p><p class="sub">to clear ${gbp(B)} in ${dur(n)}, with ${gbp(baseInterest)} of interest</p>`;
     if (extra > 0 || lump > 0) {
       html += `<div class="stats" style="margin-top:14px">${stats([[dur(months), "Mortgage-free in"], [gbp(saved), "Interest saved"], [sooner > 0 ? dur(sooner) : "Same end date", "Sooner"]])}</div>`;
