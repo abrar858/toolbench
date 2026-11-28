@@ -153,7 +153,7 @@ const REVIEWED = "22 November 2026";
 // Who wrote and checks the money pages (named on the About page).
 const AUTHOR_NAME = "Bisma Zainab";
 const AUTHOR_LD = {"@type": "Person", name: AUTHOR_NAME, url: "https://toolsbravo.com/about.html", jobTitle: "Software developer"};
-const byline = (date = "2026-11-22", text = REVIEWED) => `<p class="byline">By <a href="about.html" rel="author">${AUTHOR_NAME}</a>, developer of ToolsBravo · Figures checked against official sources · Reviewed <time datetime="${date}">${text}</time></p>`;
+const byline = (date = "2026-11-22", text = REVIEWED) => `<p class="byline">By <a href="about.html" rel="author">${AUTHOR_NAME}</a><span class="bl-extra">, developer of ToolsBravo · Figures checked against official sources</span> · Reviewed <time datetime="${date}">${text}</time></p>`;
 const sourcesNote = c => `<p class="checked">${c.id === "take-home-pay" ? `Rates last checked against HMRC guidance on <time datetime="2026-11-15">${RATES_CHECKED}</time> for the ${TAX_YEAR} tax year.` : `Formulas and rules last reviewed on <time datetime="2026-11-22">${REVIEWED}</time>. Results are estimates, not financial advice.`} Sources: ${c.sources.map(([n, u]) => `<a href="${u}" rel="noopener">${esc(n)}</a>`).join(", ")}.</p>`;
 const EMBEDS = {"take-home-pay": 740, "vat-calculator": 400, "loan-calculator": 700, "mortgage-overpayment": 860, "savings-calculator": 1040, "budget-planner": 520, "percentage-calculator": 420};
 const embedCode = (t, c) => `<iframe src="${ORIGIN}embed/${c.slug}" title="${t.name}" width="100%" height="${EMBEDS[t.id]}" style="border:0;max-width:680px" loading="lazy"></iframe>\n<p><a href="${ORIGIN}${c.slug}">${t.name}</a> by ToolsBravo</p>`;
