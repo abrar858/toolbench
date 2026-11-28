@@ -784,3 +784,13 @@ input.ep-field[type=checkbox],input.ep-field[type=radio]{accent-color:var(--teal
 /* Author line on money pages */
 .byline{margin:8px 0 20px;line-height:1.5;font-size:.88rem;color:var(--muted)}
 .byline a{color:inherit;font-weight:600}
+
+/* Phones: get the tool on screen sooner */
+@media (max-width:560px){
+ .tool-head h1{margin:8px 0 8px}
+ .tool-head .lede{font-size:.98rem;line-height:1.5}
+ .tool-meta{gap:2px 12px;margin-top:10px;font-size:.8rem}
+ .tool-meta li:nth-child(3){display:none}
+ .byline{margin:6px 0 14px;font-size:.8rem}
+ .byline .bl-extra{display:none}
+}

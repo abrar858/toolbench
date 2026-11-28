@@ -126,11 +126,15 @@ export const FILE_CONTENT = [
   sections: [
     ["Permanent rotation", "<p>Turning a page in a PDF viewer usually only changes how you see it on screen. This tool saves the new orientation in the file, so it opens the right way up for everyone you send it to, and prints correctly too.</p>"],
     ["Mixed documents", "<p>Scanned documents often have just a few pages the wrong way round. Enter only those pages, and the rest of the document is left exactly as it was. Rotating twice by 90° is the same as rotating once by 180°.</p>"],
+    ["Scanned documents", "<p>Scanners and phone scanning apps often save a page sideways or upside down, especially when a landscape page is fed in with portrait ones. Open the PDF, note which pages are wrong, and rotate just those: for example <code>3, 7</code> by 90° clockwise. Pages you don't list stay as they are.</p>"],
+    ["How the rotation is added", "<p>The rotation is added to whatever the page already has. A page already turned 90° and rotated another 90° ends up at 180°. If a page comes out the wrong way, rotate it again by the angle that fixes it, or start again from your original file, which is never changed.</p>"],
   ],
   faqs: [
     ["How do I rotate just one page in a PDF?", "Enter that page number in the pages box, choose the rotation and press Rotate and download."],
     ["Does rotating change the quality?", "No. Only the page orientation setting changes; text and images are untouched."],
     ["Can I rotate a PDF on my phone?", "Yes. The tool works in mobile browsers on iPhone and Android."],
+    ["How do I rotate a PDF and save it?", "Choose the PDF, pick the angle, and press Rotate and download. The downloaded PDF keeps the new orientation in any PDF reader."],
+    ["Can I rotate different pages by different amounts?", "Yes, in two passes: rotate the first group of pages, then open the downloaded file and rotate the next group."],
     PRIVATE,
   ],
   related: ["delete-pdf-pages", "merge-pdf", "split-pdf"],
@@ -145,11 +149,15 @@ export const FILE_CONTENT = [
   sections: [
     ["When to use it", "<p>Take out blank pages from a scan, remove a cover sheet or terms and conditions before sending a document, drop duplicate pages, or cut a long report down to the part someone needs to read.</p>"],
     ["Keep instead of delete", "<p>If you want to keep only a few pages, it can be quicker to use <a href=\"split-pdf.html\">Split PDF</a> and extract them into a new file. Either way, the remaining pages are copied exactly, with no loss of quality, and nothing is uploaded.</p>"],
+    ["Examples", "<ul><li><code>1</code>: remove a cover page.</li><li><code>2, 5-7</code>: remove page 2 and pages 5, 6 and 7.</li><li><code>10-</code>: remove page 10 to the end, for example the terms and conditions at the back of a statement.</li></ul><p>Page numbers are the page's position in the file (the first page is 1), which can differ from the numbers printed on the pages.</p>"],
+    ["What happens to the rest of the PDF", "<p>The remaining pages are copied exactly: text stays selectable and searchable, images keep their quality and the file is not compressed. Your original file is not changed; you download a new copy. To remove information from a page rather than a whole page, use <a href=\"edit-pdf.html\">Edit PDF</a>, whose redaction removes the hidden text too.</p>"],
   ],
   faqs: [
     ["How do I remove a page from a PDF for free?", "Choose the PDF, type the page number to delete and press Delete pages and download."],
     ["Can I delete several pages at once?", "Yes. Separate pages and ranges with commas, for example 1, 4-6, 10."],
     ["Can I undo it?", "Your original file is never changed. The edited copy is downloaded as a new file."],
+    ["How do I delete blank pages from a PDF?", "Find the page numbers of the blank pages, enter them, for example 3, 8, and press Delete pages and download."],
+    ["Does deleting pages make the PDF smaller?", "Usually, yes, because the deleted pages' content is left out. For a much smaller file, run the result through Compress PDF."],
     PRIVATE,
   ],
   related: ["split-pdf", "rotate-pdf", "merge-pdf"],
@@ -270,10 +278,15 @@ export const FILE_CONTENT = [
   sections: [
     ["Which format should I use?", "<ul><li><strong>JPG</strong>: the most compatible choice for photos. Doesn't support transparency, so transparent areas become white.</li><li><strong>PNG</strong>: lossless and supports transparency. Best for logos, screenshots and graphics with text.</li><li><strong>WebP</strong>: modern format with much smaller files than JPG or PNG, supported by all current browsers. Ideal for websites.</li></ul>"],
     ["Common conversions", "<p>Convert WebP images saved from websites to JPG so they open everywhere, PNG screenshots to JPG to make them smaller, or JPG photos to WebP to speed up your website. Phone photos are turned the right way up automatically.</p>"],
+    ["Transparency", "<p>PNG and WebP can have transparent areas; JPG can't. When you convert to JPG, transparent areas become white. Keep PNG or WebP for logos and graphics that need a transparent background.</p>"],
+    ["iPhone photos (HEIC)", "<p>iPhones save photos as HEIC. The converter can read them where your browser can display HEIC, such as Safari on iPhone and Mac. In other browsers, share the photo from your phone as JPG, or set <em>Settings › Camera › Formats</em> to <em>Most Compatible</em> so new photos are saved as JPG.</p>"],
+    ["File size", "<p>For photos, JPG or WebP at 80–90% quality is usually much smaller than PNG with no visible difference. For screenshots and text, PNG stays sharp. To reach a specific size such as under 100 KB, use the <a href=\"image-compressor.html\">image compressor</a>; to change the pixel size, use the <a href=\"image-resizer.html\">image resizer</a>.</p>"],
   ],
   faqs: [
     ["How do I convert WebP to JPG?", "Choose the WebP images, select JPG and press Convert."],
     ["How do I convert PNG to JPG?", "Choose the PNG files, select JPG and press Convert. Transparent backgrounds become white."],
+    ["Why is my converted JPG background white?", "JPG doesn't support transparency, so transparent areas are filled with white. Convert to PNG or WebP to keep them transparent."],
+    ["Can I convert HEIC to JPG?", "Yes in browsers that can display HEIC, such as Safari on iPhone and Mac. Elsewhere, share the photo as JPG from your phone first."],
     ["Can I convert many images at once?", "Yes. Select as many as you like and download them all as a ZIP file."],
     PRIVATE,
   ],

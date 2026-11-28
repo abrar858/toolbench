@@ -115,10 +115,14 @@ export const OFFICE_CONTENT = [
   sections: [
     ["Worked example", "<p>A sheet with the header row <code>Name | Age</code> and a row <code>Sam | 34</code> becomes <code>[{\"Name\": \"Sam\", \"Age\": 34}]</code> as an array of objects, or <code>[[\"Name\", \"Age\"], [\"Sam\", 34]]</code> as an array of rows. Numbers and true/false values keep their type, dates become ISO 8601 text such as <code>2026-04-06T00:00:00.000Z</code>, and empty cells become <code>null</code>.</p>"],
     ["Tips", "<p>Use short, unique column headings without spaces if the JSON is going into code. To check or reformat the output, paste it into the <a href=\"json-formatter.html\">JSON formatter</a>.</p>"],
+    ["How cells are converted", "<ul><li>Numbers stay numbers and TRUE/FALSE become true/false.</li><li>Empty cells become <code>null</code>, so every object has the same keys.</li><li>Dates become ISO 8601 text, such as <code>\"2026-11-28T00:00:00.000Z\"</code>.</li><li>Completely blank rows are skipped.</li><li>Formulas are exported as their calculated values.</li></ul>"],
+    ["Objects or rows?", "<p><em>Array of objects</em> uses the first row as keys: <code>[{\"name\":\"Ada\",\"age\":36}]</code>. It's the format most APIs, JavaScript code and no-code tools expect. <em>Array of rows</em> keeps every row, including the header, as a list of values: <code>[[\"name\",\"age\"],[\"Ada\",36]]</code>. It's handy when the sheet has no header row or repeated column names.</p>"],
   ],
   faqs: [
     ["How do I convert Excel to JSON?", "Choose the file, keep 'Array of objects' and copy or download the JSON."],
     ["Which row becomes the keys?", "The first row of the sheet. Choose 'Array of rows' if your sheet has no header."],
+    ["How are dates converted to JSON?", "As ISO 8601 date-time text, for example 2026-11-28T00:00:00.000Z, which most programming languages can read."],
+    ["What happens to empty cells?", "They become null, so every object has the same keys."],
     ["Can I convert CSV to JSON too?", "Yes. CSV files work the same way."],
     PRIVATE,
   ],
@@ -156,11 +160,15 @@ export const OFFICE_CONTENT = [
   sections: [
     ["When it helps", "<p>Check an attachment on a computer without Microsoft Office, look up a row in a large export, or open a spreadsheet on a work machine where you can't install software. Values appear as Excel formats them, including dates and currency.</p>"],
     ["Limits", "<p>The viewer shows values, not formulas, colours or charts, and displays the first 1,000 matching rows of a sheet at a time. Use search to find rows further down. To edit or convert the file, try <a href=\"excel-to-csv.html\">Excel to CSV</a> or <a href=\"excel-to-pdf.html\">Excel to PDF</a>.</p>"],
+    ["Finding a row quickly", "<p>Type a name, reference or number into <em>Search this sheet</em> and only the rows containing it are shown, with the header row kept at the top. It matches part of a cell, so “smi” finds “Smith”. Clear the box to see every row again. Each sheet has its own tab.</p>"],
+    ["Files from other software", "<p>Bank statements, payroll exports, school reports and accounting systems often produce .xls, .xlsx or .csv files. You can check one on a phone, Chromebook or shared computer without installing Excel or uploading it anywhere. To work with the data, convert it with <a href=\"excel-to-csv.html\">Excel to CSV</a> or <a href=\"excel-to-pdf.html\">Excel to PDF</a>.</p>"],
   ],
   faqs: [
     ["How can I open an XLSX file without Excel?", "Choose it here. It opens in your browser, on any device, with no software to install."],
     ["Can it open old .xls files?", "Yes, as well as .xlsx, .xlsm, .ods and .csv."],
     ["Can I edit the spreadsheet?", "No, it is a viewer. Use Google Sheets or LibreOffice to edit, or the converters to change the format."],
+    ["Why can't I see every row?", "Up to 1,000 rows are shown at once to keep the page fast. Use the search box to find the rows you need in a bigger sheet."],
+    ["Can I open an Excel file on my phone?", "Yes. Choose the file from your phone's files or downloads; it opens in the browser with no app needed."],
     PRIVATE,
   ],
   related: ["excel-to-pdf", "excel-to-csv", "pdf-to-excel"],
