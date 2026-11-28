@@ -1,89 +1,185 @@
-# ToolsBravo — listings, profiles and owner checklist
+# ToolsBravo — listings and links kit
 
-Ready-to-paste text for directories and communities. Everything here is accurate as of 18 November 2026; update the tool count if it changes. Don't buy links, don't post the same text everywhere on the same day, and follow each site's rules.
+Ready-to-paste text for directories, launch sites, community answers and embed outreach. Accurate as of **28 November 2026** (52 tools). Update the tool count and dates if they change.
 
-## Owner checklist (things only the owner can do)
+**Why this matters:** Search Console shows **0 external links** to toolsbravo.com. Links from real, relevant sites are the main thing Google uses to trust a new domain, and the main reason pages sit at positions 50–90 with no clicks. Code changes can't fix this; the steps below can.
 
-| # | Task | Where | Time |
-|---|---|---|---|
-| 1 | Resubmit `sitemap.xml` once (Google last read 69 URLs; there are now 80) | Search Console → Sitemaps | 2 min |
-| 2 | Request indexing for the home page, Sign PDF, Compress PDF and the new guide `electronic-vs-digital-signature.html` (once each) | Search Console → URL Inspection | 5 min |
-| 3 | Add the site to Bing: **Import from Google Search Console** | bing.com/webmasters | 5 min |
-| 4 | If `https://www.toolsbravo.com` still shows a security error 24 hours after the DNS change: Settings → Pages → remove the custom domain, save, add `toolsbravo.com` back, save, then tick **Enforce HTTPS** when offered | GitHub repository settings | 5 min |
-| 5 | Create brand profiles (same name, logo and link): X, LinkedIn page, Reddit user. Send the profile URLs so they can be added to the site's structured data | Each site | 30 min |
-| 6 | Submit to AlternativeTo, then SaaSHub, using the text below | Each site | 20 min each |
-| 7 | Product Hunt launch (one day; pick a Tuesday–Thursday) | producthunt.com | 1 hour on the day |
-| 8 | Show HN post (one only) | news.ycombinator.com | 15 min + replying to comments |
-| 9 | Answer genuine questions in communities where a tool solves the problem (see guidance below) | Reddit, Stack Exchange, forums | ongoing |
-| 10 | Mid-December: send Search Console screenshots (28-day performance: queries and pages; Pages report) | Search Console | 10 min |
+**Rules:**
+- Don't buy links or use link schemes.
+- Don't post the same text everywhere on the same day.
+- Follow each site's rules, which change. Check them before posting.
+- Say you're the maker.
 
-After the PR is merged, IndexNow runs automatically on every deploy. To submit every page once (Bing and others), open **Actions → IndexNow ping → Run workflow**, tick **Submit every URL in sitemap.xml**.
+## Plan and tracker
+
+Work top to bottom, one or two a week. Record each one so nothing is done twice.
+
+| # | Where | What | Time | Done | Link to listing |
+|---|---|---|---|---|---|
+| 1 | AlternativeTo | Add as an alternative to iLovePDF, Smallpdf, Sejda, PDF24 | 20 min | | |
+| 2 | SaaSHub | Product listing | 15 min | | |
+| 3 | Brand profiles | LinkedIn page, X, Reddit user (same name and logo) | 30 min | | |
+| 4 | Product Hunt | One launch day (Tuesday–Thursday) | 1 hour on the day | | |
+| 5 | Show HN | One post | 15 min + replies | | |
+| 6 | Indie Hackers | Product page and a short "what I learned" post | 30 min | | |
+| 7 | Community answers | One genuinely helpful answer a week (templates below) | 15 min each | | |
+| 8 | Embed outreach | 5 short emails a week to UK money and student blogs (template below) | 30 min a week | | |
+
+After each one is live, add its link to the table, so you can see which sites send visitors (Search Console → Links, after a few weeks).
 
 ## Core description
 
 **Name:** ToolsBravo
 **URL:** https://toolsbravo.com
+**Maker:** Bisma Zainab
 **Tagline (60 characters):** Free PDF, Office and UK money tools that never upload files
 
 **Short (160 characters):**
-52 free browser tools: edit, sign, merge and compress PDFs, convert Word and Excel, UK salary and VAT calculators. Files stay on your device. No account.
+52 free browser tools: edit, sign, merge and compress PDFs, convert Word and Excel, UK salary, loan and VAT calculators. Files stay on your device. No account.
 
 **Long:**
-ToolsBravo is a free collection of 52 everyday tools that run entirely in your web browser. Edit PDFs (change or remove text, white out, redact for real, fill in forms), sign, merge, split and compress them (including to a size limit such as 200 KB for upload forms), convert between PDF, Word, Excel, CSV and images, work out UK take-home pay and VAT, and use developer tools such as a JSON formatter and UUID generator.
+ToolsBravo is a free collection of 52 everyday tools that run entirely in your web browser.
+- Edit PDFs: change or remove text, white out, redact for real, fill in forms.
+- Sign, merge, split, extract pages and compress PDFs, including to a size limit such as 200 KB for upload forms.
+- Convert between PDF, Word, Excel, CSV and images.
+- Work out UK take-home pay, loan and car finance settlement figures, mortgage overpayments and VAT.
+- Developer tools such as a JSON formatter and UUID generator.
 
-Unlike most online PDF sites, nothing is uploaded: files are processed on your own device with open-source libraries, so private documents never leave your computer or phone. There's no account and no watermark. It works on Windows, Mac, Chromebook, iPhone and Android.
+Unlike most online PDF sites, nothing is uploaded: files are processed on your own device, so private documents never leave your computer or phone. There's no account, no watermark and no adverts. It works on Windows, Mac, Chromebook, iPhone and Android.
 
 **Key features:**
 - Edit PDFs: change or remove existing text, whiteout, true redaction, add text, images and drawings, fill in forms
 - Sign PDFs: draw, type or upload a signature, add initials and dates, place them on any page
 - Compress PDFs and images to a size limit (for example under 200 KB or 20 KB)
+- Extract, split, merge, rotate and delete PDF pages
 - PDF ↔ Word, Excel, JPG; merge Word or Excel files; remove duplicate rows
-- UK take-home pay for 2026/27, salary tables, VAT, loans, savings
+- UK take-home pay for 2026/27 (with student loans and Scottish rates), loan and car finance (PCP) settlement, mortgage overpayments, VAT, budgets
 - No upload, no account, no watermark, free
 
-**Categories / tags:** PDF tools, PDF editor, e-signature, file converter, image compressor, Excel tools, calculator, developer tools, privacy
+**Categories / tags:** PDF tools, PDF editor, e-signature, file converter, image compressor, Excel tools, UK calculators, privacy
 
-## AlternativeTo
+**Logo:** `assets/icon-512.png` (use the same name and logo everywhere).
 
-Add ToolsBravo as an alternative to: **iLovePDF**, **Smallpdf**, **Adobe Acrobat online**, **PDF24 Tools**, **Sejda**.
-- Platform: Online (web)
-- License: Free
-- Use the short and long descriptions and features above.
-- Feature tags if offered: tick "No registration required" and "Privacy focused". Don't tick "Works offline": the site has to load from the internet first.
+## 1. AlternativeTo
 
-## SaaSHub
+Add ToolsBravo as an alternative to **iLovePDF**, **Smallpdf**, **Adobe Acrobat online**, **PDF24 Tools** and **Sejda**.
+- Platform: Online (web). License: Free.
+- Use the short and long descriptions and the features above.
+- Feature tags, if offered: tick "No registration required" and "Privacy focused". Don't tick "Works offline": the site has to load from the internet first.
+
+## 2. SaaSHub
 
 Same text as AlternativeTo. Category: PDF tools / File conversion. Pricing: Free.
 
-## Product Hunt
+## 3. Brand profiles
 
-**Name:** ToolsBravo
-**Tagline:** PDF and Office tools that never upload your files
-**Description (260 characters):** Sign, merge and compress PDFs, convert Word, Excel and images, and work out UK pay, all inside your browser. Your files never leave your device. 52 free tools, no account, no watermark.
-**Topics:** Productivity, Privacy, Developer Tools
-**First comment (from the maker):**
-> I built ToolsBravo because most "free PDF" sites upload your documents to their servers, which isn't great for contracts, payslips or ID scans. Everything here runs in your browser using open-source libraries (pdf-lib, pdf.js), so files stay on your device. My favourite bits: compress a PDF to a specific size for upload forms, and sign a PDF on your phone. It's free with no account. I'd love feedback on what's missing.
+- **Bio (160 characters):** Free browser tools for PDFs, Word, Excel, images and UK money. Files never leave your device. No account, no watermark. toolsbravo.com
+- **LinkedIn page description:** ToolsBravo makes free, private online tools: sign, edit, merge and compress PDFs, convert Word and Excel files, and calculate UK take-home pay, loan settlements and VAT, all processed in your browser so files are never uploaded.
 
-## Show HN
+Send the profile URLs once they exist, so they can be added to the site's structured data (Organization `sameAs`).
 
-**Title:** Show HN: Browser-only PDF tools – sign, merge, compress without uploading
+## 4. Product Hunt
+
+- **Name:** ToolsBravo
+- **Tagline:** PDF and Office tools that never upload your files
+- **Description (260 characters):** Sign, edit, merge and compress PDFs, convert Word, Excel and images, and work out UK pay and loan settlements, all inside your browser. Your files never leave your device. 52 free tools, no account, no watermark.
+- **Topics:** Productivity, Privacy, Personal finance
+- **First comment (from the maker):**
+
+> Hi, I'm Bisma. I built ToolsBravo because most "free PDF" sites upload your documents to their servers. That isn't great for contracts, payslips or ID scans. Everything here runs in your browser, so files stay on your device. My favourite bits: compressing a PDF to an exact size for upload forms, signing a PDF on your phone, and the UK car finance settlement calculator. It's free with no account. I'd love feedback on what's missing.
+
+## 5. Show HN
+
+**Title:** Show HN: Browser-only PDF tools – sign, edit, compress without uploading
+
 **Text:**
-> ToolsBravo (https://toolsbravo.com) is a set of 52 tools that run client-side: PDF editing (including redaction that rasterises affected pages so the text is really gone), signing, merging, splitting and compression (including binary-searching render settings to hit a size limit like 200 KB), PDF/Word/Excel/image conversion, and some UK finance calculators.
+
+> ToolsBravo (https://toolsbravo.com) is a set of 52 tools that run client-side:
+> - PDF editing, including redaction that rasterises the affected pages so the text is really gone
+> - signing, merging, splitting and extracting pages
+> - compression that searches render settings to hit a size limit like 200 KB
+> - PDF, Word, Excel and image conversion
+> - some UK finance calculators
 >
-> It's a static site on GitHub Pages. PDF work uses pdf-lib and pdf.js; Word uses mammoth; spreadsheets use SheetJS. No server, no analytics, no accounts. Source: https://github.com/abrar858/toolbench
+> It's a static site with no server, no analytics and no accounts.
 >
-> Things I learned: signed PDFs have to be rewritten carefully for Acrobat (generation numbers on incrementally updated files), and "compress to X KB" is mostly a page-count problem once pages are rasterised. Happy to answer questions.
+> Things I learned:
+> - Signed PDFs have to be rewritten carefully for Acrobat (generation numbers on incrementally updated files).
+> - "Compress to X KB" is mostly a page-count problem once pages are rasterised.
+> - UK loan settlement figures follow a statutory formula: remaining payments discounted at the APR to 28 days after the request.
+>
+> Happy to answer questions.
 
-## Brand profiles
+## 6. Indie Hackers
 
-**Bio (160 characters):** Free browser tools for PDFs, Word, Excel, images and UK money. Files never leave your device. No account, no watermark. toolsbravo.com
-**LinkedIn page description:** ToolsBravo makes free, private online tools: sign, merge and compress PDFs, convert Word and Excel files, and calculate UK take-home pay and VAT, all processed in your browser so files are never uploaded.
-**Use:** the logo from `assets/icon-512.png`, and the same name everywhere.
+- **Product page:** use the short description.
+- **Post idea:** "3 weeks in: what Search Console taught me about a new tools site".
+  - Impressions grew to about 470 a day with zero clicks, because the site ranked at positions 50–90.
+  - Two pages were competing for the same searches.
+  - Thin pages weren't indexed until they had something unique to offer.
+  - Be honest and specific; that's what gets read and linked.
 
-## Community answers: how to do it well
+## 7. Community answers (templates)
 
-- Only answer when a ToolsBravo tool genuinely solves the question asked, and answer the question fully in the reply itself; the link is a bonus, not the answer.
-- Say you made it ("I built a free tool for this…"); undisclosed self-promotion breaks most communities' rules.
-- Good fits: "how do I get my PDF under 200 KB for this form?", "sign a PDF without Adobe", "merge Excel files into one", "how much is £35k after tax?".
-- Check each subreddit's rules first (for example r/excel and r/UKPersonalFinance restrict self-promotion).
-- One helpful answer a week beats twenty links in a day.
+**Before you answer:**
+- Only answer when a tool genuinely solves the question.
+- Answer fully in the reply itself; the link is a bonus, not the answer.
+- Say you made it.
+- Check each community's rules first. For example, r/UKPersonalFinance and r/excel restrict self-promotion, so there you answer without a link unless the rules allow one.
+
+**"How do I get my PDF under 200 KB for an upload form?"**
+> Scanned PDFs are big because each page is a photo. To get under a limit like 200 KB, the pages need re-rendering at a lower resolution, which is what most "compress PDF" tools do. Try the strongest setting first and check the text is still readable; for multi-page scans, removing blank or unneeded pages helps most. I made a free tool that does this to an exact size limit in your browser (nothing is uploaded): https://toolsbravo.com/compress-pdf.html. Pick "Size limit" and 200 KB.
+
+**"How much would it cost to settle my car finance (PCP) early?"**
+> You're entitled to a settlement figure from the finance company: they must send it within 7 days of your request, and it shows what to pay to settle on a date 28 days after they received the request. It's your remaining monthly payments plus the final balloon payment, minus the interest you no longer owe, worked out with the APR. With more than a year left they can add about a month's interest, and on agreements from 2011 they can charge up to 1% if you repay more than £8,000. If you'd rather hand the car back, voluntary termination lets you do that once you've paid half the total amount payable. I made a free calculator that estimates the figure, including the balloon: https://toolsbravo.com/early-loan-settlement-calculator.html.
+
+**"How do I sign a PDF on my iPhone without Adobe?"**
+> On iPhone, open the PDF in Files, tap the markup (pen) icon, then + → Signature. That works for a simple signature. If you need initials and a date on several pages, or want to do it in a browser on any device, I made a free tool that signs PDFs on your phone without uploading the file: https://toolsbravo.com/sign-pdf.html.
+
+**"How much is £35k after tax?"**
+> In 2026/27 in England, Wales or Northern Ireland, £35,000 is about £2,393 a month after income tax and National Insurance (no pension or student loan). With a Plan 2 student loan it's about £42 a month less. I made a page that shows the full breakdown, including Scotland and every student loan plan: https://toolsbravo.com/35000-after-tax.html.
+
+(Check the figures on the page before posting, in case rates have changed.)
+
+## 8. Embed outreach (calculators other sites can use)
+
+Seven calculators can be embedded on any website with one line of code, with a credit link back. The embed box is under each calculator, and there's a free embed page for each:
+
+| Calculator | Page |
+|---|---|
+| UK take-home pay | https://toolsbravo.com/uk-take-home-pay-calculator.html |
+| VAT | https://toolsbravo.com/vat-calculator.html |
+| Loan repayment | https://toolsbravo.com/loan-repayment-calculator.html |
+| Mortgage overpayment | https://toolsbravo.com/mortgage-overpayment-calculator.html |
+| Savings | https://toolsbravo.com/savings-calculator.html |
+| 50/30/20 budget | https://toolsbravo.com/budget-planner.html |
+| Percentage | https://toolsbravo.com/percentage-calculator.html |
+
+**Who to contact:** small UK blogs and sites that write about the same topic as a calculator. For example:
+- student money and graduate jobs blogs (take-home pay, budget);
+- first-time buyer and mortgage blogs (mortgage overpayment);
+- freelancer and small business blogs (VAT);
+- debt-free journey bloggers (loan, budget).
+
+Personalise every email, and send no more than a few a day.
+
+**Email template:**
+
+> Subject: A free calculator for your post on {topic}
+>
+> Hi {name},
+>
+> I enjoyed your post "{post title}", especially {one specific point}.
+>
+> I make ToolsBravo, a set of free UK calculators that run in the browser (no sign-up, no adverts, nothing stored). If it's useful for your readers, you're welcome to embed the {calculator} on that page. It's one line of code from https://toolsbravo.com/{page}, under "Add this calculator to your website", and it keeps your readers on your page.
+>
+> No obligation at all. If you spot anything wrong in it, I'd be glad to hear.
+>
+> Bisma Zainab
+> ToolsBravo
+
+## Done already (for reference)
+
+- Google Search Console: sitemap read (84 URLs), 80 pages indexed, indexing requests made.
+- Bing Webmaster Tools set up; IndexNow notifies Bing automatically after every deploy.
+- `https://www.toolsbravo.com` redirects correctly.
